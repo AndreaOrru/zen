@@ -1,6 +1,4 @@
 *.o
 
 /build
-/build.zig
-
 /zen
