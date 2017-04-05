@@ -1,5 +1,5 @@
 # Zen
-Experimental operating system written in Zig.
+Experimental operating system written in [Zig](http://ziglang.org).
 
 ## Build and test
 ```
