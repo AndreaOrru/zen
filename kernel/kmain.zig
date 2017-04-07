@@ -1,6 +1,7 @@
 use @import("multiboot.zig");
-const terminal = @import("terminal.zig");
+const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
+const Color = tty.Color;
 
 // Initial kernel stack pointer.
 const stack_top: usize = 0x80000;
@@ -18,6 +19,10 @@ export nakedcc fn _start() {
 
 // Get the ball rolling.
 fn kmain() {
-    terminal.initialize();
-    terminal.write("Hello world!");
+    tty.initialize();
+    tty.colorPrintf(Color.LightRed, ">>> Zen - v0.0.1\n\n");
+
+    tty.colorPrintf(Color.LightBlue, "Initializing the microkernel:\n");
+    tty.step("Loading X"); tty.stepOK();
+    tty.step("Loading Y"); tty.stepOK();
 }
