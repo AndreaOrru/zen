@@ -34,10 +34,10 @@ const VGAEntry = packed struct {
     foreground: u4,
 };
 
-const vram = (&VGAEntry)(0xB8000);     // VRAM buffer.
-var background = u4(Color.Black);      // Background color.
-var foreground = u4(Color.LightGrey);  // Foreground color.
-var cursor = usize(0);                 // Cursor position.
+const vram = @intToPtr(&VGAEntry, 0xB8000);  // VRAM buffer.
+var background = u4(Color.Black);            // Background color.
+var foreground = u4(Color.LightGrey);        // Foreground color.
+var cursor = usize(0);                       // Cursor position.
 
 // Initialize the terminal.
 pub fn initialize() {

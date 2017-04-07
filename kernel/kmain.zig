@@ -1,4 +1,5 @@
 use @import("multiboot.zig");
+const gdt = @import("gdt.zig");
 const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
 const Color = tty.Color;
@@ -21,8 +22,7 @@ export nakedcc fn _start() {
 fn kmain() {
     tty.initialize();
     tty.colorPrintf(Color.LightRed, ">>> Zen - v0.0.1\n\n");
-
     tty.colorPrintf(Color.LightBlue, "Initializing the microkernel:\n");
-    tty.step("Loading X"); tty.stepOK();
-    tty.step("Loading Y"); tty.stepOK();
+
+    gdt.initialize();
 }
