@@ -75,7 +75,7 @@ pub fn printf(comptime format: String, args: ...) {
 
 // Callback for printf.
 fn printCallback(context: void, string: String) -> bool {
-    writeString(string);
+    write(string);
     return true;
 }
 
@@ -90,7 +90,7 @@ pub fn colorPrintf(fg: Color, comptime format: String, args: ...) {
 }
 
 // Print a string to the screen.
-pub fn writeString(string: String) {
+pub fn write(string: String) {
     for (string) |c| writeChar(c);
 }
 
