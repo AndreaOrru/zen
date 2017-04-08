@@ -40,12 +40,16 @@ fn makeEntry(base: u32, limit: u32, access: u8, flags: u4) -> GDTEntry {
 }
 
 // Fill in the GDT (at compile time).
-const gdt = []GDTEntry {
-    makeEntry(0, 0, 0, 0),
-    makeEntry(0, 0xFFFFF, KERNEL | CODE, PROTECTED | BLOCKS_4K),
-    makeEntry(0, 0xFFFFF, KERNEL | DATA, PROTECTED | BLOCKS_4K),
-    makeEntry(0, 0xFFFFF, USER   | CODE, PROTECTED | BLOCKS_4K),
-    makeEntry(0, 0xFFFFF, USER   | DATA, PROTECTED | BLOCKS_4K),
+const gdt = {
+    @setGlobalAlign(gdt, 4);
+
+    []GDTEntry {
+        makeEntry(0, 0, 0, 0),
+        makeEntry(0, 0xFFFFF, KERNEL | CODE, PROTECTED | BLOCKS_4K),
+        makeEntry(0, 0xFFFFF, KERNEL | DATA, PROTECTED | BLOCKS_4K),
+        makeEntry(0, 0xFFFFF, USER   | CODE, PROTECTED | BLOCKS_4K),
+        makeEntry(0, 0xFFFFF, USER   | DATA, PROTECTED | BLOCKS_4K),
+    }
 };
 
 // GDT descriptor register pointing at the GDT.
