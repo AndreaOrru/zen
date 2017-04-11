@@ -1,6 +1,12 @@
 use @import("types.zig");
 const tty = @import("tty.zig");
 
+// GDT segment selectors.
+pub const KERNEL_CODE = 0x08;
+pub const KERNEL_DATA = 0x10;
+pub const USER_CODE   = 0x18;
+pub const USER_DATA   = 0x20;
+
 // Access permission values.
 const KERNEL = 0x90;
 const USER   = 0xF0;
@@ -13,13 +19,13 @@ const BLOCKS_4K = (1 << 3);
 
 // Structure representing an entry in the GDT.
 const GDTEntry = packed struct {
-    limitLow:  u16,
-    baseLow:   u16,
-    baseMid:   u8,
-    access:    u8,
-    limitHigh: u4,
-    flags:     u4,
-    baseHigh:  u8,
+    limit_low:  u16,
+    base_low:   u16,
+    base_mid:   u8,
+    access:     u8,
+    limit_high: u4,
+    flags:      u4,
+    base_high:  u8,
 };
 
 // GDT descriptor register.
@@ -30,13 +36,13 @@ const GDTRegister = packed struct {
 
 // Generate a GDT entry structure.
 fn makeEntry(base: u32, limit: u32, access: u8, flags: u4) -> GDTEntry {
-    (GDTEntry) { .limitLow  = u16(limit       ),
-                 .baseLow   = u16(base        ),
-                 .baseMid   =  u8(base   >> 16),
-                 .access    =  u8(access      ),
-                 .limitHigh =  u4(limit  >> 16),
-                 .flags     =  u4(flags       ),
-                 .baseHigh  =  u8(base   >> 24), }
+    (GDTEntry) { .limit_low  = u16(limit       ),
+                 .base_low   = u16(base        ),
+                 .base_mid   =  u8(base   >> 16),
+                 .access     =  u8(access      ),
+                 .limit_high =  u4(limit  >> 16),
+                 .flags      =  u4(flags       ),
+                 .base_high  =  u8(base   >> 24), }
 }
 
 // Fill in the GDT (at compile time).
@@ -84,6 +90,8 @@ fn load() {
 // Initialize the GDT.
 pub fn initialize() {
     tty.step("Initializing the GDT");
+
     load();
+
     tty.stepOK();
 }

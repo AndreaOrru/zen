@@ -1,6 +1,7 @@
 use @import("multiboot.zig");
 use @import("types.zig");
 const gdt = @import("gdt.zig");
+const idt = @import("idt.zig");
 const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
 const Color = tty.Color;
@@ -37,4 +38,5 @@ fn kmain() {
     tty.colorPrintf(Color.LightBlue, "Initializing the microkernel:\n");
 
     gdt.initialize();
+    idt.initialize();
 }
