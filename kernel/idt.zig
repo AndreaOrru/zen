@@ -7,11 +7,11 @@ pub const INTERRUPT_GATE = 0x8E;
 
 // Structure representing an entry in the IDT.
 const IDTEntry = packed struct {
-    offset_high: u16,
-    flags:       u8,
-    zero:        u8,
-    selector:    u16,
     offset_low:  u16,
+    selector:    u16,
+    zero:        u8,
+    flags:       u8,
+    offset_high: u16,
 };
 
 // IDT descriptor register.

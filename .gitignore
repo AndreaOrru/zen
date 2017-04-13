@@ -2,3 +2,6 @@
 
 /build
 /zen
+
+/run/iso/boot/zen
+/run/zen.iso

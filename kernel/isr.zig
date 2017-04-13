@@ -12,7 +12,7 @@ comptime {
         \\         .endif
         \\         push \n
         \\         pusha
-        \\         call [interrupt_handlers + (\n * 4)]
+        \\         call *(interrupt_handlers + (\n * 4))
         \\ .endmacro
         \\
         \\ isrGenerate  0; isrGenerate  1; isrGenerate  2; isrGenerate  3;
