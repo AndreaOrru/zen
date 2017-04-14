@@ -1,19 +1,89 @@
-// Multiboot structure to be read by the bootloader.
-const MultibootHeader = packed struct {
-    magic:    usize,
-    flags:    usize,
-    checksum: usize,
+use @import("types.zig");
+
+// This should be in EAX.
+pub const MULTIBOOT_BOOTLOADER_MAGIC = 0x2BADB002;
+
+// Is there basic lower/upper memory information?
+pub const MULTIBOOT_INFO_MEMORY      = 0x00000001;
+// Is there a full memory map?
+pub const MULTIBOOT_INFO_MEM_MAP     = 0x00000040;
+
+// System information structure passed by the bootloader.
+pub const MultibootInfo = packed struct {
+    // Multiboot info version number.
+    flags: u32,
+
+    // Available memory from BIOS.
+    mem_lower: u32,
+    mem_upper: u32,
+
+    // "root" partition.
+    boot_device: u32,
+
+    // Kernel command line.
+    cmdline: u32,
+
+    // Boot-Module list.
+    mods_count: u32,
+    mods_addr: u32,
+
+    // TODO: use the real types here.
+    u: u128,
+
+    // Memory Mapping buffer.
+    mmap_length: u32,
+    mmap_addr: u32,
+
+    // Drive Info buffer.
+    drives_length: u32,
+    drives_addr: u32,
+
+    // ROM configuration table.
+    config_table: u32,
+
+    // Boot Loader Name.
+    boot_loader_name: u32,
+
+    // APM table.
+    apm_table: u32,
+
+    // Video.
+    vbe_control_info: u32,
+    vbe_mode_info: u32,
+    vbe_mode: u16,
+    vbe_interface_seg: u16,
+    vbe_interface_off: u16,
+    vbe_interface_len: u16,
 };
 
-const MAGIC   = usize(0x1BADB002);  // Magic number for validation.
-const ALIGN   = usize(1 << 0);      // Align loaded modules.
-const MEMINFO = usize(1 << 1);      // Receive a memory map from the bootloader.
-const FLAGS   = ALIGN | MEMINFO;    // Combine the flags.
+// Types of memory map entries.
+pub const MULTIBOOT_MEMORY_AVAILABLE = 1;
+pub const MULTIBOOT_MEMORY_RESERVED  = 2;
+
+// Entries in the memory map.
+pub const MultibootMMapEntry = packed struct {
+    size: u32,
+    addr: u64,
+    len:  u64,
+    type: u32,
+};
+
+// Multiboot structure to be read by the bootloader.
+const MultibootHeader = packed struct {
+    magic:    usize,  // Must be equal to header magic number.
+    flags:    usize,  // Feature flags.
+    checksum: usize,  // Above fields plus this one must equal 0 mod 2^32.
+};
 
 // Place the header at the very beginning of the binary.
 export const multiboot_header = {
     @setGlobalSection(multiboot_header, ".multiboot");
     @setGlobalAlign(multiboot_header, 4);
+
+    const MAGIC   = usize(0x1BADB002);  // Magic number for validation.
+    const ALIGN   = usize(1 << 0);      // Align loaded modules.
+    const MEMINFO = usize(1 << 1);      // Receive a memory map from the bootloader.
+    const FLAGS   = ALIGN | MEMINFO;    // Combine the flags.
 
     MultibootHeader {
         .magic    = MAGIC,

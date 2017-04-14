@@ -69,18 +69,18 @@ pub fn setBackground(bg: Color) {
 }
 
 // Print a formatted string to the screen.
-pub fn printf(comptime format: String, args: ...) {
+pub fn printf(comptime format: []const u8, args: ...) {
     _ = fmt.format({}, printCallback, format, args);
 }
 
 // Callback for printf.
-fn printCallback(context: void, string: String) -> bool {
+fn printCallback(context: void, string: []const u8) -> bool {
     write(string);
     return true;
 }
 
 // Print a string in the given foreground color.
-pub fn colorPrintf(fg: Color, comptime format: String, args: ...) {
+pub fn colorPrintf(fg: Color, comptime format: []const u8, args: ...) {
     var save_foreground = foreground;
 
     foreground = u4(fg);
@@ -90,7 +90,7 @@ pub fn colorPrintf(fg: Color, comptime format: String, args: ...) {
 }
 
 // Print a string to the screen.
-pub fn write(string: String) {
+pub fn write(string: []const u8) {
     for (string) |c| writeChar(c);
 }
 
@@ -120,7 +120,7 @@ pub fn writeChar(char: u8) {
 }
 
 // Print a loading step.
-pub fn step(comptime format: String, args: ...) {
+pub fn step(comptime format: []const u8, args: ...) {
     colorPrintf(Color.LightBlue, ">> ");
     printf(format ++ "...", args);
 }
