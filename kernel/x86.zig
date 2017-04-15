@@ -1,3 +1,16 @@
+// The size of a memory page.
+pub const PAGE_SIZE: usize = 4096;
+
+// Page-align an address downward.
+pub inline fn pageBase(address: usize) -> usize {
+    address & (~PAGE_SIZE +% 1)
+}
+
+// Page-align an address upward.
+pub inline fn pageAlign(address: usize) -> usize {
+    (address + PAGE_SIZE - 1) & (~PAGE_SIZE +% 1)
+}
+
 // Halt the CPU.
 pub inline fn hlt() -> noreturn {
     while (true) {

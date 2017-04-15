@@ -92,7 +92,7 @@ fn load() {
 
 // Initialize the GDT.
 pub fn initialize() {
-    tty.step("Initializing the GDT");
+    tty.step("Setting up the Global Descriptor Table");
 
     load();
 

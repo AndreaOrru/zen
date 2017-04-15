@@ -47,7 +47,7 @@ pub fn load() {
 
 // Initialize the IDT.
 pub fn initialize() {
-    tty.step("Initializing the IDT");
+    tty.step("Setting up the Interrupt Descriptor Table");
 
     interrupt.initialize();
     load();

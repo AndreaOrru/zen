@@ -1,6 +1,7 @@
 use @import("multiboot.zig");
 const gdt = @import("gdt.zig");
 const idt = @import("idt.zig");
+const pmem = @import("pmem.zig");
 const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
 const assert = @import("std").debug.assert;
@@ -31,14 +32,15 @@ pub fn panic(message: []const u8) -> noreturn {
 }
 
 // Get the ball rolling.
-export fn kmain(magic: u32, info: &MultibootInfo) {
+export fn kmain(magic: u32, info: &const MultibootInfo) {
     tty.initialize();
 
     assert(magic == MULTIBOOT_BOOTLOADER_MAGIC);
 
     tty.colorPrintf(Color.LightRed,  ">>> Zen - v0.0.1\n\n");
-    tty.colorPrintf(Color.LightBlue, "Initializing the microkernel:\n");
+    tty.colorPrintf(Color.LightBlue, "Booting the microkernel:\n");
 
     gdt.initialize();
     idt.initialize();
+    pmem.initialize(info);
 }
