@@ -2,6 +2,7 @@ use @import("multiboot.zig");
 const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
 const assert = @import("std").debug.assert;
+const Color = tty.Color;
 
 extern var __bss_end: u8;  // End of the kernel (supplied by the linker).
 
@@ -62,7 +63,7 @@ pub fn initialize(info: &const MultibootInfo)
         map += entry.size + @sizeOf(@typeOf(entry.size));
     }
 
-    tty.printf(" {d} MB", available() / (1024 * 1024));
+    tty.colorPrintf(Color.White, " {d} MB", available() / (1024 * 1024));
 
     tty.stepOK();
 }

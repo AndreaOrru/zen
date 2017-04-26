@@ -8,19 +8,6 @@ const x86 = @import("x86.zig");
 const assert = @import("std").debug.assert;
 const Color = tty.Color;
 
-// Entry point. It puts the machine into a consistent state,
-// starts the kernel and then waits forever.
-export nakedcc fn _start() -> noreturn {
-    asm volatile(
-        \\ mov esp, 0x80000  // Setup the stack.
-        \\ push ebx          // Pass multiboot info structure.
-        \\ push eax          // Pass multiboot magic code.
-        \\ call kmain        // Call the kernel.
-    : : : "{esp}");
-
-    x86.hlt();  // Halt the CPU.
-}
-
 // Panic function called by Zig on language errors.
 pub fn panic(message: []const u8) -> noreturn {
     tty.writeChar('\n');
@@ -37,9 +24,11 @@ export fn kmain(magic: u32, info: &const MultibootInfo) {
 
     assert(magic == MULTIBOOT_BOOTLOADER_MAGIC);
 
-    tty.colorPrintf(Color.LightRed,  ">>> Zen - v0.0.1\n\n");
-    tty.colorPrintf(Color.LightBlue, "Booting the microkernel:\n");
+    const title = ">>> Zen - v0.0.1 <<<";
+    tty.alignCenter(title.len);
+    tty.colorPrintf(Color.LightRed, title ++ "\n\n");
 
+    tty.colorPrintf(Color.LightBlue, "Booting the microkernel:\n");
     gdt.initialize();
     idt.initialize();
     pmem.initialize(info);

@@ -25,7 +25,7 @@ pub const Color = enum {
     LightBrown,    // 14
     White,         // 15
 };
-// TODO: convert to enum(u4) { Black = 0, ... } once available in Zig.
+// TODO: convert to enum(u4) { Black = 0, ... } once available in Zig (issue #305).
 
 // Character with attributes.
 const VGAEntry = packed struct {
@@ -99,24 +99,39 @@ pub fn writeChar(char: u8) {
     switch (char) {
         // Newline:
         '\n' => {
-             writeChar(' ');
-             while (cursor % VGA_WIDTH != 0)
-                 writeChar(' ');
+            writeChar(' ');
+            alignLeft(0);
         },
         // Tab:
         '\t' => {
-             writeChar(' ');
-             while (cursor % VGA_WIDTH != 4)
-                 writeChar(' ');
+            writeChar(' ');
+            while (cursor % 4 != 0)
+                writeChar(' ');
         },
         // Any other character:
         else => {
-             vram[cursor] = (VGAEntry) { .char       = char,
-                                         .background = background,
-                                         .foreground = foreground, };
-             cursor += 1;
+            vram[cursor] = (VGAEntry) { .char       = char,
+                                        .background = background,
+                                        .foreground = foreground, };
+            cursor += 1;
         },
     }
+}
+
+// Align the cursor so that it is offset characters from the left border.
+pub fn alignLeft(offset: usize) {
+    while (cursor % VGA_WIDTH != offset)
+        writeChar(' ');
+}
+
+// Align the cursor so that it is offset characters from the right border.
+pub fn alignRight(offset: usize) {
+    alignLeft(VGA_WIDTH - offset);
+}
+
+// Align the cursor to horizontally center a string of length strLen.
+pub fn alignCenter(strLen: usize) {
+    alignLeft((VGA_WIDTH - strLen) / 2);
 }
 
 // Signal an unrecoverable error and hang the computer.
@@ -137,5 +152,8 @@ pub fn step(comptime format: []const u8, args: ...) {
 
 // Signal that a loading step completed successfully.
 pub fn stepOK() {
-    colorPrintf(Color.LightGreen, " OK!\n")
+    const ok = " [ OK ]";
+
+    alignRight(ok.len);
+    colorPrintf(Color.LightGreen, ok);
 }

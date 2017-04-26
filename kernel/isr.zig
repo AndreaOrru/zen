@@ -29,6 +29,7 @@ comptime {
         \\ isrGenerate 44; isrGenerate 45; isrGenerate 46; isrGenerate 47;
     );
 }
+// TODO: put this functions into separate assembly files.
 
 extern fn  isr0(); extern fn  isr1(); extern fn  isr2(); extern fn  isr3();
 extern fn  isr4(); extern fn  isr5(); extern fn  isr6(); extern fn  isr7();

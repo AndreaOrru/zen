@@ -24,7 +24,7 @@ const GDTEntry = packed struct {
     base_mid:   u8,
     access:     u8,
 
-    // TODO: invert these fields once bitfields are fixed.
+    // TODO: invert these fields once bitfields are fixed (issue #307).
     flags:      u4,
     limit_high: u4,
 
