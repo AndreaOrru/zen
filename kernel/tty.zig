@@ -119,6 +119,16 @@ pub fn writeChar(char: u8) {
     }
 }
 
+// Signal an unrecoverable error and hang the computer.
+pub fn panic(comptime format: []const u8, args: ...) -> noreturn {
+    writeChar('\n');
+
+    setBackground(Color.Red);
+    colorPrintf(Color.White, "KERNEL PANIC: " ++ format ++ "\n", args);
+
+    x86.hang();
+}
+
 // Print a loading step.
 pub fn step(comptime format: []const u8, args: ...) {
     colorPrintf(Color.LightBlue, ">> ");

@@ -2,6 +2,7 @@ use @import("multiboot.zig");
 const gdt = @import("gdt.zig");
 const idt = @import("idt.zig");
 const pmem = @import("pmem.zig");
+const vmem = @import("vmem.zig");
 const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
 const assert = @import("std").debug.assert;
@@ -10,7 +11,7 @@ const Color = tty.Color;
 // Entry point. It puts the machine into a consistent state,
 // starts the kernel and then waits forever.
 export nakedcc fn _start() -> noreturn {
-    asm volatile (
+    asm volatile(
         \\ mov esp, 0x80000  // Setup the stack.
         \\ push ebx          // Pass multiboot info structure.
         \\ push eax          // Pass multiboot magic code.
@@ -27,8 +28,7 @@ pub fn panic(message: []const u8) -> noreturn {
     tty.setBackground(Color.Red);
     tty.colorPrintf(Color.White, "KERNEL PANIC: {}", message);
 
-    x86.cli();
-    x86.hlt();
+    x86.hang();
 }
 
 // Get the ball rolling.
@@ -43,4 +43,5 @@ export fn kmain(magic: u32, info: &const MultibootInfo) {
     gdt.initialize();
     idt.initialize();
     pmem.initialize(info);
+    vmem.initialize();
 }

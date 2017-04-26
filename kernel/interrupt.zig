@@ -20,6 +20,11 @@ fn unhandled() {
 // Registered interrupt handlers.
 export var interrupt_handlers = []fn() { unhandled } ** 48;
 
+// Register an interrupt handler.
+pub fn register(n: u8, handler: fn()) {
+    interrupt_handlers[n] = handler;
+}
+
 // Remap the PICs so that IRQs don't override software interrupts.
 fn remapPIC(offset_pic1: u8, offset_pic2: u8) {
     // ICW1: start initialization sequence.

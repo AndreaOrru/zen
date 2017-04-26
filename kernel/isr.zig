@@ -2,7 +2,7 @@ const idt = @import("idt.zig");
 
 // Generate the Interrupt Service Routines.
 comptime {
-    asm volatile (
+    asm volatile(
         \\ .macro isrGenerate n
         \\     .align 4
         \\     .type isr\n, @function
