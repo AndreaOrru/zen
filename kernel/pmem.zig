@@ -10,12 +10,12 @@ var stack: &usize = undefined;  // Stack of free physical page.
 var stack_pointer: usize = 0;   // Index into the stack.
 
 // Return the amount of variable elements (in bytes).
-pub inline fn available() -> usize {
+pub fn available() -> usize {
     stack_pointer * x86.PAGE_SIZE
 }
 
 // Request a free physical page and return its address.
-pub inline fn allocate() -> usize {
+pub fn allocate() -> usize {
     if (available() == 0)
         @panic("out of memory");
 
@@ -24,7 +24,7 @@ pub inline fn allocate() -> usize {
 }
 
 // Free a previously allocated physical page.
-pub inline fn free(address: usize) {
+pub fn free(address: usize) {
     stack[stack_pointer] = x86.pageBase(address);
     stack_pointer += 1;
 }
@@ -39,7 +39,7 @@ pub fn initialize(info: &const MultibootInfo)
     assert((info.flags & MULTIBOOT_INFO_MEM_MAP) != 0);
 
     // Place the stack of free pages after the end of the kernel.
-    stack = @intToPtr(&usize, x86.pageAlign(usize(&__bss_end)));
+    stack = @ptrCast(&usize, x86.pageAlign(&__bss_end));
     // Calculate the approximate size of the stack based on the amount of total upper memory.
     const stack_size: usize = ((info.mem_upper * 1024) / x86.PAGE_SIZE) * @sizeOf(usize);
     const stack_end:  usize = x86.pageAlign(usize(stack) + stack_size);

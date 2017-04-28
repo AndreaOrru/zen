@@ -1,14 +1,28 @@
 // The size of a memory page.
 pub const PAGE_SIZE: usize = 4096;
 
+// Return address as either usize or a pointer of type T.
+fn usizeOrPtr(comptime T: type, address: usize) -> T {
+    if (T == usize) address else @intToPtr(T, address)
+}
+
 // Page-align an address downward.
-pub inline fn pageBase(address: usize) -> usize {
-    address & (~PAGE_SIZE +% 1)
+pub fn pageBase(address: var) -> @typeOf(address) {
+    const result = usize(address) & (~PAGE_SIZE +% 1);
+
+    return usizeOrPtr(@typeOf(address), result);
 }
 
 // Page-align an address upward.
-pub inline fn pageAlign(address: usize) -> usize {
-    (address + PAGE_SIZE - 1) & (~PAGE_SIZE +% 1)
+pub fn pageAlign(address: var) -> @typeOf(address) {
+    const result = (usize(address) + PAGE_SIZE - 1) & (~PAGE_SIZE +% 1);
+
+    return usizeOrPtr(@typeOf(address), result);
+}
+
+// Invalidate the TLB entry associated with the given virtual address.
+pub inline fn invlpg(v_addr: usize) {
+    asm volatile("invlpg [%[v_addr]]" : : [v_addr] "r" (v_addr));
 }
 
 // Halt the CPU.
