@@ -13,12 +13,15 @@ const PAGE_USER      = (1 << 2);
 const PAGE_4MB       = (1 << 7);
 const PAGE_GLOBAL    = (1 << 8);
 
+// Page table structures (mapped with the recursive PD trick).
 const PD  = @intToPtr(&PageEntry, 0xFFFFF000);
 const PTs = @intToPtr(&PageEntry, 0xFFC00000);
 
+// Calculate the PD and PT indexes given a virtual address.
 fn pdIndex(v_addr: usize) -> usize {  v_addr >> 22 }
 fn ptIndex(v_addr: usize) -> usize { (v_addr >> 12) & 0x3FF }
 
+// Return pointers to the PD and PT entries given a virtual address.
 fn pdEntry(v_addr: usize) -> &PageEntry { &PD[pdIndex(v_addr)] }
 fn ptEntry(v_addr: usize) -> &PageEntry {
     &PTs[(pdIndex(v_addr) * 0x400) + ptIndex(v_addr)]
