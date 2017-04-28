@@ -24,7 +24,7 @@ export fn kmain(magic: u32, info: &const MultibootInfo) {
 
     assert(magic == MULTIBOOT_BOOTLOADER_MAGIC);
 
-    const title = ">>> Zen - v0.0.1 <<<";
+    const title = "Zen - v0.0.1";
     tty.alignCenter(title.len);
     tty.colorPrintf(Color.LightRed, title ++ "\n\n");
 

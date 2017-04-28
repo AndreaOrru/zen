@@ -1,8 +1,6 @@
-*.o
+/zig-cache
 
-/*.h
-/build
 /zen
 
-/run/iso/boot/zen
 /run/zen.iso
+/run/iso/boot/zen
