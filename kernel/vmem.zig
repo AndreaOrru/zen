@@ -59,25 +59,8 @@ pub fn unmap(v_addr: usize) {
     x86.invlpg(v_addr);
 }
 
-// Given the physical address of the Page Directory, enable the paging system.
-fn setupPaging(phys_pd: usize) {
-    // Point CR3 to the page directory.
-    asm volatile("mov cr3, %[phys_pd]" : : [phys_pd] "{eax}" (phys_pd));
-
-    // Enable Page Size Extension and Page Global.
-    asm volatile(
-        \\ mov eax, cr4
-        \\ or eax, 0b10010000
-        \\ mov cr4, eax
-    : : : "{eax}");
-
-    // Enable Paging.
-    asm volatile(
-        \\ mov eax, cr0
-        \\ or eax, (1 << 31)
-        \\ mov cr0, eax
-    : : : "{eax}");
-}
+// Enable the paging system (defined in assembly).
+extern fn setupPaging(phys_pd: usize);
 
 // Handler for page faults interrupts.
 fn pageFault() {

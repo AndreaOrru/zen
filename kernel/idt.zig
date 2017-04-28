@@ -41,7 +41,7 @@ pub fn setGate(n: u8, flags: u8, offset: extern fn()) {
 }
 
 // Load the IDT structure in the system registers.
-pub fn load() {
+inline fn load() {
     asm volatile("lidt $[idtr]" : : [idtr] "{eax}" (&idtr));
 }
 

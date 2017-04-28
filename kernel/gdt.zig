@@ -64,34 +64,14 @@ const gdtr = GDTRegister {
     .base  = &gdt[0],
 };
 
-// Load the GDT structure in the system registers.
-fn load() {
-    // Load the GDT pointer.
-    asm volatile("lgdt $[gdtr]" : : [gdtr] "{eax}" (&gdtr));
-
-    // Reload data segments (GDT entry 2: kernel data).
-    asm volatile(
-        \\ mov ax, 0x10
-        \\ mov ds, ax
-        \\ mov es, ax
-        \\ mov fs, ax
-        \\ mov gs, ax
-        \\ mov ss, ax
-    : : : "ax");
-
-    // Reload code segment (GDT entry 1: kernel code).
-    asm volatile(
-        \\ .att_syntax
-        \\ ljmp $0x08, $.reloadCS
-        \\ .reloadCS:
-    );
-}
+// Load the GDT into the system registers (defined in assembly).
+extern fn loadGDT(gdtr: &const GDTRegister);
 
 // Initialize the GDT.
 pub fn initialize() {
     tty.step("Setting up the Global Descriptor Table");
 
-    load();
+    loadGDT(&gdtr);
 
     tty.stepOK();
 }
