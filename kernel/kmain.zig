@@ -8,7 +8,12 @@ const x86 = @import("x86.zig");
 const assert = @import("std").debug.assert;
 const Color = tty.Color;
 
+////
 // Panic function called by Zig on language errors.
+//
+// Arguments:
+//     message: Reason for the panic.
+//
 pub fn panic(message: []const u8) -> noreturn {
     tty.writeChar('\n');
 
@@ -18,7 +23,13 @@ pub fn panic(message: []const u8) -> noreturn {
     x86.hang();
 }
 
+////
 // Get the ball rolling.
+//
+// Arguments:
+//     magic: Magic number from bootloader.
+//     info: Information structure from bootloader.
+//
 export fn kmain(magic: u32, info: &const MultibootInfo) {
     tty.initialize();
 

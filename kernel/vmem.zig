@@ -27,7 +27,14 @@ fn ptEntry(v_addr: usize) -> &PageEntry {
     &PTs[(pdIndex(v_addr) * 0x400) + ptIndex(v_addr)]
 }
 
+////
 // Map a virtual page to a physical one with the given flags.
+//
+// Arguments:
+//     v_addr: Virtual address of the page to be mapped.
+//     p_addr: Physical address to map the page to.
+//     flags: Paging flags (protection etc.).
+//
 pub fn map(v_addr: usize, p_addr: usize, flags: u32) {
     const pd_entry = pdEntry(v_addr);
     const pt_entry = ptEntry(v_addr);
@@ -48,7 +55,12 @@ pub fn map(v_addr: usize, p_addr: usize, flags: u32) {
     x86.invlpg(v_addr);
 }
 
+////
 // Unmap a virtual page.
+//
+// Arguments:
+//     v_addr: Virtual address of the page to be unmapped.
+//
 pub fn unmap(v_addr: usize) {
     const pd_entry = pdEntry(v_addr);
     if (*pd_entry == 0) return;
@@ -59,7 +71,12 @@ pub fn unmap(v_addr: usize) {
     x86.invlpg(v_addr);
 }
 
+////
 // Enable the paging system (defined in assembly).
+//
+// Arguments:
+//     phys_pd: Physical pointer to the page directory.
+//
 extern fn setupPaging(phys_pd: usize);
 
 // Handler for page faults interrupts.
@@ -83,7 +100,9 @@ fn pageFault() {
     , address, err, operation, privilege);
 }
 
+////
 // Initialize the virtual memory system.
+//
 pub fn initialize() {
     tty.step("Initializing Paging");
 

@@ -29,7 +29,14 @@ const idtr = IDTRegister {
     .base  = &idt,
 };
 
+////
 // Setup an IDT entry.
+//
+// Arguments:
+//     n: Index of the gate.
+//     flags: Type and attributes.
+//     offset: Address of the ISR.
+//
 pub fn setGate(n: u8, flags: u8, offset: extern fn()) {
     const intOffset = usize(offset);
 
@@ -40,12 +47,16 @@ pub fn setGate(n: u8, flags: u8, offset: extern fn()) {
     idt[n].selector    = gdt.KERNEL_CODE;
 }
 
+////
 // Load the IDT structure in the system registers.
+//
 inline fn load() {
-    asm volatile("lidt $[idtr]" : : [idtr] "{eax}" (&idtr));
+    asm volatile("lidt $[idtr]" : : [idtr] "r" (&idtr));
 }
 
+////
 // Initialize the IDT.
+//
 pub fn initialize() {
     tty.step("Setting up the Interrupt Descriptor Table");
 

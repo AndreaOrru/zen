@@ -37,7 +37,15 @@ const GDTRegister = packed struct {
     base: &const GDTEntry,
 };
 
+////
 // Generate a GDT entry structure.
+//
+// Arguments:
+//     base: Beginning of the segment.
+//     limit: Size of the segment.
+//     access: Access byte.
+//     flags: Segment flags.
+//
 fn makeEntry(base: u32, limit: u32, access: u8, flags: u4) -> GDTEntry {
     (GDTEntry) { .limit_low  = u16( limit        & 0xFFFF),
                  .base_low   = u16( base         & 0xFFFF),
@@ -64,10 +72,17 @@ const gdtr = GDTRegister {
     .base  = &gdt[0],
 };
 
+////
 // Load the GDT into the system registers (defined in assembly).
+//
+// Arguments:
+//     gdtr: Pointer to the GDTR.
+//
 extern fn loadGDT(gdtr: &const GDTRegister);
 
+////
 // Initialize the GDT.
+//
 pub fn initialize() {
     tty.step("Setting up the Global Descriptor Table");
 

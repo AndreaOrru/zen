@@ -14,7 +14,9 @@ extern fn isr36(); extern fn isr37(); extern fn isr38(); extern fn isr39();
 extern fn isr40(); extern fn isr41(); extern fn isr42(); extern fn isr43();
 extern fn isr44(); extern fn isr45(); extern fn isr46(); extern fn isr47();
 
+////
 // Install the Interrupt Service Routines in the IDT.
+//
 pub fn install() {
     idt.setGate(0,  idt.INTERRUPT_GATE, isr0);
     idt.setGate(1,  idt.INTERRUPT_GATE, isr1);

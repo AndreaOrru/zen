@@ -12,7 +12,9 @@ const ICW1_INIT = 0x10;
 const ICW1_ICW4 = 0x01;
 const ICW4_8086 = 0x01;
 
+////
 // Default interrupt handler.
+//
 fn unhandled() {
     @panic("unhandled");
 }
@@ -20,20 +22,28 @@ fn unhandled() {
 // Registered interrupt handlers.
 export var interrupt_handlers = []fn() { unhandled } ** 48;
 
+////
 // Register an interrupt handler.
+//
+// Arguments:
+//     n: Index of the interrupt.
+//     handler: Interrupt handler.
+//
 pub fn register(n: u8, handler: fn()) {
     interrupt_handlers[n] = handler;
 }
 
+////
 // Remap the PICs so that IRQs don't override software interrupts.
-fn remapPIC(offset_pic1: u8, offset_pic2: u8) {
+//
+fn remapPIC() {
     // ICW1: start initialization sequence.
     x86.outb(PIC1_CMD, ICW1_INIT | ICW1_ICW4);
     x86.outb(PIC2_CMD, ICW1_INIT | ICW1_ICW4);
 
     // ICW2: Interrupt Vector offsets of IRQs.
-    x86.outb(PIC1_DATA, offset_pic1);  // IRQ 0..7
-    x86.outb(PIC2_DATA, offset_pic2);  // IRQ 8..15
+    x86.outb(PIC1_DATA, 32);  // IRQ 0..7  -> Interrupt 32..39
+    x86.outb(PIC2_DATA, 40);  // IRQ 8..15 -> Interrupt 40..47
 
     // ICW3: IRQ line 2 to connect master to slave PIC.
     x86.outb(PIC1_DATA, 1 << 2);
@@ -48,8 +58,10 @@ fn remapPIC(offset_pic1: u8, offset_pic2: u8) {
     x86.outb(PIC2_DATA, 0xFF);
 }
 
+////
 // Initialize interrupts.
+//
 pub fn initialize() {
-    remapPIC(32, 40);
+    remapPIC();
     isr.install();
 }

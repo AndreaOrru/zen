@@ -1,9 +1,10 @@
 .type setupPaging, @function
 
+////
 // Enable the paging system.
 //
 // Arguments:
-//     phys_pd:  physical pointer to the page directory.
+//     phys_pd: Physical pointer to the page directory.
 //
 setupPaging:
   mov eax, [esp + 4]  // Fetch the phys_pd parameter.

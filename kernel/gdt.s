@@ -1,9 +1,10 @@
 .type loadGDT, @function
 
+////
 // Load the GDT into the system registers.
 //
 // Arguments:
-//     gdtr:  pointer to the GDTR.
+//     gdtr: Pointer to the GDTR.
 //
 loadGDT:
     mov eax, [esp + 4]  // Fetch the gdtr parameter.

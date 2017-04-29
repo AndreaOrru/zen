@@ -9,12 +9,16 @@ extern var __bss_end: u8;  // End of the kernel (supplied by the linker).
 var stack: &usize = undefined;  // Stack of free physical page.
 var stack_pointer: usize = 0;   // Index into the stack.
 
+////
 // Return the amount of variable elements (in bytes).
+//
 pub fn available() -> usize {
     stack_pointer * x86.PAGE_SIZE
 }
 
+////
 // Request a free physical page and return its address.
+//
 pub fn allocate() -> usize {
     if (available() == 0)
         @panic("out of memory");
@@ -23,13 +27,23 @@ pub fn allocate() -> usize {
     return stack[stack_pointer];
 }
 
+////
 // Free a previously allocated physical page.
+//
+// Arguments:
+//     address: Address of the page to be freed.
+//
 pub fn free(address: usize) {
     stack[stack_pointer] = x86.pageBase(address);
     stack_pointer += 1;
 }
 
+////
 // Scan the memory map to index all available memory.
+//
+// Arguments:
+//     info: Information structure from bootloader.
+//
 pub fn initialize(info: &const MultibootInfo)
 {
     tty.step("Indexing Physical Memory");
