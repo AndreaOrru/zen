@@ -14,6 +14,29 @@ extern fn isr36(); extern fn isr37(); extern fn isr38(); extern fn isr39();
 extern fn isr40(); extern fn isr41(); extern fn isr42(); extern fn isr43();
 extern fn isr44(); extern fn isr45(); extern fn isr46(); extern fn isr47();
 
+// Context saved by Interrupt Service Routines.
+pub const Context = packed struct {
+    regs: [8]u32,  // General purpose registers.
+
+    int_n: u32,    // Number of the interrupt.
+    err: u32,      // Associated error code (or 0).
+
+    // CPU status:
+    eip: u32,
+    cs: u32,
+    eflags: u32,
+    esp: u32,
+    ss: u32,
+};
+
+// Pointer to the current saved context.
+export var context: &volatile Context = undefined;
+
+////
+// Return a pointer to the current saved context.
+//
+pub fn getContext() -> &volatile Context { context }
+
 ////
 // Install the Interrupt Service Routines in the IDT.
 //

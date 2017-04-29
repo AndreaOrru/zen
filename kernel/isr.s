@@ -8,10 +8,14 @@
     isr\n:
         // Push a dummy error code for interrupts that don't have one.
         .if (\n != 8 && !(\n >= 10 && \n <= 14) && \n != 17)
-            push 0
+            push $0
         .endif
-        push \n  // Push the interrupt number.
-        pusha    // Save the register state.
+        push $\n  // Push the interrupt number.
+        pusha     // Save the register state.
+
+        // Save a pointer to the saved context.
+        mov %esp, context
+
         // Call the designed interrupt handler.
         call *(interrupt_handlers + (\n * 4))
 .endmacro

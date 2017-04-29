@@ -6,16 +6,16 @@ const x86 = @import("x86.zig");
 // A single entry in a page table.
 const PageEntry = u32;
 
-// Page mapping flags. Refer to the official Intel manual.
-const PAGE_PRESENT   = (1 << 0);
-const PAGE_WRITE     = (1 << 1);
-const PAGE_USER      = (1 << 2);
-const PAGE_4MB       = (1 << 7);
-const PAGE_GLOBAL    = (1 << 8);
-
 // Page table structures (mapped with the recursive PD trick).
 const PD  = @intToPtr(&PageEntry, 0xFFFFF000);
 const PTs = @intToPtr(&PageEntry, 0xFFC00000);
+
+// Page mapping flags. Refer to the official Intel manual.
+pub const PAGE_PRESENT = (1 << 0);
+pub const PAGE_WRITE   = (1 << 1);
+pub const PAGE_USER    = (1 << 2);
+pub const PAGE_4MB     = (1 << 7);
+pub const PAGE_GLOBAL  = (1 << 8);
 
 // Calculate the PD and PT indexes given a virtual address.
 fn pdIndex(v_addr: usize) -> usize {  v_addr >> 22 }

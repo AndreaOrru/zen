@@ -183,7 +183,7 @@ pub fn alignRight(offset: usize) {
 //     str_len: Length of the string to be centered.
 //
 pub fn alignCenter(str_len: usize) {
-    alignLeft((VGA_WIDTH - strLen) / 2);
+    alignLeft((VGA_WIDTH - str_len) / 2);
 }
 
 ////
