@@ -34,6 +34,38 @@ pub fn register(n: u8, handler: fn()) {
 }
 
 ////
+// Register an IRQ handler.
+//
+// Arguments:
+//     irq: Index of the IRQ.
+//     handler: IRQ handler.
+//
+pub fn registerIRQ(irq: u8, handler: fn()) {
+    register(irq + 32, handler);
+    maskIRQ(irq, false);  // Unmask the IRQ.
+}
+
+////
+// Mask/unmask an IRQ.
+//
+// Arguments:
+//     n: Index of the IRQ.
+//     mask: Whether to mask (true) or unmask (false).
+//
+pub fn maskIRQ(irq: u8, mask: bool) {
+    // Figure out if master or slave PIC owns the IRQ.
+    const port: u16 = if (irq < 8) PIC1_DATA else PIC2_DATA;
+    const old = x86.inb(port);  // Retrieve the current mask.
+
+    // Mask or unmask the interrupt.
+    if (mask) {
+        x86.outb(port, value & ~(1 << (irq % 8)));
+    } else {
+        x86.outb(port, value |  (1 << (irq % 8)));
+    }
+}
+
+////
 // Remap the PICs so that IRQs don't override software interrupts.
 //
 fn remapPIC() {

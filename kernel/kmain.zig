@@ -3,6 +3,7 @@ const gdt = @import("gdt.zig");
 const idt = @import("idt.zig");
 const pmem = @import("pmem.zig");
 const vmem = @import("vmem.zig");
+const timer = @import("timer.zig");
 const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
 const assert = @import("std").debug.assert;
@@ -44,4 +45,5 @@ export fn kmain(magic: u32, info: &const MultibootInfo) {
     idt.initialize();
     pmem.initialize(info);
     vmem.initialize();
+    timer.initialize(50);
 }
