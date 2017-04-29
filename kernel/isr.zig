@@ -16,17 +16,17 @@ extern fn isr44(); extern fn isr45(); extern fn isr46(); extern fn isr47();
 
 // Context saved by Interrupt Service Routines.
 pub const Context = packed struct {
-    regs: [8]u32,  // General purpose registers.
+    registers: [8]u32,  // General purpose registers.
 
-    int_n: u32,    // Number of the interrupt.
-    err: u32,      // Associated error code (or 0).
+    interrupt_n: u32,   // Number of the interrupt.
+    error_code:  u32,   // Associated error code (or 0).
 
     // CPU status:
-    eip: u32,
-    cs: u32,
+    eip:    u32,
+    cs:     u32,
     eflags: u32,
-    esp: u32,
-    ss: u32,
+    esp:    u32,
+    ss:     u32,
 };
 
 // Pointer to the current saved context.

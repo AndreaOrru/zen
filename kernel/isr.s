@@ -11,13 +11,27 @@
             push $0
         .endif
         push $\n  // Push the interrupt number.
-        pusha     // Save the register state.
+        pusha     // Save the registers state.
 
-        // Save a pointer to the saved context.
+        // Keep a pointer to the saved context.
         mov %esp, context
 
         // Call the designed interrupt handler.
         call *(interrupt_handlers + (\n * 4))
+
+        // Only for IRQs: send "End Of Interrupt" signal.
+        .if (\n >= 32 && \n < 48)
+            mov $0x20, %al
+            // Signal the slave PIC as well for IRQs >= 8.
+            .if (\n >= 40)
+                out %al, $0xa0
+            .endif
+            out %al, $0x20
+        .endif
+
+        popa          // Restore the registers state.
+        add $8, %esp  // Remove interrupt number and error code.
+        iret
 .endmacro
 
 // Exceptions.

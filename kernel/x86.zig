@@ -97,3 +97,12 @@ pub inline fn hang() -> noreturn {
     cli();
     hlt();
 }
+
+////
+// Read the CR2 control register.
+//
+pub inline fn readCR2() -> usize {
+    var result: usize = undefined;
+    asm volatile("mov %[result], cr2" : [result] "=r" (result));
+    return result;
+}

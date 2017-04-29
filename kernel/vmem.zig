@@ -1,4 +1,5 @@
 const interrupt = @import("interrupt.zig");
+const isr = @import("isr.zig");
 const pmem = @import("pmem.zig");
 const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
@@ -82,15 +83,15 @@ extern fn setupPaging(phys_pd: usize);
 // Handler for page faults interrupts.
 fn pageFault() {
     // Get the faulting address from the CR2 register.
-    var address: u32 = undefined;
-    asm volatile("mov %[address], cr2" : [address] "=r" (address));
+    const address = x86.readCR2();
+    // Get the error code from the interrupt stack.
+    const code = isr.getContext().error_code;
 
-    // TODO: get the error flags from the stack.
-    const err       = "non-present";
-    const operation = "write";
-    const privilege = "kernel";
+    const err       = if (code & PAGE_PRESENT != 0) "protection" else "non-present";
+    const operation = if (code & PAGE_WRITE   != 0) "write"      else "read";
+    const privilege = if (code & PAGE_USER    != 0) "user"       else "kernel";
 
-    // Issue a kernel panic with details about the error.
+    // Trigger a kernel panic with details about the error.
     tty.panic(
         \\page fault
         \\  address:    0x{X}

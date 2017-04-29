@@ -16,7 +16,7 @@ const ICW4_8086 = 0x01;
 // Default interrupt handler.
 //
 fn unhandled() {
-    @panic("unhandled");
+    @panic("unhandled interrupt");
 }
 
 // Registered interrupt handlers.
