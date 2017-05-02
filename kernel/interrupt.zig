@@ -54,14 +54,14 @@ pub fn registerIRQ(irq: u8, handler: fn()) {
 //
 pub fn maskIRQ(irq: u8, mask: bool) {
     // Figure out if master or slave PIC owns the IRQ.
-    const port: u16 = if (irq < 8) PIC1_DATA else PIC2_DATA;
+    const port = if (irq < 8) u16(PIC1_DATA) else u16(PIC2_DATA);
     const old = x86.inb(port);  // Retrieve the current mask.
 
     // Mask or unmask the interrupt.
     if (mask) {
-        x86.outb(port, value & ~(1 << (irq % 8)));
+        x86.outb(port, old |  (1 << (irq % 8)));
     } else {
-        x86.outb(port, value |  (1 << (irq % 8)));
+        x86.outb(port, old & ~(1 << (irq % 8)));
     }
 }
 

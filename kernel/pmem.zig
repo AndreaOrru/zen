@@ -7,13 +7,17 @@ const Color = tty.Color;
 extern var __bss_end: u8;  // End of the kernel (supplied by the linker).
 
 var stack: &usize = undefined;  // Stack of free physical page.
-var stack_pointer: usize = 0;   // Index into the stack.
+var stack_index: usize = 0;     // Index into the stack.
+
+// Boundaries of the frame stack.
+pub var stack_size: usize = undefined;
+pub var stack_end:  usize = undefined;
 
 ////
 // Return the amount of variable elements (in bytes).
 //
 pub fn available() -> usize {
-    stack_pointer * x86.PAGE_SIZE
+    stack_index * x86.PAGE_SIZE
 }
 
 ////
@@ -23,8 +27,8 @@ pub fn allocate() -> usize {
     if (available() == 0)
         @panic("out of memory");
 
-    stack_pointer -= 1;
-    return stack[stack_pointer];
+    stack_index -= 1;
+    return stack[stack_index];
 }
 
 ////
@@ -34,8 +38,8 @@ pub fn allocate() -> usize {
 //     address: Address of the page to be freed.
 //
 pub fn free(address: usize) {
-    stack[stack_pointer] = x86.pageBase(address);
-    stack_pointer += 1;
+    stack[stack_index] = x86.pageBase(address);
+    stack_index += 1;
 }
 
 ////
@@ -44,8 +48,7 @@ pub fn free(address: usize) {
 // Arguments:
 //     info: Information structure from bootloader.
 //
-pub fn initialize(info: &const MultibootInfo)
-{
+pub fn initialize(info: &const MultibootInfo) {
     tty.step("Indexing Physical Memory");
 
     // Ensure the bootloader has given us the memory map.
@@ -55,8 +58,8 @@ pub fn initialize(info: &const MultibootInfo)
     // Place the stack of free pages after the end of the kernel.
     stack = @ptrCast(&usize, x86.pageAlign(&__bss_end));
     // Calculate the approximate size of the stack based on the amount of total upper memory.
-    const stack_size: usize = ((info.mem_upper * 1024) / x86.PAGE_SIZE) * @sizeOf(usize);
-    const stack_end:  usize = x86.pageAlign(usize(stack) + stack_size);
+    stack_size = ((info.mem_upper * 1024) / x86.PAGE_SIZE) * @sizeOf(usize);
+    stack_end  = x86.pageAlign(usize(stack) + stack_size);
 
     var map: usize = info.mmap_addr;
     while (map < info.mmap_addr + info.mmap_length) {
@@ -78,6 +81,5 @@ pub fn initialize(info: &const MultibootInfo)
     }
 
     tty.colorPrintf(Color.White, " {d} MB", available() / (1024 * 1024));
-
     tty.stepOK();
 }

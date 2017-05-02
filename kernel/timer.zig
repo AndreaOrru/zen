@@ -39,6 +39,6 @@ pub fn initialize(hz: u32) {
 ////
 // Register an handler for the timer.
 //
-pub fn register(handler: fn()) {
+pub fn registerHandler(handler: fn()) {
     interrupt.registerIRQ(0, handler);
 }

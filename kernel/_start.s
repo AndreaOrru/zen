@@ -10,4 +10,6 @@ _start:
     push %eax   // Pass multiboot magic code.
     call kmain  // Call the kernel.
 
-    hlt  // Halt the CPU.
+    // Halt the CPU.
+    cli
+    hlt

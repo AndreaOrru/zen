@@ -35,7 +35,7 @@ export var context: &volatile Context = undefined;
 ////
 // Return a pointer to the current saved context.
 //
-pub fn getContext() -> &volatile Context { context }
+pub inline fn getContext() -> &volatile Context { context }
 
 ////
 // Install the Interrupt Service Routines in the IDT.

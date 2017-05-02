@@ -83,7 +83,7 @@ pub inline fn hang() -> noreturn {
 //     idtr: Address of the IDTR register.
 //
 pub inline fn lidt(idtr: usize) {
-    asm volatile ("lidt %[idtr]" : : [idtr] "m" (idtr));
+    asm volatile ("lidt (%[idtr])" : : [idtr] "r" (idtr));
 }
 
 ////
@@ -106,13 +106,29 @@ pub inline fn readCR2() -> usize {
 }
 
 ////
+// Read a byte from a port.
+//
+// Arguments:
+//     port: Port from where to read.
+//
+// Returns:
+//     The read byte.
+//
+pub inline fn inb(port: u16) -> u8 {
+    var result: u8 = undefined;
+    asm volatile ("inb %[port], %[result]" : [result] "={al}" (result)
+                                           : [port]   "N{dx}" (port));
+    return result;
+}
+
+////
 // Write a byte on a port.
 //
 // Arguments:
 //     port: Port where to write the value.
 //     value: Value to be written.
 //
-pub inline fn outb(comptime port: u16, value: u8) {
+pub inline fn outb(port: u16, value: u8) {
     asm volatile ("outb %[value], %[port]" : : [value] "{al}" (value),
                                                [port]  "N{dx}" (port));
 }

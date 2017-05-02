@@ -111,8 +111,9 @@ pub fn initialize() {
     const phys_pd = @intToPtr(&PageEntry, pmem.allocate());
     @memset(@ptrCast(&u8, phys_pd), 0, x86.PAGE_SIZE);
 
-    // Identity map the kernel (first 4 MB of data) and point last entry of PD to the PD itself.
+    // Identity map the kernel (first 8 MB of data) and point last entry of PD to the PD itself.
     phys_pd[0]    = 0x000000       | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL;
+    phys_pd[1]    = 0x400000       | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL;
     phys_pd[1023] = usize(phys_pd) | PAGE_PRESENT | PAGE_WRITE;
     // The recursive PD trick allows us to automagically map the paging hierarchy in every address space.
 
