@@ -10,10 +10,10 @@ zig build
 You can run and debug the kernel straight away with Qemu:
 ```
 # Run the kernel inside the emulator.
-./qemu.sh
+zig build qemu
 
 # Wait for a GDB connection first (for debugging).
-./qemu.sh -g
+zig build qemu-debug
 gdb
 ```
 
