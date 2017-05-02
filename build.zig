@@ -3,6 +3,8 @@ const builtin = @import("builtin");
 
 pub fn build(b: &Builder) {
     const kernel = b.addExecutable("zen", "kernel/kmain.zig");
+    kernel.setOutputPath("zen");
+
     kernel.addAssemblyFile("kernel/_start.s");
     kernel.addAssemblyFile("kernel/gdt.s");
     kernel.addAssemblyFile("kernel/isr.s");

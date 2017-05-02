@@ -46,21 +46,11 @@ pub fn pageAlign(address: var) -> @typeOf(address) {
 }
 
 ////
-// Invalidate the TLB entry associated with the given virtual address.
-//
-// Arguments:
-//     v_addr: Virtual address to invalidate.
-//
-pub inline fn invlpg(v_addr: usize) {
-    asm volatile("invlpg [%[v_addr]]" : : [v_addr] "r" (v_addr));
-}
-
-////
 // Halt the CPU.
 //
 pub inline fn hlt() -> noreturn {
     while (true) {
-        asm volatile("hlt");
+        asm volatile ("hlt");
     }
 }
 
@@ -68,26 +58,14 @@ pub inline fn hlt() -> noreturn {
 // Disable interrupts.
 //
 pub inline fn cli() {
-    asm volatile("cli");
+    asm volatile ("cli");
 }
 
 ////
 // Enable interrupts.
 //
 pub inline fn sti() {
-    asm volatile("sti");
-}
-
-////
-// Write a byte on a port.
-//
-// Arguments:
-//     port: Port where to write the value.
-//     value: Value to be written.
-//
-pub inline fn outb(comptime port: u16, value: u8) {
-    asm volatile("out %[port], %[value]" : : [port]  "N{dx}" (port),
-                                             [value] "{al}" (value));
+    asm volatile ("sti");
 }
 
 ////
@@ -99,10 +77,42 @@ pub inline fn hang() -> noreturn {
 }
 
 ////
+// Load a new Interrupt Descriptor Table.
+//
+// Arguments:
+//     idtr: Address of the IDTR register.
+//
+pub inline fn lidt(idtr: usize) {
+    asm volatile ("lidt %[idtr]" : : [idtr] "m" (idtr));
+}
+
+////
+// Invalidate the TLB entry associated with the given virtual address.
+//
+// Arguments:
+//     v_addr: Virtual address to invalidate.
+//
+pub inline fn invlpg(v_addr: usize) {
+    asm volatile ("invlpg (%[v_addr])" : : [v_addr] "r" (v_addr) : "memory");
+}
+
+////
 // Read the CR2 control register.
 //
 pub inline fn readCR2() -> usize {
     var result: usize = undefined;
-    asm volatile("mov %[result], cr2" : [result] "=r" (result));
+    asm volatile ("mov %%cr2, %[result]" : [result] "=r" (result));
     return result;
+}
+
+////
+// Write a byte on a port.
+//
+// Arguments:
+//     port: Port where to write the value.
+//     value: Value to be written.
+//
+pub inline fn outb(comptime port: u16, value: u8) {
+    asm volatile ("outb %[value], %[port]" : : [value] "{al}" (value),
+                                               [port]  "N{dx}" (port));
 }

@@ -1,5 +1,3 @@
-.att_syntax
-
 // Template for the Interrupt Service Routines.
 .macro isrGenerate n
     .align 4

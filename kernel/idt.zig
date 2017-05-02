@@ -1,6 +1,7 @@
 const gdt = @import("gdt.zig");
 const interrupt = @import("interrupt.zig");
 const tty = @import("tty.zig");
+const x86 = @import("x86.zig");
 
 // Types of gates.
 pub const INTERRUPT_GATE = 0x8E;
@@ -48,20 +49,13 @@ pub fn setGate(n: u8, flags: u8, offset: extern fn()) {
 }
 
 ////
-// Load the IDT structure in the system registers.
-//
-inline fn load() {
-    asm volatile("lidt $[idtr]" : : [idtr] "r" (&idtr));
-}
-
-////
 // Initialize the IDT.
 //
 pub fn initialize() {
     tty.step("Setting up the Interrupt Descriptor Table");
 
     interrupt.initialize();
-    load();
+    x86.lidt(usize(&idtr));
 
     tty.stepOK();
 }
