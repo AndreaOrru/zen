@@ -6,6 +6,7 @@ pub fn build(b: &Builder) {
     // Default step.
     //
     const kernel = b.addExecutable("zen", "kernel/kmain.zig");
+    kernel.setBuildMode(b.standardReleaseOptions());
     kernel.setOutputPath("zen");
 
     kernel.addAssemblyFile("kernel/_start.s");
@@ -19,7 +20,7 @@ pub fn build(b: &Builder) {
     b.default_step.dependOn(&kernel.step);
 
     ////
-    // Test or debug on Qemu.
+    // Test and debug on Qemu.
     //
     const qemu       = b.step("qemu",       "Run the kernel with qemu");
     const qemu_debug = b.step("qemu-debug", "Run the kernel with qemu and wait for debugger to attach");
