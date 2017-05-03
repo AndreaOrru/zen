@@ -11,11 +11,12 @@
         push $\n  // Push the interrupt number.
         pusha     // Save the registers state.
 
-        // Keep a pointer to the saved context.
-        mov %esp, context
+        mov %esp, context  // Save context pointer.
 
         // Call the designed interrupt handler.
         call *(interrupt_handlers + (\n * 4))
+
+        mov context, %esp  // Restore context pointer (potentially different).
 
         // Only for IRQs: send "End Of Interrupt" signal.
         .if (\n >= 32 && \n < 48)

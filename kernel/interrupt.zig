@@ -1,4 +1,5 @@
 const isr = @import("isr.zig");
+const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
 
 // PIC ports.
@@ -16,15 +17,15 @@ const ICW4_8086 = 0x01;
 // Default interrupt handler.
 //
 fn unhandled() {
-    @panic("unhandled interrupt");
+    const n = isr.context.interrupt_n;
+    tty.panic("unhandled interrupt number {d}", n);
 }
 
 // Registered interrupt handlers.
 export var interrupt_handlers = []fn() { unhandled } ** 48;
 
 ////
-// Register an interrupt handler.
-//
+// Register an interrupt handler. //
 // Arguments:
 //     n: Index of the interrupt.
 //     handler: Interrupt handler.

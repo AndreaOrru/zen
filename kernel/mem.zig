@@ -30,7 +30,7 @@ fn realloc(self: &mem.Allocator, old_mem: []u8, new_size: usize) -> %[]u8 {
 fn free(self: &mem.Allocator, old_mem: []u8) {}
 
 pub fn initialize(address: usize, capacity: usize) {
-    tty.step("Initializing the Kernel Allocator");
+    tty.step("Initializing Dynamic Memory Allocation");
 
     bytes = @intToPtr(&u8, address)[0...capacity];
 

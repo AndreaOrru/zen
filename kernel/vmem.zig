@@ -85,7 +85,7 @@ fn pageFault() {
     // Get the faulting address from the CR2 register.
     const address = x86.readCR2();
     // Get the error code from the interrupt stack.
-    const code = isr.getContext().error_code;
+    const code = isr.context.error_code;
 
     const err       = if (code & PAGE_PRESENT != 0) "protection" else "non-present";
     const operation = if (code & PAGE_WRITE   != 0) "write"      else "read";
