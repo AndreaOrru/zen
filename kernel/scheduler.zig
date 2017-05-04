@@ -2,7 +2,7 @@ const mem = @import("mem.zig");
 const timer = @import("timer.zig");
 const tty = @import("tty.zig");
 const Thread = @import("thread.zig").Thread;
-const List = @import("std").linked_list.LinkedList;
+const List = @import("std").LinkedList;
 
 var ready_queue: List(Thread) = undefined;
 
