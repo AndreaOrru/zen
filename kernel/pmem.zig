@@ -73,7 +73,7 @@ pub fn initialize(info: &const MultibootInfo) {
 
         // Flag all the pages in this memory area as free.
         if (entry.type == MULTIBOOT_MEMORY_AVAILABLE)
-            while (start < end; start += x86.PAGE_SIZE)
+            while (start < end) : (start += x86.PAGE_SIZE)
                 free(start);
 
         // Go to the next entry in the memory map.
