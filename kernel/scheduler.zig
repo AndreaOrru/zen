@@ -7,7 +7,9 @@ const List = @import("std").linked_list.LinkedList;
 var ready_queue: List(Thread) = undefined;
 
 fn schedule() {
-    tty.printf("\nSchedule!");
+    if (ready_queue.len == 0) {
+        tty.panic("no threads to schedule");
+    }
 }
 
 pub fn initialize() {

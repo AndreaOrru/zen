@@ -25,7 +25,7 @@ pub fn available() -> usize {
 //
 pub fn allocate() -> usize {
     if (available() == 0)
-        @panic("out of memory");
+        tty.panic("out of memory");
 
     stack_index -= 1;
     return stack[stack_index];

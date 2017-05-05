@@ -21,7 +21,7 @@ pub fn panic(message: []const u8) -> noreturn {
     tty.writeChar('\n');
 
     tty.setBackground(Color.Red);
-    tty.colorPrintf(Color.White, "KERNEL PANIC: {}", message);
+    tty.colorPrintf(Color.White, "KERNEL PANIC: {}\n", message);
 
     x86.hang();
 }
