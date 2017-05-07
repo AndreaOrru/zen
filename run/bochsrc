@@ -1,2 +1,3 @@
 ata0-master: type=cdrom, path=run/zen.iso, status=inserted
 boot: cdrom
+magic_break: enabled=1

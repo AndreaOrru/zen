@@ -87,6 +87,16 @@ pub inline fn lidt(idtr: usize) {
 }
 
 ////
+// Load a new Task Register.
+//
+// Arguments:
+//     desc: Segment selector of the TSS.
+//
+pub inline fn ltr(desc: u16) {
+    asm volatile ("ltr %[desc]" : : [desc] "r" (desc));
+}
+
+////
 // Invalidate the TLB entry associated with the given virtual address.
 //
 // Arguments:

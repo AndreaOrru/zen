@@ -49,7 +49,7 @@ pub fn setGate(n: u8, flags: u8, offset: extern fn()) {
 }
 
 ////
-// Initialize the IDT.
+// Initialize the Interrupt Descriptor Table.
 //
 pub fn initialize() {
     tty.step("Setting up the Interrupt Descriptor Table");

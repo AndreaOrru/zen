@@ -5,6 +5,7 @@ const scheduler = @import("scheduler.zig");
 const mem = @import("mem.zig");
 const pmem = @import("pmem.zig");
 const vmem = @import("vmem.zig");
+const thread = @import("thread.zig");
 const timer = @import("timer.zig");
 const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
@@ -51,6 +52,42 @@ export fn kmain(magic: u32, info: &const MultibootInfo) -> noreturn {
     timer.initialize(50);
     scheduler.initialize();
 
+    thread.create(usize(thread1));
+    thread.create(usize(thread2));
+    thread.create(usize(thread3));
+
     x86.sti();
     x86.hlt();
+}
+
+fn loseSomeTime() {
+    var i: u32 = 0;
+    while (i < 100000) : (i += 1) {}
+}
+
+fn thread1() {
+    var i: u32 = 0;
+    while (i < 1000) : (i += 1) {
+        tty.writeChar('A');
+        loseSomeTime();
+    }
+    while (true) {}
+}
+
+fn thread2() {
+    var i: u32 = 0;
+    while (i < 1000) : (i += 1) {
+        tty.writeChar('B');
+        loseSomeTime();
+    }
+    while (true) {}
+}
+
+fn thread3() {
+    var i: u32 = 0;
+    while (i < 1000) : (i += 1) {
+        tty.writeChar('C');
+        loseSomeTime();
+    }
+    while (true) {}
 }

@@ -11,12 +11,19 @@
         push $\n  // Push the interrupt number.
         pusha     // Save the registers state.
 
-        mov %esp, context  // Save context pointer.
+        // Enforce kernel data segment.
+        mov $0x10, %bp
+        mov %bp, %ds
+        mov %bp, %es
+
+        mov $0x80000, %esp  // Switch to global kernel stack.
 
         // Call the designed interrupt handler.
         call *(interrupt_handlers + (\n * 4))
 
-        mov context, %esp  // Restore context pointer (potentially different).
+      	// NOTE: From here on, assume we have interrupted user mode.
+        // The kernel can only be interrupted by non-recoverable exceptions,
+        // and the following code will be unreachable in that case.
 
         // Only for IRQs: send "End Of Interrupt" signal.
         .if (\n >= 32 && \n < 48)
@@ -28,8 +35,15 @@
             out %al, $0x20
         .endif
 
+        mov context, %esp  // Get thread state (any thread, potentially).
+
+        // Enforce user data segment.
+        mov $0x23, %bp
+        mov %bp, %ds
+        mov %bp, %es
+
         popa          // Restore the registers state.
-        add $8, %esp  // Remove interrupt number and error code.
+        add $8, %esp  // Remove interrupt number and error code from stack.
         iret
 .endmacro
 
