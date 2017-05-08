@@ -87,7 +87,7 @@ var gdt = []GDTEntry {
 // GDT descriptor register pointing at the GDT.
 var gdtr = GDTRegister {
     .limit = u16(@sizeOf(@typeOf(gdt))),
-    .base  = undefined,  // Fill in at runtime.
+    .base  = &gdt[0],
 };
 
 // Instance of the Task State Segment.
@@ -125,7 +125,6 @@ pub fn initialize() {
     tty.step("Setting up the Global Descriptor Table");
 
     // Initialize GDT.
-    gdtr.base = &gdt[0];
     loadGDT(&gdtr);
 
     // Initialize TSS.
