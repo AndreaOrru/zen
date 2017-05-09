@@ -4,3 +4,6 @@
 
 /run/zen.iso
 /run/iso/boot/zen
+/run/iso/daemons/*
+
+!.gitkeep

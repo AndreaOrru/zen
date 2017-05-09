@@ -147,9 +147,9 @@ pub fn writeChar(char: u8) {
         },
         // Any other character:
         else => {
-            vram[cursor] = (VGAEntry) { .char       = char,
-                                        .background = background,
-                                        .foreground = foreground, };
+            vram[cursor] = VGAEntry { .char       = char,
+                                      .background = background,
+                                      .foreground = foreground, };
             cursor += 1;
         },
     }

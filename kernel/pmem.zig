@@ -4,8 +4,6 @@ const x86 = @import("x86.zig");
 const assert = @import("std").debug.assert;
 const Color = tty.Color;
 
-extern var __bss_end: u8;  // End of the kernel (supplied by the linker).
-
 var stack: &usize = undefined;  // Stack of free physical page.
 var stack_index: usize = 0;     // Index into the stack.
 
@@ -55,8 +53,8 @@ pub fn initialize(info: &const MultibootInfo) {
     assert((info.flags & MULTIBOOT_INFO_MEMORY)  != 0);
     assert((info.flags & MULTIBOOT_INFO_MEM_MAP) != 0);
 
-    // Place the stack of free pages after the end of the kernel.
-    stack = @ptrCast(&usize, x86.pageAlign(&__bss_end));
+    // Place the stack of free pages after the last Multiboot module.
+    stack = @intToPtr(&usize, x86.pageAlign(info.lastModuleEnd()));
     // Calculate the approximate size of the stack based on the amount of total upper memory.
     stack_size = ((info.mem_upper * 1024) / x86.PAGE_SIZE) * @sizeOf(usize);
     stack_end  = x86.pageAlign(usize(stack) + stack_size);

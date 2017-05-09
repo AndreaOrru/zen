@@ -1,10 +1,9 @@
-ENTRY(_start)
+ENTRY(main)
 
 SECTIONS {
-    . = 0x100000;
+    . = 0x10000000;
 
     .text : ALIGN(4K) {
-        KEEP(*(.multiboot))
         *(.text)
     }
 

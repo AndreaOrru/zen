@@ -12,7 +12,6 @@ const LSB_THEN_MSB    = (0b11  << 4);
 // Operating frequency of the PIT.
 const PIT_FREQUENCY = 1193182;
 
-
 ////
 // Initialize the system timer.
 //

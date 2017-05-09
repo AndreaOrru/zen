@@ -1,4 +1,8 @@
 use @import("types.zig");
+const elf = @import("elf.zig");
+const thread = @import("thread.zig");
+const tty = @import("tty.zig");
+const cstr = @import("std").cstr;
 
 // This should be in EAX.
 pub const MULTIBOOT_BOOTLOADER_MAGIC = 0x2BADB002;
@@ -10,6 +14,8 @@ pub const MULTIBOOT_INFO_MEM_MAP     = 0x00000040;
 
 // System information structure passed by the bootloader.
 pub const MultibootInfo = packed struct {
+    const Self = this;
+
     // Multiboot info version number.
     flags: u32,
 
@@ -25,18 +31,18 @@ pub const MultibootInfo = packed struct {
 
     // Boot-Module list.
     mods_count: u32,
-    mods_addr: u32,
+    mods_addr:  u32,
 
     // TODO: use the real types here.
     u: u128,
 
     // Memory Mapping buffer.
     mmap_length: u32,
-    mmap_addr: u32,
+    mmap_addr:   u32,
 
     // Drive Info buffer.
     drives_length: u32,
-    drives_addr: u32,
+    drives_addr:   u32,
 
     // ROM configuration table.
     config_table: u32,
@@ -48,12 +54,39 @@ pub const MultibootInfo = packed struct {
     apm_table: u32,
 
     // Video.
-    vbe_control_info: u32,
-    vbe_mode_info: u32,
-    vbe_mode: u16,
+    vbe_control_info:  u32,
+    vbe_mode_info:     u32,
+    vbe_mode:          u16,
     vbe_interface_seg: u16,
     vbe_interface_off: u16,
     vbe_interface_len: u16,
+
+    ////
+    // Return the ending address of the last module.
+    //
+    pub fn lastModuleEnd(self: &const Self) -> usize {
+        const mods = @intToPtr(&MultibootModule, self.mods_addr);
+        return mods[self.mods_count - 1].mod_end;
+    }
+
+    ////
+    // Load all the modules passed by the bootloader.
+    //
+    pub fn loadModules(self: &const Self) {
+        const mods = @intToPtr(&MultibootModule, self.mods_addr)[0...self.mods_count];
+
+        for (mods) |mod| {
+            const cmdline = cstr.toSlice(@intToPtr(&u8, mod.cmdline));
+            tty.step("Loading \"{}\"", cmdline);
+
+            const entry = elf.load(mod.mod_start);
+            thread.create(entry);
+            // TODO: create a process.
+            // TODO: deallocate the original memory.
+
+            tty.stepOK();
+        }
+    }
 };
 
 // Types of memory map entries.
@@ -68,12 +101,22 @@ pub const MultibootMMapEntry = packed struct {
     type: u32,
 };
 
+pub const MultibootModule = packed struct {
+    // The memory used goes from bytes 'mod_start' to 'mod_end-1' inclusive.
+    mod_start: u32,
+    mod_end:   u32,
+
+    cmdline:   u32,  // Module command line.
+    pad:       u32,  // Padding to take it to 16 bytes (must be zero).
+};
+
 // Multiboot structure to be read by the bootloader.
 const MultibootHeader = packed struct {
-    magic:    usize,  // Must be equal to header magic number.
-    flags:    usize,  // Feature flags.
-    checksum: usize,  // Above fields plus this one must equal 0 mod 2^32.
+    magic:    u32,  // Must be equal to header magic number.
+    flags:    u32,  // Feature flags.
+    checksum: u32,  // Above fields plus this one must equal 0 mod 2^32.
 };
+// NOTE: this structure is incomplete.
 
 // Place the header at the very beginning of the binary.
 comptime {
@@ -81,10 +124,10 @@ comptime {
     @setGlobalAlign(multiboot_header, 4);
 }
 export const multiboot_header = {
-    const MAGIC   = usize(0x1BADB002);  // Magic number for validation.
-    const ALIGN   = usize(1 << 0);      // Align loaded modules.
-    const MEMINFO = usize(1 << 1);      // Receive a memory map from the bootloader.
-    const FLAGS   = ALIGN | MEMINFO;    // Combine the flags.
+    const MAGIC   = u32(0x1BADB002);  // Magic number for validation.
+    const ALIGN   = u32(1 << 0);      // Align loaded modules.
+    const MEMINFO = u32(1 << 1);      // Receive a memory map from the bootloader.
+    const FLAGS   = ALIGN | MEMINFO;  // Combine the flags.
 
     MultibootHeader {
         .magic    = MAGIC,

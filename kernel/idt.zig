@@ -18,7 +18,7 @@ const IDTEntry = packed struct {
 // IDT descriptor register.
 const IDTRegister = packed struct {
     limit: u16,
-    base: &[256]IDTEntry,
+    base:  &[256]IDTEntry,
 };
 
 // Interrupt Descriptor Table.

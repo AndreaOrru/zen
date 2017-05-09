@@ -47,8 +47,8 @@ const GDTRegister = packed struct {
 // Task State Segment.
 const TSS = packed struct {
     unused1: u32,
-    esp0:    usize,    // Stack to use when coming to ring 0 from ring > 0.
-    ss0:     usize,    // Segment to use when coming to ring 0 from ring > 0.
+    esp0:    u32,      // Stack to use when coming to ring 0 from ring > 0.
+    ss0:     u32,      // Segment to use when coming to ring 0 from ring > 0.
     unused2: [22]u32,
     unused3: u16,
     iomap_base: u16,   // Base of the IO bitmap.

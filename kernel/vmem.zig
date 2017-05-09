@@ -36,7 +36,7 @@ fn ptEntry(v_addr: usize) -> &PageEntry {
 //     p_addr: Physical address to map the page to.
 //     flags: Paging flags (protection etc.).
 //
-pub fn map(v_addr: usize, p_addr: usize, flags: u32) {
+pub fn map(v_addr: usize, p_addr: ?usize, flags: u32) {
     const pd_entry = pdEntry(v_addr);
     const pt_entry = ptEntry(v_addr);
 
@@ -51,8 +51,14 @@ pub fn map(v_addr: usize, p_addr: usize, flags: u32) {
         @memset(@ptrCast(&u8, x86.pageBase(pt_entry)), 0, x86.PAGE_SIZE);
     }
 
-    // Point the Page Table entry to the physical page.
-    *pt_entry = x86.pageBase(p_addr) | flags | PAGE_PRESENT;
+    if (p_addr) |p| {
+        // Point the Page Table entry to the specified physical page.
+        *pt_entry = x86.pageBase(p) | flags | PAGE_PRESENT;
+    } else {
+        // Allocate a new physical page.
+        *pt_entry = pmem.allocate() | flags | PAGE_PRESENT;
+    }
+
     x86.invlpg(v_addr);
 }
 
@@ -70,6 +76,8 @@ pub fn unmap(v_addr: usize) {
     *pt_entry = 0;
 
     x86.invlpg(v_addr);
+
+    // TODO: handle deallocation of allocated physical pages.
 }
 
 ////
@@ -111,8 +119,10 @@ pub fn initialize() {
     const phys_pd = @intToPtr(&PageEntry, pmem.allocate());
     @memset(@ptrCast(&u8, phys_pd), 0, x86.PAGE_SIZE);
 
+    // NOTE: we are assuming (0x100000 + kernel + modules + pmem stack + heap) < 0x800000.
+
     // Identity map the kernel (first 8 MB of data) and point last entry of PD to the PD itself.
-    phys_pd[0]    = 0x000000       | PAGE_PRESENT | PAGE_WRITE | PAGE_USER | PAGE_4MB | PAGE_GLOBAL;  // NOTE: PAGE_USER is super temporary!
+    phys_pd[0]    = 0x000000       | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL;
     phys_pd[1]    = 0x400000       | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL;
     phys_pd[1023] = usize(phys_pd) | PAGE_PRESENT | PAGE_WRITE;
     // The recursive PD trick allows us to automagically map the paging hierarchy in every address space.
