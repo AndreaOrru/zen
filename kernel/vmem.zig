@@ -5,18 +5,19 @@ const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
 
 // A single entry in a page table.
-const PageEntry = u32;
+const PageEntry = usize;
 
 // Page table structures (mapped with the recursive PD trick).
 const PD  = @intToPtr(&PageEntry, 0xFFFFF000);
 const PTs = @intToPtr(&PageEntry, 0xFFC00000);
 
 // Page mapping flags. Refer to the official Intel manual.
-pub const PAGE_PRESENT = (1 << 0);
-pub const PAGE_WRITE   = (1 << 1);
-pub const PAGE_USER    = (1 << 2);
-pub const PAGE_4MB     = (1 << 7);
-pub const PAGE_GLOBAL  = (1 << 8);
+pub const PAGE_PRESENT   = (1 << 0);
+pub const PAGE_WRITE     = (1 << 1);
+pub const PAGE_USER      = (1 << 2);
+pub const PAGE_4MB       = (1 << 7);
+pub const PAGE_GLOBAL    = (1 << 8);
+pub const PAGE_ALLOCATED = (1 << 9);
 
 // Calculate the PD and PT indexes given a virtual address.
 fn pdIndex(v_addr: usize) -> usize {  v_addr >> 22 }
@@ -43,7 +44,7 @@ pub fn map(v_addr: usize, p_addr: ?usize, flags: u32) {
     // If the relevant Page Directory entry is empty, we need a new Page Table.
     if (*pd_entry == 0) {
         // Allocate the new Page Table and point the Page Directory entry to it.
-        // Permissive flags are set in the PD, restrictions are set in the PT entry.
+        // Permissive flags are set in the PD, as restrictions are set in the PT entry.
         *pd_entry = pmem.allocate() | flags | PAGE_PRESENT | PAGE_WRITE | PAGE_USER;
         x86.invlpg(usize(pt_entry));
 
@@ -52,11 +53,19 @@ pub fn map(v_addr: usize, p_addr: ?usize, flags: u32) {
     }
 
     if (p_addr) |p| {
+        // If the currently mapped physical page was allocated, free it.
+        if (*pt_entry & PAGE_ALLOCATED != 0) pmem.free(*pt_entry);
+
         // Point the Page Table entry to the specified physical page.
         *pt_entry = x86.pageBase(p) | flags | PAGE_PRESENT;
     } else {
-        // Allocate a new physical page.
-        *pt_entry = pmem.allocate() | flags | PAGE_PRESENT;
+        if (*pt_entry & PAGE_ALLOCATED != 0) {
+            // Reuse the existing allocated page.
+            *pt_entry = x86.pageBase(*pt_entry) | flags | PAGE_PRESENT | PAGE_ALLOCATED;
+        } else {
+            // Allocate a new physical page.
+            *pt_entry = pmem.allocate()         | flags | PAGE_PRESENT | PAGE_ALLOCATED;
+        }
     }
 
     x86.invlpg(v_addr);
@@ -71,13 +80,13 @@ pub fn map(v_addr: usize, p_addr: ?usize, flags: u32) {
 pub fn unmap(v_addr: usize) {
     const pd_entry = pdEntry(v_addr);
     if (*pd_entry == 0) return;
-
     const pt_entry = ptEntry(v_addr);
+
+    // Deallocate the physical page if it was allocated during mapping.
+    if (*py_entry & PAGE_ALLOCATED != 0) pmem.free(*pt_entry);
+
     *pt_entry = 0;
-
     x86.invlpg(v_addr);
-
-    // TODO: handle deallocation of allocated physical pages.
 }
 
 ////
