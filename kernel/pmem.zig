@@ -7,10 +7,6 @@ const Color = tty.Color;
 var stack: &usize = undefined;  // Stack of free physical page.
 var stack_index: usize = 0;     // Index into the stack.
 
-// Boundaries of the frame stack.
-pub var stack_size: usize = undefined;
-pub var stack_end:  usize = undefined;
-
 ////
 // Return the amount of variable elements (in bytes).
 //
@@ -56,8 +52,8 @@ pub fn initialize(info: &const MultibootInfo) {
     // Place the stack of free pages after the last Multiboot module.
     stack = @intToPtr(&usize, x86.pageAlign(info.lastModuleEnd()));
     // Calculate the approximate size of the stack based on the amount of total upper memory.
-    stack_size = ((info.mem_upper * 1024) / x86.PAGE_SIZE) * @sizeOf(usize);
-    stack_end  = x86.pageAlign(usize(stack) + stack_size);
+    const stack_size = ((info.mem_upper * 1024) / x86.PAGE_SIZE) * @sizeOf(usize);
+    const stack_end  = x86.pageAlign(usize(stack) + stack_size);
 
     var map: usize = info.mmap_addr;
     while (map < info.mmap_addr + info.mmap_length) {

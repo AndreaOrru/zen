@@ -58,7 +58,7 @@ const ELFProgHeader = packed struct {
 pub fn load(elf_addr: usize) -> usize {
     // Get the ELF structures.
     const elf    = @intToPtr(&ELFHeader,     elf_addr);
-    const ph_tbl = @intToPtr(&ELFProgHeader, elf_addr + elf.e_phoff)[0...elf.e_phnum];
+    const ph_tbl = @intToPtr(&ELFProgHeader, elf_addr + elf.e_phoff)[0..elf.e_phnum];
 
     // Iterate over the Program Header Table.
     for (ph_tbl) |ph| {

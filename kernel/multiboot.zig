@@ -73,7 +73,7 @@ pub const MultibootInfo = packed struct {
     // Load all the modules passed by the bootloader.
     //
     pub fn loadModules(self: &const Self) {
-        const mods = @intToPtr(&MultibootModule, self.mods_addr)[0...self.mods_count];
+        const mods = @intToPtr(&MultibootModule, self.mods_addr)[0..self.mods_count];
 
         for (mods) |mod| {
             const cmdline = cstr.toSlice(@intToPtr(&u8, mod.cmdline));

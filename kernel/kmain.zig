@@ -1,10 +1,10 @@
 use @import("multiboot.zig");
 const gdt = @import("gdt.zig");
 const idt = @import("idt.zig");
-const scheduler = @import("scheduler.zig");
 const mem = @import("mem.zig");
 const pmem = @import("pmem.zig");
 const vmem = @import("vmem.zig");
+const scheduler = @import("scheduler.zig");
 const timer = @import("timer.zig");
 const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
@@ -47,7 +47,7 @@ export fn kmain(magic: u32, info: &const MultibootInfo) -> noreturn {
     idt.initialize();
     pmem.initialize(info);
     vmem.initialize();
-    mem.initialize(pmem.stack_end, 0x100000);
+    mem.initialize(0x800000, 0x10000);
     timer.initialize(50);
     scheduler.initialize();
 

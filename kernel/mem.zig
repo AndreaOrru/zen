@@ -1,4 +1,5 @@
 const tty = @import("tty.zig");
+const vmem = @import("vmem.zig");
 const mem = @import("std").mem;
 const Color = tty.Color;
 
@@ -16,7 +17,7 @@ fn alloc(self: &mem.Allocator, n: usize) -> %[]u8 {
     if (new_end_index > bytes.len) {
         return error.NoMem;
     }
-    const result = bytes[end_index...new_end_index];
+    const result = bytes[end_index..new_end_index];
     end_index = new_end_index;
     return result;
 }
@@ -32,7 +33,8 @@ fn free(self: &mem.Allocator, old_mem: []u8) {}
 pub fn initialize(address: usize, capacity: usize) {
     tty.step("Initializing Dynamic Memory Allocation");
 
-    bytes = @intToPtr(&u8, address)[0...capacity];
+    vmem.mapZone(address, null, capacity, vmem.PAGE_WRITE | vmem.PAGE_GLOBAL);
+    bytes = @intToPtr(&u8, address)[0..capacity];
 
     tty.colorPrintf(Color.White, " {d} KB", capacity / 1024);
     tty.stepOK();

@@ -34,7 +34,7 @@ fn ptEntry(v_addr: usize) -> &PageEntry {
 //
 // Arguments:
 //     v_addr: Virtual address of the page to be mapped.
-//     p_addr: Physical address to map the page to.
+//     p_addr: Physical address to map the page to (or null to allocate it).
 //     flags: Paging flags (protection etc.).
 //
 pub fn map(v_addr: usize, p_addr: ?usize, flags: u32) {
@@ -48,8 +48,7 @@ pub fn map(v_addr: usize, p_addr: ?usize, flags: u32) {
         *pd_entry = pmem.allocate() | flags | PAGE_PRESENT | PAGE_WRITE | PAGE_USER;
         x86.invlpg(usize(pt_entry));
 
-        // Zero the page table.
-        @memset(@ptrCast(&u8, x86.pageBase(pt_entry)), 0, x86.PAGE_SIZE);
+        zeroPageTable(x86.pageBase(pt_entry));
     }
 
     if (p_addr) |p| {
@@ -90,12 +89,53 @@ pub fn unmap(v_addr: usize) {
 }
 
 ////
+// Map a virtual memory zone.
+//
+// Arguments:
+//     v_addr: Beginning of the virtual memory zone.
+//     p_addr: Beginning of the physical memory zone (or null to allocate it).
+//     size: Size of the memory zone.
+//     flags: Paging flags (protection etc.)
+//
+pub fn mapZone(v_addr: usize, p_addr: ?usize, size: usize, flags: u32) {
+    var i: usize = 0;
+    while (i < size) : (i += x86.PAGE_SIZE) {
+        map(v_addr + i, if (p_addr) |p| p + i else null, flags);
+    }
+}
+
+////
+// Unmap a virtual memory zone.
+//
+// Arguments:
+//     v_addr: Beginning of the virtual memory zone.
+//     size: Size of the memory zone.
+//
+pub fn unmapZone(v_addr: usize, size: usize) {
+    var i: usize = 0;
+    while (i < size) : (i += x86.PAGE_SIZE) {
+        unmap(v_addr + i);
+    }
+}
+
+////
 // Enable the paging system (defined in assembly).
 //
 // Arguments:
 //     phys_pd: Physical pointer to the page directory.
 //
 extern fn setupPaging(phys_pd: usize);
+
+////
+// Fill a page table with zeroes.
+//
+// Arguments:
+//     page_table: The address of the table.
+//
+fn zeroPageTable(page_table: &PageEntry) {
+    const pt = @ptrCast(&u8, page_table);
+    @memset(pt, 0, x86.PAGE_SIZE);
+}
 
 // Handler for page faults interrupts.
 fn pageFault() {
@@ -124,20 +164,18 @@ fn pageFault() {
 pub fn initialize() {
     tty.step("Initializing Paging");
 
-    // Allocate a zeroed page for the Page Directory.
-    const phys_pd = @intToPtr(&PageEntry, pmem.allocate());
-    @memset(@ptrCast(&u8, phys_pd), 0, x86.PAGE_SIZE);
+    // Allocate a page for the Page Directory.
+    const pd = @intToPtr(&PageEntry, pmem.allocate());
+    zeroPageTable(pd);
 
-    // NOTE: we are assuming (0x100000 + kernel + modules + pmem stack + heap) < 0x800000.
-
-    // Identity map the kernel (first 8 MB of data) and point last entry of PD to the PD itself.
-    phys_pd[0]    = 0x000000       | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL;
-    phys_pd[1]    = 0x400000       | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL;
-    phys_pd[1023] = usize(phys_pd) | PAGE_PRESENT | PAGE_WRITE;
-    // The recursive PD trick allows us to automagically map the paging hierarchy in every address space.
+    // Identity map the kernel (first 8 MB) and point last entry of PD to the PD itself.
+    pd[0]    = 0x000000  | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL;
+    pd[1]    = 0x400000  | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL;
+    pd[1023] = usize(pd) | PAGE_PRESENT | PAGE_WRITE;
+    // The recursive PD trick maps the whole paging hierarchy at the end of the address space.
 
     interrupt.register(14, pageFault);  // Register the page fault handler.
-    setupPaging(usize(phys_pd));        // Enable paging.
+    setupPaging(usize(pd));             // Enable paging.
 
     tty.stepOK();
 }

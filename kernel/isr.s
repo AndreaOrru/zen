@@ -16,6 +16,11 @@
         mov %bp, %ds
         mov %bp, %es
 
+        // Exceptions can happen in kernel mode. The context doesn't point
+        // to this very stack in that case, so we need to update it.
+        .if (\n < 32)
+            mov %esp, context
+        .endif
         mov $0x80000, %esp  // Switch to global kernel stack.
 
         // Call the designed interrupt handler.

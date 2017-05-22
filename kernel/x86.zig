@@ -116,6 +116,13 @@ pub inline fn readCR2() -> usize {
 }
 
 ////
+// Write the CR3 control register.
+//
+pub inline fn writeCR3(pd: usize) {
+    asm volatile ("mov %[pd], %%cr3" : : [pd] "r" (pd));
+}
+
+////
 // Read a byte from a port.
 //
 // Arguments:
