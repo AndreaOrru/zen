@@ -36,7 +36,7 @@ pub fn panic(message: []const u8) -> noreturn {
 export fn kmain(magic: u32, info: &const MultibootInfo) -> noreturn {
     tty.initialize();
 
-    assert(magic == MULTIBOOT_BOOTLOADER_MAGIC);
+    assert (magic == MULTIBOOT_BOOTLOADER_MAGIC);
 
     const title = "Zen - v0.0.1";
     tty.alignCenter(title.len);
@@ -47,7 +47,7 @@ export fn kmain(magic: u32, info: &const MultibootInfo) -> noreturn {
     idt.initialize();
     pmem.initialize(info);
     vmem.initialize();
-    mem.initialize(0x800000, 0x10000);
+    mem.initialize(0x10000);
     timer.initialize(50);
     scheduler.initialize();
 

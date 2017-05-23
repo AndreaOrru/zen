@@ -1,3 +1,4 @@
+const layout = @import("layout.zig");
 const tty = @import("tty.zig");
 const vmem = @import("vmem.zig");
 const mem = @import("std").mem;
@@ -30,11 +31,11 @@ fn realloc(self: &mem.Allocator, old_mem: []u8, new_size: usize) -> %[]u8 {
 
 fn free(self: &mem.Allocator, old_mem: []u8) {}
 
-pub fn initialize(address: usize, capacity: usize) {
+pub fn initialize(capacity: usize) {
     tty.step("Initializing Dynamic Memory Allocation");
 
-    vmem.mapZone(address, null, capacity, vmem.PAGE_WRITE | vmem.PAGE_GLOBAL);
-    bytes = @intToPtr(&u8, address)[0..capacity];
+    vmem.mapZone(layout.HEAP, null, capacity, vmem.PAGE_WRITE | vmem.PAGE_GLOBAL);
+    bytes = @intToPtr(&u8, layout.HEAP)[0..capacity];
 
     tty.colorPrintf(Color.White, " {d} KB", capacity / 1024);
     tty.stepOK();

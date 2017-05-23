@@ -1,15 +1,17 @@
 const interrupt = @import("interrupt.zig");
 const isr = @import("isr.zig");
+const layout = @import("layout.zig");
 const pmem = @import("pmem.zig");
 const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
+const assert = @import("std").debug.assert;
 
 // A single entry in a page table.
 const PageEntry = usize;
 
 // Page table structures (mapped with the recursive PD trick).
-const PD  = @intToPtr(&PageEntry, 0xFFFFF000);
-const PTs = @intToPtr(&PageEntry, 0xFFC00000);
+const PD  = @intToPtr(&PageEntry, layout.PD);
+const PTs = @intToPtr(&PageEntry, layout.PTs);
 
 // Page mapping flags. Refer to the official Intel manual.
 pub const PAGE_PRESENT   = (1 << 0);
@@ -163,6 +165,9 @@ fn pageFault() {
 //
 pub fn initialize() {
     tty.step("Initializing Paging");
+
+    assert (pmem.stack_end <  0x800000);  // Ensure we map all the page stack.
+    assert (layout.HEAP    >= 0x800000);  // The heap comes after the identity map area.
 
     // Allocate a page for the Page Directory.
     const pd = @intToPtr(&PageEntry, pmem.allocate());

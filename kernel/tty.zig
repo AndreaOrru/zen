@@ -1,4 +1,5 @@
 use @import("types.zig");
+const layout = @import("layout.zig");
 const x86 = @import("x86.zig");
 const fmt = @import("std").fmt;
 
@@ -35,7 +36,7 @@ const VGAEntry = packed struct {
 };
 
 // VRAM buffer.
-const vram = @intToPtr(&VGAEntry, 0xB8000)[0..0x4000];
+const vram = @intToPtr(&VGAEntry, layout.VRAM)[0..0x4000];
 
 var background = u4(Color.Black);      // Background color.
 var foreground = u4(Color.LightGrey);  // Foreground color.
