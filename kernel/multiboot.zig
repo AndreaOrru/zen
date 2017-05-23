@@ -1,6 +1,5 @@
 use @import("types.zig");
-const elf = @import("elf.zig");
-const thread = @import("thread.zig");
+const process = @import("process.zig");
 const tty = @import("tty.zig");
 const cstr = @import("std").cstr;
 
@@ -14,8 +13,6 @@ pub const MULTIBOOT_INFO_MEM_MAP     = 0x00000040;
 
 // System information structure passed by the bootloader.
 pub const MultibootInfo = packed struct {
-    const Self = this;
-
     // Multiboot info version number.
     flags: u32,
 
@@ -64,7 +61,7 @@ pub const MultibootInfo = packed struct {
     ////
     // Return the ending address of the last module.
     //
-    pub fn lastModuleEnd(self: &const Self) -> usize {
+    pub fn lastModuleEnd(self: &const MultibootInfo) -> usize {
         const mods = @intToPtr(&MultibootModule, self.mods_addr);
         return mods[self.mods_count - 1].mod_end;
     }
@@ -72,16 +69,14 @@ pub const MultibootInfo = packed struct {
     ////
     // Load all the modules passed by the bootloader.
     //
-    pub fn loadModules(self: &const Self) {
+    pub fn loadModules(self: &const MultibootInfo) {
         const mods = @intToPtr(&MultibootModule, self.mods_addr)[0..self.mods_count];
 
         for (mods) |mod| {
             const cmdline = cstr.toSlice(@intToPtr(&u8, mod.cmdline));
             tty.step("Loading \"{}\"", cmdline);
 
-            const entry = elf.load(mod.mod_start);
-            thread.create(entry);
-            // TODO: create a process.
+            _ = process.create(mod.mod_start);
             // TODO: deallocate the original memory.
 
             tty.stepOK();

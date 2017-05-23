@@ -1,32 +1,95 @@
 const gdt = @import("gdt.zig");
+const layout = @import("layout.zig");
 const mem = @import("mem.zig");
+const vmem = @import("vmem.zig");
 const scheduler = @import("scheduler.zig");
+const x86 = @import("x86.zig");
+const assert = @import("std").debug.assert;
 const Context = @import("isr.zig").Context;
+const Process = @import("process.zig").Process;
 
-var next_tid: u16 = 1;
+const STACK_SIZE = x86.PAGE_SIZE;  // Size of thread stacks.
+var next_tid: u16 = 1;             // Keep track of the used TIDs.
 
+// Structure representing a thread.
 pub const Thread = struct {
     context: Context,
+    process: &Process,
+
+    local_tid: u8,
     tid: u16,
 };
 
-fn initContext(context: &Context, entry_point: usize, stack: usize) {
-    @memset(@ptrCast(&u8, context), 0, @sizeOf(Context));
+////
+// Set up the initial context of a thread.
+//
+// Arguments:
+//     entry_point: Entry point of the thread.
+//     stack: The beginning of the stack.
+//
+// Returns:
+//     The initialized context.
+//
+fn initContext(entry_point: usize, stack: usize) -> Context {
+    Context {
+        .cs  = gdt.USER_CODE | gdt.USER_RPL,
+        .ss  = gdt.USER_DATA | gdt.USER_RPL,
+        .eip = entry_point,
+        .esp = stack + STACK_SIZE,  // Grows downwards.
+        .eflags = 0x202,
 
-    context.cs  = gdt.USER_CODE | gdt.USER_RPL;
-    context.ss  = gdt.USER_DATA | gdt.USER_RPL;
-    context.eip = entry_point;
-    context.esp = stack;
-    context.eflags = 0x202;
+        .registers = []u32 { 0 } ** 8,
+        .interrupt_n = 0,
+        .error_code  = 0,
+    }
 }
 
-pub fn create(entry_point: usize) {
+////
+// Get the address of a thread stack.
+//
+// Arguments:
+//     local_tid: Local TID of the thread inside the process.
+//
+// Returns:
+//     The address of the beginning of the stack.
+//
+fn getStack(local_tid: u8) -> usize {
+    const stack = layout.USER_STACKS + (2 * (local_tid - 1) * STACK_SIZE);
+
+    assert (stack < layout.USER_STACKS_END);
+
+    return stack;
+}
+
+////
+// Create a new thread inside the current process.
+//
+// Arguments:
+//     entry_point: The entry point of the new thread.
+//
+// Returns:
+//     Pointer to the new thread structure.
+//
+pub fn create(entry_point: usize) -> &Thread {
+    // Get the next available local TID inside the current process.
+    var local_tid = scheduler.current_process.next_local_tid;
+    // Calculate the address of the thread stack and map it.
+    var stack = getStack(local_tid);
+    vmem.mapZone(stack, null, STACK_SIZE, vmem.PAGE_WRITE | vmem.PAGE_USER);
+
     var thread = %%mem.allocator.create(Thread);
-    thread.tid = next_tid;
+    *thread = Thread {
+        .context   = initContext(entry_point, stack),
+        .process   = scheduler.current_process,
+        .local_tid = local_tid,
+        .tid       = next_tid,
+    };
+
+    thread.process.next_local_tid += 1;
     next_tid += 1;
 
-    var stack = %%mem.allocator.alloc(u8, 0x1000);
-    initContext(&thread.context, entry_point, usize(stack.ptr) + 0x1000 - 4);
-
     scheduler.add(thread);
+    return thread;
 }
+
+// TODO: thread.destroy

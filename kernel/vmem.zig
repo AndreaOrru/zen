@@ -40,6 +40,9 @@ fn ptEntry(v_addr: usize) -> &PageEntry {
 //     flags: Paging flags (protection etc.).
 //
 pub fn map(v_addr: usize, p_addr: ?usize, flags: u32) {
+    // Do not touch the identity mapped area.
+    assert (v_addr >= layout.IDENTITY);
+
     const pd_entry = pdEntry(v_addr);
     const pt_entry = ptEntry(v_addr);
 
@@ -79,12 +82,14 @@ pub fn map(v_addr: usize, p_addr: ?usize, flags: u32) {
 //     v_addr: Virtual address of the page to be unmapped.
 //
 pub fn unmap(v_addr: usize) {
+    assert (v_addr >= layout.IDENTITY);
+
     const pd_entry = pdEntry(v_addr);
     if (*pd_entry == 0) return;
     const pt_entry = ptEntry(v_addr);
 
     // Deallocate the physical page if it was allocated during mapping.
-    if (*py_entry & PAGE_ALLOCATED != 0) pmem.free(*pt_entry);
+    if (*pt_entry & PAGE_ALLOCATED != 0) pmem.free(*pt_entry);
 
     *pt_entry = 0;
     x86.invlpg(v_addr);
@@ -139,7 +144,35 @@ fn zeroPageTable(page_table: &PageEntry) {
     @memset(pt, 0, x86.PAGE_SIZE);
 }
 
+////
+// Initialize a new address space.
+//
+// Returns:
+//     The address of the new Page Directory.
+//
+pub fn createAddressSpace() -> usize {
+    // Allocate space for a new Page Directory.
+    const phys_pd = pmem.allocate();
+    const virt_pd = @intToPtr(&PageEntry, layout.TMP);
+    // Map it somewhere and initialize it.
+    map(usize(virt_pd), phys_pd, PAGE_WRITE);
+    zeroPageTable(virt_pd);
+
+    // Copy the kernel space of the original address space.
+    var i: usize = 0;
+    while (i < pdIndex(layout.USER)) : (i += 1) {
+        virt_pd[i] = PD[i];
+    }
+    virt_pd[1023] = phys_pd | PAGE_PRESENT | PAGE_WRITE;
+
+    return phys_pd;
+}
+
+// TODO: destroyAddressSpace
+
+////
 // Handler for page faults interrupts.
+//
 fn pageFault() {
     // Get the faulting address from the CR2 register.
     const address = x86.readCR2();
@@ -166,8 +199,8 @@ fn pageFault() {
 pub fn initialize() {
     tty.step("Initializing Paging");
 
-    assert (pmem.stack_end <  0x800000);  // Ensure we map all the page stack.
-    assert (layout.HEAP    >= 0x800000);  // The heap comes after the identity map area.
+    // Ensure we map all the page stack.
+    assert (pmem.stack_end < layout.IDENTITY);
 
     // Allocate a page for the Page Directory.
     const pd = @intToPtr(&PageEntry, pmem.allocate());
