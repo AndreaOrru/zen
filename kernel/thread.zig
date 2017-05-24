@@ -1,11 +1,11 @@
 const gdt = @import("gdt.zig");
+const isr = @import("isr.zig");
 const layout = @import("layout.zig");
 const mem = @import("mem.zig");
 const vmem = @import("vmem.zig");
 const scheduler = @import("scheduler.zig");
 const x86 = @import("x86.zig");
 const assert = @import("std").debug.assert;
-const Context = @import("isr.zig").Context;
 const Process = @import("process.zig").Process;
 
 const STACK_SIZE = x86.PAGE_SIZE;  // Size of thread stacks.
@@ -13,7 +13,7 @@ var next_tid: u16 = 1;             // Keep track of the used TIDs.
 
 // Structure representing a thread.
 pub const Thread = struct {
-    context: Context,
+    context: isr.Context,
     process: &Process,
 
     local_tid: u8,
@@ -30,15 +30,15 @@ pub const Thread = struct {
 // Returns:
 //     The initialized context.
 //
-fn initContext(entry_point: usize, stack: usize) -> Context {
-    Context {
+fn initContext(entry_point: usize, stack: usize) -> isr.Context {
+    isr.Context {
         .cs  = gdt.USER_CODE | gdt.USER_RPL,
         .ss  = gdt.USER_DATA | gdt.USER_RPL,
         .eip = entry_point,
         .esp = stack + STACK_SIZE,  // Grows downwards.
         .eflags = 0x202,
 
-        .registers = []u32 { 0 } ** 8,
+        .registers = isr.Registers.init(),
         .interrupt_n = 0,
         .error_code  = 0,
     }

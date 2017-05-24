@@ -110,9 +110,7 @@ pub inline fn invlpg(v_addr: usize) {
 // Read the CR2 control register.
 //
 pub inline fn readCR2() -> usize {
-    var result: usize = undefined;
-    asm volatile ("mov %%cr2, %[result]" : [result] "=r" (result));
-    return result;
+    asm volatile ("mov %%cr2, %[result]" : [result] "=r" (-> usize))
 }
 
 ////
@@ -132,10 +130,8 @@ pub inline fn writeCR3(pd: usize) {
 //     The read byte.
 //
 pub inline fn inb(port: u16) -> u8 {
-    var result: u8 = undefined;
-    asm volatile ("inb %[port], %[result]" : [result] "={al}" (result)
-                                           : [port]   "N{dx}" (port));
-    return result;
+    asm volatile ("inb %[port], %[result]" : [result] "={al}" (-> u8)
+                                           : [port]   "N{dx}" (port))
 }
 
 ////

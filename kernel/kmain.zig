@@ -1,13 +1,14 @@
 use @import("multiboot.zig");
+use @import("syscall.zig");
 const gdt = @import("gdt.zig");
 const idt = @import("idt.zig");
 const mem = @import("mem.zig");
 const pmem = @import("pmem.zig");
 const vmem = @import("vmem.zig");
 const scheduler = @import("scheduler.zig");
-const timer = @import("timer.zig");
 const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
+const timer = @import("timer.zig");
 const assert = @import("std").debug.assert;
 const Color = tty.Color;
 

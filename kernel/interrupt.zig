@@ -13,16 +13,16 @@ const ICW1_INIT = 0x10;
 const ICW1_ICW4 = 0x01;
 const ICW4_8086 = 0x01;
 
+// Registered interrupt handlers.
+export var interrupt_handlers = []fn() { unhandled } ** 48;
+
 ////
 // Default interrupt handler.
 //
-fn unhandled() {
+fn unhandled() -> noreturn {
     const n = isr.context.interrupt_n;
     tty.panic("unhandled interrupt number {d}", n);
 }
-
-// Registered interrupt handlers.
-export var interrupt_handlers = []fn() { unhandled } ** 48;
 
 ////
 // Register an interrupt handler. //

@@ -13,13 +13,14 @@ extern fn isr32(); extern fn isr33(); extern fn isr34(); extern fn isr35();
 extern fn isr36(); extern fn isr37(); extern fn isr38(); extern fn isr39();
 extern fn isr40(); extern fn isr41(); extern fn isr42(); extern fn isr43();
 extern fn isr44(); extern fn isr45(); extern fn isr46(); extern fn isr47();
+extern fn isr128();
 
 // Context saved by Interrupt Service Routines.
 pub const Context = packed struct {
-    registers: [8]u32,  // General purpose registers.
+    registers: Registers,  // General purpose registers.
 
-    interrupt_n: u32,   // Number of the interrupt.
-    error_code:  u32,   // Associated error code (or 0).
+    interrupt_n: u32,  // Number of the interrupt.
+    error_code:  u32,  // Associated error code (or 0).
 
     // CPU status:
     eip:    u32,
@@ -29,6 +30,19 @@ pub const Context = packed struct {
     ss:     u32,
 };
 
+// Structure holding general purpose registers as saved by PUSHA.
+pub const Registers = packed struct {
+    edi: u32, esi: u32, ebp: u32, esp: u32,
+    ebx: u32, edx: u32, ecx: u32, eax: u32,
+
+    pub fn init() -> Registers {
+        Registers {
+            .edi = 0, .esi = 0, .ebp = 0, .esp = 0,
+            .ebx = 0, .edx = 0, .ecx = 0, .eax = 0,
+        }
+    }
+};
+
 // Pointer to the current saved context.
 export var context: &volatile Context = undefined;
 
@@ -36,6 +50,7 @@ export var context: &volatile Context = undefined;
 // Install the Interrupt Service Routines in the IDT.
 //
 pub fn install() {
+    // Exceptions.
     idt.setGate(0,  idt.INTERRUPT_GATE, isr0);
     idt.setGate(1,  idt.INTERRUPT_GATE, isr1);
     idt.setGate(2,  idt.INTERRUPT_GATE, isr2);
@@ -69,6 +84,7 @@ pub fn install() {
     idt.setGate(30, idt.INTERRUPT_GATE, isr30);
     idt.setGate(31, idt.INTERRUPT_GATE, isr31);
 
+    // IRQs.
     idt.setGate(32, idt.INTERRUPT_GATE, isr32);
     idt.setGate(33, idt.INTERRUPT_GATE, isr33);
     idt.setGate(34, idt.INTERRUPT_GATE, isr34);
@@ -85,4 +101,7 @@ pub fn install() {
     idt.setGate(45, idt.INTERRUPT_GATE, isr45);
     idt.setGate(46, idt.INTERRUPT_GATE, isr46);
     idt.setGate(47, idt.INTERRUPT_GATE, isr47);
+
+    // Syscalls.
+    idt.setGate(128, idt.SYSCALL_GATE, isr128);
 }

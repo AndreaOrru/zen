@@ -173,7 +173,7 @@ pub fn createAddressSpace() -> usize {
 ////
 // Handler for page faults interrupts.
 //
-fn pageFault() {
+fn pageFault() -> noreturn {
     // Get the faulting address from the CR2 register.
     const address = x86.readCR2();
     // Get the error code from the interrupt stack.

@@ -5,6 +5,7 @@ const x86 = @import("x86.zig");
 
 // Types of gates.
 pub const INTERRUPT_GATE = 0x8E;
+pub const SYSCALL_GATE   = 0xEE;
 
 // Structure representing an entry in the IDT.
 const IDTEntry = packed struct {
