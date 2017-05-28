@@ -7,7 +7,7 @@ N_EXCEPTIONS = 32
 IRQ_0  = N_EXCEPTIONS
 IRQ_16 = IRQ_0 + 16
 
-N_SYSCALLS   = 1
+N_SYSCALLS   = 4
 SYSCALL_GATE = 128
 
 // Template for the Interrupt Service Routines.
@@ -28,39 +28,43 @@ SYSCALL_GATE = 128
         mov %bp, %ds
         mov %bp, %es
 
-        // Exceptions can happen in kernel mode. The context doesn't point
-        // to this very stack in that case, so we need to update it.
+        // IRQ7 may be spurious - check.
+        .if (\n == (IRQ_0 + 7))
+            // Read the In-Service Register.
+            mov $0x0B, %al
+            out %al, $0x20
+            inb $0x20, %al
+            // If bit 7 isn't set, ignore the IRQ.
+            and $(1 << 7), %al
+            jz 3f
+        .endif
+
+        // Only exceptions can happen in kernel mode. The context doesn't
+        // point to this very stack in that case, so we need to update it.
         .if (\n < N_EXCEPTIONS)
             mov %esp, context
-        // A syscall can cause a change of context. We need to keep a reference to
-        // the current one, so that we can later inject the syscall's return value.
-        .elseif (\n == SYSCALL_GATE)
-            mov context, %ebp
         .endif
         mov $KERNEL_STACK, %esp  // Switch to global kernel stack.
 
         // Call the designated interrupt or syscall handler.
         .if (\n == SYSCALL_GATE)
             cmp $N_SYSCALLS, %eax
-            jl .valid
+            jl 1f
 
-            .invalid:
-                call invalidSyscall
-                jmp .restoreContext\n
+            call invalidSyscall
+            jmp 2f
 
-            .valid:
-                // TODO: change the calling convention to use registers directly.
-    		        push %edi
-	              push %esi
-	              push %ebx
-	              // First two parameters are passed through ECX and EDX.
-                call *syscall_handlers(,%eax, 4)
-                mov %eax, 32(%ebp)  // Save the return value into the caller's context.
+            // TODO: change the calling convention to use registers directly.
+1:          push %edi
+            push %esi
+            push %ebx
+            // First two parameters are passed through ECX and EDX.
+            call *syscall_handlers(,%eax, 4)
         .else
-          	call *(interrupt_handlers + (\n * 4))
+            call *(interrupt_handlers + (\n * 4))
         .endif
 
-      	// NOTE: From here on, assume we have interrupted user mode.
+        // NOTE: From here on, assume we have interrupted user mode.
         // The kernel can only be interrupted by non-recoverable exceptions,
         // and the following code will be unreachable in that case.
 
@@ -69,16 +73,15 @@ SYSCALL_GATE = 128
             mov $0x20, %al
             // Signal the slave PIC as well for IRQs >= 8.
             .if (\n >= 40)
-                out %al, $0xa0
+                out %al, $0xA0
             .endif
             out %al, $0x20
         .endif
 
-        .restoreContext\n:
-        mov context, %esp  // Get thread state (any thread, potentially).
+2:      mov context, %esp  // Get thread state (any thread, potentially).
 
         // Enforce user data segment.
-        mov $USER_DS, %bp
+3:      mov $USER_DS, %bp
         mov %bp, %ds
         mov %bp, %es
 

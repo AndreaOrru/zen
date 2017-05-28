@@ -88,7 +88,7 @@ pub fn create(entry_point: usize) -> &Thread {
     thread.process.next_local_tid += 1;
     next_tid += 1;
 
-    scheduler.add(thread);
+    scheduler.new(thread);
     return thread;
 }
 

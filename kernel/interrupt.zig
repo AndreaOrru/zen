@@ -25,7 +25,8 @@ fn unhandled() -> noreturn {
 }
 
 ////
-// Register an interrupt handler. //
+// Register an interrupt handler.
+//
 // Arguments:
 //     n: Index of the interrupt.
 //     handler: Interrupt handler.

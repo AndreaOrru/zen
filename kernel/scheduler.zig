@@ -59,16 +59,49 @@ pub fn switchProcess(process: &Process) {
 // Arguments:
 //     new_thread: The thread to be added.
 //
-pub fn add(new_thread: &Thread) {
+pub fn new(new_thread: &Thread) {
     ready_queue.append(%%ready_queue.createNode(new_thread));
     contextSwitch(new_thread);
+}
+
+////
+// Enqueue a thread into the scheduling queue.
+// Schedule it last.
+//
+// Arguments:
+//     thread: The thread to be enqueued.
+//
+pub fn enqueue(thread: &List(&Thread).Node) {
+    var llast = ready_queue.last;  // HACK: ugly workaround for Zig issue #379.
+
+    // Last element in the queue is the thread currently being executed.
+    // So put this thread in the second to last position.
+    if (llast) |last| {
+        ready_queue.insertBefore(last, thread);
+    } else {
+        // If the queue is empty, simply insert the thread.
+        ready_queue.prepend(thread);
+    }
+}
+
+////
+// Deschedule the current thread and schedule a new one.
+//
+// Returns:
+//     The descheduled thread.
+//
+pub fn dequeue() -> ?&List(&Thread).Node {
+    const thread = ready_queue.pop() ?? return null;
+    schedule();
+    return thread;
 }
 
 ////
 // Return the thread currently being executed.
 //
 pub fn current() -> ?&Thread {
-    const last = ready_queue.last ?? return null;
+    var llast = ready_queue.last;  // HACK: ugly workaround for Zig issue #379.
+    const last = llast ?? return null;
     return last.data;
 }
 

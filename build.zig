@@ -1,14 +1,15 @@
-const ArrayList = @import("std").ArrayList;
+const Array = @import("std").ArrayList;
 const Builder = @import("std").build.Builder;
-const LibExeObjStep = @import("std").build.LibExeObjStep;
 const builtin = @import("builtin");
+const join = @import("std").mem.join;
 
 pub fn build(b: &Builder) {
     ////
     // Default step.
     //
-    const kernel = buildKernel(b);
-    const test_daemon = buildDaemon(b, "test");
+    const kernel   = buildKernel(b);
+    const receiver = buildDaemon(b, "receiver");
+    const sender   = buildDaemon(b, "sender");
 
 
     ////
@@ -19,13 +20,13 @@ pub fn build(b: &Builder) {
 
     const common_params = [][]const u8 {
         "-display", "curses",
-        "-kernel", kernel.getOutputPath(),
-        "-initrd", test_daemon.getOutputPath(),
+        "-kernel", kernel,
+        "-initrd", %%join(b.allocator, ',', receiver, sender),
     };
     const debug_params = [][]const u8 {"-s", "-S"};
 
-    var qemu_params       = ArrayList([]const u8).init(b.allocator);
-    var qemu_debug_params = ArrayList([]const u8).init(b.allocator);
+    var qemu_params       = Array([]const u8).init(b.allocator);
+    var qemu_debug_params = Array([]const u8).init(b.allocator);
     for (common_params) |p| { %%qemu_params.append(p); %%qemu_debug_params.append(p); }
     for (debug_params)  |p| {                          %%qemu_debug_params.append(p); }
 
@@ -38,7 +39,7 @@ pub fn build(b: &Builder) {
     qemu_debug.dependOn(&run_qemu_debug.step);
 }
 
-fn buildKernel(b: &Builder) -> &LibExeObjStep {
+fn buildKernel(b: &Builder) -> []const u8 {
     const kernel = b.addExecutable("zen", "kernel/kmain.zig");
     kernel.setBuildMode(b.standardReleaseOptions());
     kernel.setOutputPath("zen");
@@ -52,16 +53,17 @@ fn buildKernel(b: &Builder) -> &LibExeObjStep {
     kernel.setLinkerScriptPath("kernel/linker.ld");
 
     b.default_step.dependOn(&kernel.step);
-    return kernel;
+    return kernel.getOutputPath();
 }
 
-fn buildDaemon(b: &Builder, comptime name: []const u8) -> &LibExeObjStep {
+fn buildDaemon(b: &Builder, comptime name: []const u8) -> []const u8 {
     const daemon = b.addExecutable(name, "daemons/" ++ name ++ "/main.zig");
     daemon.setOutputPath("daemons/" ++ name ++ "/" ++ name);
 
     daemon.setTarget(builtin.Arch.i386, builtin.Os.freestanding, builtin.Environ.gnu);
     daemon.setLinkerScriptPath("daemons/linker.ld");
+    daemon.addPackagePath("zen", "lib/zen.zig");
 
     b.default_step.dependOn(&daemon.step);
-    return daemon;
+    return daemon.getOutputPath();
 }

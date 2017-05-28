@@ -1,4 +1,5 @@
 const isr = @import("isr.zig");
+const ipc = @import("ipc.zig");
 const tty = @import("tty.zig");
 
 ////
@@ -20,6 +21,9 @@ fn SYSCALL(syscall: var) -> fn() {
 // Registered syscall handlers.
 export var syscall_handlers = []fn() {
     SYSCALL(tty.writeChar),
+    SYSCALL(ipc.createMailbox),
+    SYSCALL(ipc.send),
+    SYSCALL(ipc.receive),
 };
 
 ////

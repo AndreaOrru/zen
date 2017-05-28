@@ -19,6 +19,5 @@ loadGDT:
   	mov %ax, %ss
 
     // Reload code segment (GDT entry 1: kernel code).
-    ljmp $0x08, $.reloadCS
-    .reloadCS:
-        ret
+    ljmp $0x08, $1f
+1:  ret

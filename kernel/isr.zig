@@ -28,6 +28,10 @@ pub const Context = packed struct {
     eflags: u32,
     esp:    u32,
     ss:     u32,
+
+    pub inline fn setReturnValue(self: &Context, value: usize) {
+        self.registers.eax = value;
+    }
 };
 
 // Structure holding general purpose registers as saved by PUSHA.
