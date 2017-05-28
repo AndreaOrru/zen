@@ -66,22 +66,20 @@ pub fn send(mailbox_id: u16, data: usize) {
 //     mailbox_id: The number of the mailbox.
 //
 // Returns:
-//     usize: The received message, immediately
-//            or upon unblocking.
+//     The received message, immediately or after unblocking.
 //
-pub fn receive(mailbox_id: u16) {
+pub fn receive(mailbox_id: u16) -> usize {
     var mailbox = mailboxes[mailbox_id];
 
     if (mailbox.messages.popFirst()) |first| {
-        // There's a message in the queue.
+        // There's a message in the queue, deliver immediately.
         var message = first.data;
-        var thread = ??scheduler.current();
-        thread.context.setReturnValue(message);
-        // Deliver the message immediately.
+        return message;
     } else {
-        // No message in the queue.
+        // No message in the queue, block the thread.
         var thread = ??scheduler.dequeue();
         mailbox.waiting_queue.append(thread);
-        // Block the thread.
     }
+
+    return 0;
 }

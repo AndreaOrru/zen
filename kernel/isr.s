@@ -43,14 +43,18 @@ SYSCALL_GATE = 128
         // point to this very stack in that case, so we need to update it.
         .if (\n < N_EXCEPTIONS)
             mov %esp, context
+        // A syscall can cause a change of context. We need to keep a reference to
+        // the current one, so that we can later inject the syscall's return value.
+        .elseif (\n == SYSCALL_GATE)
+            mov context, %ebp
         .endif
         mov $KERNEL_STACK, %esp  // Switch to global kernel stack.
 
         // Call the designated interrupt or syscall handler.
         .if (\n == SYSCALL_GATE)
+            // Check if the syscall number is valid.
             cmp $N_SYSCALLS, %eax
             jl 1f
-
             call invalidSyscall
             jmp 2f
 
@@ -60,6 +64,7 @@ SYSCALL_GATE = 128
             push %ebx
             // First two parameters are passed through ECX and EDX.
             call *syscall_handlers(,%eax, 4)
+           	mov %eax, 32(%ebp)  // Save the return value into the caller's context.
         .else
             call *(interrupt_handlers + (\n * 4))
         .endif

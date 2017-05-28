@@ -1,20 +1,23 @@
+//////////////////////////////
+////  Reserved mailboxes  ////
+//////////////////////////////
+
+pub const MBOX_TERMINAL = 1;
+
+
 ///////////////////////////
 ////  Syscall numbers  ////
 ///////////////////////////
 
-pub const SYS_writeChar = 0;
-pub const SYS_createMailbox = 1;
-pub const SYS_send = 2;
-pub const SYS_receive = 3;
+pub const SYS_createMailbox = 0;
+pub const SYS_send = 1;
+pub const SYS_receive = 2;
+pub const SYS_map = 3;
 
 
 ////////////////////
 ////  Syscalls  ////
 ////////////////////
-
-pub fn writeChar(char: u8) {
-    _ = syscall1(SYS_writeChar, char);
-}
 
 pub fn createMailbox(id: u16) {
     _ = syscall1(SYS_createMailbox, id);
@@ -26,6 +29,10 @@ pub fn send(mailbox_id: u16, data: usize) {
 
 pub fn receive(mailbox_id: u16) -> usize {
     syscall1(SYS_receive, mailbox_id)
+}
+
+pub fn map(v_addr: usize, p_addr: usize, size: usize, writable: bool) -> bool {
+    syscall4(SYS_map, v_addr, p_addr, size, usize(writable)) != 0
 }
 
 
