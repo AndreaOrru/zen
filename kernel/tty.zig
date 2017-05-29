@@ -36,7 +36,7 @@ const VGAEntry = packed struct {
 };
 
 // VRAM buffer.
-const vram = @intToPtr(&VGAEntry, layout.VRAM)[0..0x4000];
+const vram = @intToPtr(&volatile VGAEntry, layout.VRAM)[0..0x4000];
 
 var background = u4(Color.Black);      // Background color.
 var foreground = u4(Color.LightGrey);  // Foreground color.

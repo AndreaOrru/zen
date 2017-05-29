@@ -72,11 +72,9 @@ pub fn new(new_thread: &Thread) {
 //     thread: The thread to be enqueued.
 //
 pub fn enqueue(thread: &List(&Thread).Node) {
-    var llast = ready_queue.last;  // HACK: ugly workaround for Zig issue #379.
-
     // Last element in the queue is the thread currently being executed.
     // So put this thread in the second to last position.
-    if (llast) |last| {
+    if (ready_queue.last) |last| {
         ready_queue.insertBefore(last, thread);
     } else {
         // If the queue is empty, simply insert the thread.
@@ -100,8 +98,7 @@ pub fn dequeue() -> ?&List(&Thread).Node {
 // Return the thread currently being executed.
 //
 pub fn current() -> ?&Thread {
-    var llast = ready_queue.last;  // HACK: ugly workaround for Zig issue #379.
-    const last = llast ?? return null;
+    const last = ready_queue.last ?? return null;
     return last.data;
 }
 

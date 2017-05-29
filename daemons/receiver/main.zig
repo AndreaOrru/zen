@@ -1,6 +1,6 @@
 const zen = @import("zen");
 
-const vram = @intToPtr(&u8, 0x20000000);
+const vram = @intToPtr(&volatile u8, 0x20000000)[0..0x8000];
 
 export fn main() -> noreturn {
     // TODO: Don't hardcode the v_addr.
