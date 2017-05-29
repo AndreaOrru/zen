@@ -21,7 +21,7 @@ export var syscall_handlers = []fn() {
 //     flags: Paging flags (protection etc.).
 //
 // Returns:
-//     true if the mapping was succesful, false otherwise.
+//     true if the mapping was successful, false otherwise.
 //
 fn map(v_addr: usize, p_addr: usize, size: usize, writable: bool) -> bool {
     // TODO: Only daemons can call this.
