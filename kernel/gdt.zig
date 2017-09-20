@@ -78,6 +78,7 @@ var gdt align(4) = []GDTEntry {
     makeEntry(0, 0, 0, 0),
     makeEntry(0, 0xFFFFF, KERNEL | CODE, PROTECTED | BLOCKS_4K),
     makeEntry(0, 0xFFFFF, KERNEL | DATA, PROTECTED | BLOCKS_4K),
+    makeEntry(0, 0xFFFFF, USER   | CODE, PROTECTED | BLOCKS_4K),
     makeEntry(0, 0xFFFFF, USER   | DATA, PROTECTED | BLOCKS_4K),
     makeEntry(0, 0, 0, 0),  // TSS (fill in at runtime).
 };
