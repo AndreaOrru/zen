@@ -40,7 +40,7 @@ const idtr = IDTRegister {
 //     offset: Address of the ISR.
 //
 pub fn setGate(n: u8, flags: u8, offset: extern fn()) {
-    const intOffset = usize(offset);
+    const intOffset = @ptrToInt(offset);
 
     idt[n].offset_low  = u16(intOffset & 0xFFFF);
     idt[n].offset_high = u16(intOffset >> 16);

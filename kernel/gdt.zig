@@ -74,12 +74,10 @@ fn makeEntry(base: usize, limit: usize, access: u8, flags: u4) -> GDTEntry {
 }
 
 // Fill in the GDT.
-comptime { @setGlobalAlign(gdt, 4) }
-var gdt = []GDTEntry {
+var gdt align(4) = []GDTEntry {
     makeEntry(0, 0, 0, 0),
     makeEntry(0, 0xFFFFF, KERNEL | CODE, PROTECTED | BLOCKS_4K),
     makeEntry(0, 0xFFFFF, KERNEL | DATA, PROTECTED | BLOCKS_4K),
-    makeEntry(0, 0xFFFFF, USER   | CODE, PROTECTED | BLOCKS_4K),
     makeEntry(0, 0xFFFFF, USER   | DATA, PROTECTED | BLOCKS_4K),
     makeEntry(0, 0, 0, 0),  // TSS (fill in at runtime).
 };

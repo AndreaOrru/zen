@@ -155,7 +155,7 @@ pub fn createAddressSpace() -> usize {
     const phys_pd = pmem.allocate();
     const virt_pd = @intToPtr(&PageEntry, layout.TMP);
     // Map it somewhere and initialize it.
-    map(usize(virt_pd), phys_pd, PAGE_WRITE);
+    map(@ptrToInt(virt_pd), phys_pd, PAGE_WRITE);
     zeroPageTable(virt_pd);
 
     // Copy the kernel space of the original address space.

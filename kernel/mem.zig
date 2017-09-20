@@ -50,17 +50,17 @@ const Block = struct {
     //
     pub fn size(self: &Block) -> usize {
         // Block can end at the beginning of the next block, or at the end of the heap.
-        const end = if (self.next) |next_block| usize(next_block)
-                    else usize(heap.ptr) + heap.len;
+        const end = if (self.next) |next_block| @ptrToInt(next_block)
+                    else @ptrToInt(heap.ptr) + heap.len;
         // End - Beginning - Metadata = the usable amount of memory.
-        return end - usize(self) - @sizeOf(Block);
+        return end - @ptrToInt(self) - @sizeOf(Block);
     }
 
     ////
     // Return a slice of the usable portion of the block.
     //
     pub fn data(self: &Block) -> []u8 {
-        @intToPtr(&u8, usize(self) + @sizeOf(Block))[0..self.size()]
+        @intToPtr(&u8, @ptrToInt(self) + @sizeOf(Block))[0..self.size()]
     }
 
     ////
@@ -73,7 +73,7 @@ const Block = struct {
     //     The associated block strucutre.
     //
     pub fn fromData(bytes: []u8) -> &Block {
-        @intToPtr(&Block, usize(bytes.ptr) - @sizeOf(Block))
+        @intToPtr(&Block, @ptrToInt(bytes.ptr) - @sizeOf(Block))
     }
 };
 
@@ -200,7 +200,7 @@ fn splitBlock(block: &Block, left_sz: usize) {
     assert (block.size() - left_sz > @sizeOf(Block));
 
     // Setup the second block at the end of the first one.
-    var right_block = @intToPtr(&Block, usize(block) + @sizeOf(Block) + left_sz);
+    var right_block = @intToPtr(&Block, @ptrToInt(block) + @sizeOf(Block) + left_sz);
     *right_block = Block {
         .free = false,  // For consistency: not free until added to the free list.
         .prev = block,
