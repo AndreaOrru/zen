@@ -57,7 +57,7 @@ pub fn initialize(info: &const MultibootInfo) {
     stack = @intToPtr(&usize, x86.pageAlign(info.lastModuleEnd()));
     // Calculate the approximate size of the stack based on the amount of total upper memory.
     stack_size = ((info.mem_upper * 1024) / x86.PAGE_SIZE) * @sizeOf(usize);
-    stack_end  = x86.pageAlign(usize(stack) + stack_size);
+    stack_end  = x86.pageAlign(@ptrToInt(stack) + stack_size);
 
     var map: usize = info.mmap_addr;
     while (map < info.mmap_addr + info.mmap_length) {

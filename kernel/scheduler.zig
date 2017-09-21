@@ -36,7 +36,7 @@ fn contextSwitch(thread: &Thread) {
     switchProcess(thread.process);
 
     isr.context = &thread.context;
-    gdt.setKernelStack(usize(isr.context) + @sizeOf(isr.Context));
+    gdt.setKernelStack(@ptrToInt(isr.context) + @sizeOf(isr.Context));
 }
 
 ////
@@ -60,7 +60,7 @@ pub fn switchProcess(process: &Process) {
 //     new_thread: The thread to be added.
 //
 pub fn new(new_thread: &Thread) {
-    ready_queue.append(%%ready_queue.createNode(new_thread));
+    ready_queue.append(%%ready_queue.createNode(new_thread, &mem.allocator));
     contextSwitch(new_thread);
 }
 
@@ -108,7 +108,7 @@ pub fn current() -> ?&Thread {
 pub fn initialize() {
     tty.step("Initializing the Scheduler");
 
-    ready_queue = List(&Thread).init(&mem.allocator);
+    ready_queue = List(&Thread).init();
     timer.registerHandler(schedule);
 
     tty.stepOK();

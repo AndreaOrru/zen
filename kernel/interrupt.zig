@@ -51,7 +51,7 @@ pub fn registerIRQ(irq: u8, handler: fn()) {
 // Mask/unmask an IRQ.
 //
 // Arguments:
-//     n: Index of the IRQ.
+//     irq: Index of the IRQ.
 //     mask: Whether to mask (true) or unmask (false).
 //
 pub fn maskIRQ(irq: u8, mask: bool) {
@@ -61,9 +61,9 @@ pub fn maskIRQ(irq: u8, mask: bool) {
 
     // Mask or unmask the interrupt.
     if (mask) {
-        x86.outb(port, old |  (1 << (irq % 8)));
+        x86.outb(port, old |  (u8(1) << u3(irq % 8)));
     } else {
-        x86.outb(port, old & ~(1 << (irq % 8)));
+        x86.outb(port, old & ~(u8(1) << u3(irq % 8)));
     }
 }
 

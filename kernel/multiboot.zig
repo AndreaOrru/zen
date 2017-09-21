@@ -1,4 +1,3 @@
-use @import("types.zig");
 const process = @import("process.zig");
 const tty = @import("tty.zig");
 const cstr = @import("std").cstr;

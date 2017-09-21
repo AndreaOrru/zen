@@ -1,4 +1,3 @@
-use @import("types.zig");
 const layout = @import("layout.zig");
 const x86 = @import("x86.zig");
 const fmt = @import("std").fmt;

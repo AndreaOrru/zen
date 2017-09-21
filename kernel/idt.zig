@@ -56,7 +56,7 @@ pub fn initialize() {
     tty.step("Setting up the Interrupt Descriptor Table");
 
     interrupt.initialize();
-    x86.lidt(usize(&idtr));
+    x86.lidt(@ptrToInt(&idtr));
 
     tty.stepOK();
 }

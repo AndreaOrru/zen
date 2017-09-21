@@ -1,4 +1,3 @@
-use @import("types.zig");
 const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
 
@@ -127,7 +126,7 @@ pub fn initialize() {
     loadGDT(&gdtr);
 
     // Initialize TSS.
-    const tss_entry = makeEntry(usize(&tss), @sizeOf(TSS) - 1, TSS_ACCESS, PROTECTED);
+    const tss_entry = makeEntry(@ptrToInt(&tss), @sizeOf(TSS) - 1, TSS_ACCESS, PROTECTED);
     gdt[TSS_DESC / @sizeOf(GDTEntry)] = tss_entry;
     x86.ltr(TSS_DESC);
 

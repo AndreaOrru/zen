@@ -11,8 +11,21 @@ pub const PAGE_SIZE: usize = 4096;
 // Returns:
 //     The given address as type T (usize or a pointer).
 //
-fn usizeOrPtr(comptime T: type, address: usize) -> T {
+fn intOrPtr(comptime T: type, address: usize) -> T {
     if (T == usize) address else @intToPtr(T, address)
+}
+
+////
+// Return address as an usize.
+//
+// Arguments:
+//     address: Address to be returned.
+//
+// Returns:
+//     The given address as type usize.
+//
+fn int(address: var) -> usize {
+    if (@typeOf(address) == usize) address else @ptrToInt(address)
 }
 
 ////
@@ -25,9 +38,9 @@ fn usizeOrPtr(comptime T: type, address: usize) -> T {
 //     The aligned address.
 //
 pub fn pageBase(address: var) -> @typeOf(address) {
-    const result = usize(address) & (~PAGE_SIZE +% 1);
+    const result = int(address) & (~PAGE_SIZE +% 1);
 
-    return usizeOrPtr(@typeOf(address), result);
+    return intOrPtr(@typeOf(address), result);
 }
 
 ////
@@ -40,9 +53,9 @@ pub fn pageBase(address: var) -> @typeOf(address) {
 //     The aligned address.
 //
 pub fn pageAlign(address: var) -> @typeOf(address) {
-    const result = (usize(address) + PAGE_SIZE - 1) & (~PAGE_SIZE +% 1);
+    const result = (int(address) + PAGE_SIZE - 1) & (~PAGE_SIZE +% 1);
 
-    return usizeOrPtr(@typeOf(address), result);
+    return intOrPtr(@typeOf(address), result);
 }
 
 ////

@@ -51,7 +51,7 @@ pub fn map(v_addr: usize, p_addr: ?usize, flags: u32) {
         // Allocate the new Page Table and point the Page Directory entry to it.
         // Permissive flags are set in the PD, as restrictions are set in the PT entry.
         *pd_entry = pmem.allocate() | flags | PAGE_PRESENT | PAGE_WRITE | PAGE_USER;
-        x86.invlpg(usize(pt_entry));
+        x86.invlpg(@ptrToInt(pt_entry));
 
         zeroPageTable(x86.pageBase(pt_entry));
     }
@@ -207,13 +207,13 @@ pub fn initialize() {
     zeroPageTable(pd);
 
     // Identity map the kernel (first 8 MB) and point last entry of PD to the PD itself.
-    pd[0]    = 0x000000  | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL;
-    pd[1]    = 0x400000  | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL;
-    pd[1023] = usize(pd) | PAGE_PRESENT | PAGE_WRITE;
+    pd[0]    = 0x000000      | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL;
+    pd[1]    = 0x400000      | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL;
+    pd[1023] = @ptrToInt(pd) | PAGE_PRESENT | PAGE_WRITE;
     // The recursive PD trick maps the whole paging hierarchy at the end of the address space.
 
     interrupt.register(14, pageFault);  // Register the page fault handler.
-    setupPaging(usize(pd));             // Enable paging.
+    setupPaging(@ptrToInt(pd));         // Enable paging.
 
     tty.stepOK();
 }

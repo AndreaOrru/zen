@@ -72,13 +72,15 @@ const Block = struct {
     // Returns:
     //     The associated block strucutre.
     //
-    pub fn fromData(bytes: []u8) -> &Block {
-        @intToPtr(&Block, @ptrToInt(bytes.ptr) - @sizeOf(Block))
+    pub fn fromData(bytes: &u8) -> &Block {
+        @intToPtr(&Block, @ptrToInt(bytes) - @sizeOf(Block))
     }
 };
 
 // Implement standard alloc function - see std.mem for reference.
-fn alloc(self: &mem.Allocator, size: usize) -> %[]u8 {
+fn alloc(self: &mem.Allocator, size: usize, alignment: usize) -> %[]u8 {
+    // TODO: align properly.
+
     // Find a block that's big enough.
     var block = searchFreeBlock(size) ?? return error.NoMem;
 
@@ -92,9 +94,9 @@ fn alloc(self: &mem.Allocator, size: usize) -> %[]u8 {
 }
 
 // Implement standard realloc function - see std.mem for reference.
-fn realloc(self: &mem.Allocator, old_mem: []u8, new_size: usize) -> %[]u8 {
+fn realloc(self: &mem.Allocator, old_mem: []u8, new_size: usize, alignment: usize) -> %[]u8 {
     // Try to increase the size of the current block.
-    var block = Block.fromData(old_mem);
+    var block = Block.fromData(old_mem.ptr);
     mergeRight(block);
 
     // If the enlargement succeeeded:
@@ -107,15 +109,15 @@ fn realloc(self: &mem.Allocator, old_mem: []u8, new_size: usize) -> %[]u8 {
     }
 
     // If the enlargement failed:
-    free(self, old_mem);                          // Free the current block.
-    var new_mem = %return alloc(self, new_size);  // Allocate a bigger one.
+    free(self, old_mem.ptr);                                 // Free the current block.
+    var new_mem = %return alloc(self, new_size, alignment);  // Allocate a bigger one.
     // Copy the data in the new location.
     mem.copy(u8, new_mem, old_mem);  // FIXME: this should be @memmove.
     return new_mem;
 }
 
 // Implement standard free function - see std.mem for reference.
-fn free(self: &mem.Allocator, old_mem: []u8) {
+fn free(self: &mem.Allocator, old_mem: &u8) {
     var block = Block.fromData(old_mem);
 
     freeBlock(block);  // Reinsert the block in the free list.

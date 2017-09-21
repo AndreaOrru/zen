@@ -33,7 +33,7 @@ pub fn create(elf_addr: usize) -> &Process {
         .pid            = next_pid,
         .page_directory = vmem.createAddressSpace(),
         .next_local_tid = 1,
-        .threads        = List(&Thread).init(&mem.allocator),
+        .threads        = List(&Thread).init(),
     };
     next_pid += 1;
 

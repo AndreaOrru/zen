@@ -25,8 +25,8 @@ pub fn createMailbox(id: u16) {
     var mailbox = %%mem.allocator.create(Mailbox);
     *mailbox = Mailbox {
         .id       = id,
-        .messages = List(usize).init(&mem.allocator),
-        .waiting_queue = List(&Thread).init(&mem.allocator),
+        .messages = List(usize).init(),
+        .waiting_queue = List(&Thread).init(),
     };
 
     mailboxes[id] = mailbox;
@@ -52,7 +52,7 @@ pub fn send(mailbox_id: u16, data: usize) {
         // Wake it and deliver the message.
     } else {
         // No thread is waiting to receive.
-        var message = %%mailbox.messages.createNode(data);
+        var message = %%mailbox.messages.createNode(data, &mem.allocator);
         mailbox.messages.append(message);
         // Put the message in the queue.
     }
