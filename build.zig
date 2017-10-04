@@ -19,6 +19,7 @@ pub fn build(b: &Builder) {
     const qemu_debug = b.step("qemu-debug", "Run the OS with Qemu and wait for debugger to attach");
 
     const common_params = [][]const u8 {
+        "qemu-system-i386",
         "-display", "curses",
         "-kernel", kernel,
         "-initrd", %%join(b.allocator, ',', receiver, sender),
@@ -30,8 +31,8 @@ pub fn build(b: &Builder) {
     for (common_params) |p| { %%qemu_params.append(p); %%qemu_debug_params.append(p); }
     for (debug_params)  |p| {                          %%qemu_debug_params.append(p); }
 
-    const run_qemu       = b.addCommand(".", b.env_map, "qemu-system-i386", qemu_params.toSlice());
-    const run_qemu_debug = b.addCommand(".", b.env_map, "qemu-system-i386", qemu_debug_params.toSlice());
+    const run_qemu       = b.addCommand(".", b.env_map, qemu_params.toSlice());
+    const run_qemu_debug = b.addCommand(".", b.env_map, qemu_debug_params.toSlice());
 
     run_qemu.step.dependOn(b.default_step);
     run_qemu_debug.step.dependOn(b.default_step);
