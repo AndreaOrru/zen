@@ -96,9 +96,8 @@ pub fn printf(comptime format: []const u8, args: ...) {
 }
 
 // Callback for printf.
-fn printCallback(context: void, string: []const u8) -> bool {
+fn printCallback(context: void, string: []const u8) -> %void {
     write(string);
-    return true;
 }
 
 ////

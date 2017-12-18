@@ -78,11 +78,11 @@ const Block = struct {
 };
 
 // Implement standard alloc function - see std.mem for reference.
-fn alloc(self: &mem.Allocator, size: usize, alignment: usize) -> %[]u8 {
+fn alloc(self: &mem.Allocator, size: usize, alignment: u29) -> %[]u8 {
     // TODO: align properly.
 
     // Find a block that's big enough.
-    var block = searchFreeBlock(size) ?? return error.NoMem;
+    var block = searchFreeBlock(size) ?? return error.OutOfMemory;
 
     // If it's bigger than needed, split it.
     if (block.size() > size + @sizeOf(Block)) {
@@ -94,7 +94,7 @@ fn alloc(self: &mem.Allocator, size: usize, alignment: usize) -> %[]u8 {
 }
 
 // Implement standard realloc function - see std.mem for reference.
-fn realloc(self: &mem.Allocator, old_mem: []u8, new_size: usize, alignment: usize) -> %[]u8 {
+fn realloc(self: &mem.Allocator, old_mem: []u8, new_size: usize, alignment: u29) -> %[]u8 {
     // Try to increase the size of the current block.
     var block = Block.fromData(old_mem.ptr);
     mergeRight(block);
@@ -109,7 +109,7 @@ fn realloc(self: &mem.Allocator, old_mem: []u8, new_size: usize, alignment: usiz
     }
 
     // If the enlargement failed:
-    free(self, old_mem.ptr);                                 // Free the current block.
+    free(self, old_mem);                                     // Free the current block.
     var new_mem = %return alloc(self, new_size, alignment);  // Allocate a bigger one.
     // Copy the data in the new location.
     mem.copy(u8, new_mem, old_mem);  // FIXME: this should be @memmove.
@@ -117,8 +117,8 @@ fn realloc(self: &mem.Allocator, old_mem: []u8, new_size: usize, alignment: usiz
 }
 
 // Implement standard free function - see std.mem for reference.
-fn free(self: &mem.Allocator, old_mem: &u8) {
-    var block = Block.fromData(old_mem);
+fn free(self: &mem.Allocator, old_mem: []u8) {
+    var block = Block.fromData(old_mem.ptr);
 
     freeBlock(block);  // Reinsert the block in the free list.
     // Try to merge the free block with adjacent ones.
