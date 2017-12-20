@@ -48,7 +48,7 @@ pub const Registers = packed struct {
 };
 
 // Pointer to the current saved context.
-export var context: &volatile Context = undefined;
+pub export var context: &volatile Context = undefined;
 
 ////
 // Install the Interrupt Service Routines in the IDT.
