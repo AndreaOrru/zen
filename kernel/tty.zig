@@ -7,7 +7,7 @@ const VGA_WIDTH  = 80;
 const VGA_HEIGHT = 25;
 
 // Color codes.
-pub const Color = enum {
+pub const Color = enum(u4) {
     Black,         // 0
     Blue,          // 1
     Green,         // 2
@@ -25,13 +25,12 @@ pub const Color = enum {
     LightBrown,    // 14
     White,         // 15
 };
-// TODO: convert to enum(u4) { Black = 0, ... } once available in Zig (issue #305).
 
 // Character with attributes.
 const VGAEntry = packed struct {
     char:       u8,
-    background: u4,
     foreground: u4,
+    background: u4,
 };
 
 // VRAM buffer.
