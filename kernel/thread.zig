@@ -31,11 +31,15 @@ pub const Thread = struct {
 //     The initialized context.
 //
 fn initContext(entry_point: usize, stack: usize) -> isr.Context {
+    // Insert a trap return address to destroy the thread on return.
+    var stack_top = @intToPtr(&usize, stack + STACK_SIZE - @sizeOf(usize));
+    *stack_top = layout.THREAD_DESTROY;
+
     return isr.Context {
         .cs  = gdt.USER_CODE | gdt.USER_RPL,
         .ss  = gdt.USER_DATA | gdt.USER_RPL,
         .eip = entry_point,
-        .esp = stack + STACK_SIZE,  // Grows downwards.
+        .esp = @ptrToInt(stack_top),
         .eflags = 0x202,
 
         .registers = isr.Registers.init(),
@@ -92,4 +96,16 @@ pub fn create(entry_point: usize) -> &Thread {
     return thread;
 }
 
-// TODO: thread.destroy
+////
+// Destroy the current thread and schedule a new one.
+//
+pub fn destroy() {
+    // Unmap the thread stack.
+    var thread = ??scheduler.current();
+    var stack = getStack(thread.local_tid);
+    vmem.unmapZone(stack, STACK_SIZE);
+
+    // Get the thread off the scheduler and deallocate its structure.
+    _ = ??scheduler.dequeue();
+    mem.allocator.destroy(thread);
+}

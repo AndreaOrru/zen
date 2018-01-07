@@ -1,16 +1,44 @@
 const isr = @import("isr.zig");
 const ipc = @import("ipc.zig");
 const layout = @import("layout.zig");
+const thread = @import("thread.zig");
 const tty = @import("tty.zig");
 const vmem = @import("vmem.zig");
 
 // Registered syscall handlers.
 export var syscall_handlers = []fn() {
-    SYSCALL(ipc.createMailbox),  // 0
-    SYSCALL(ipc.send),           // 1
-    SYSCALL(ipc.receive),        // 2
-    SYSCALL(map),                // 3
+    SYSCALL(exit),               // 0
+    SYSCALL(ipc.createMailbox),  // 1
+    SYSCALL(ipc.send),           // 2
+    SYSCALL(ipc.receive),        // 3
+    SYSCALL(map),                // 4
+    SYSCALL(createThread),       // 5
 };
+// NOTE: keep N_SYSCALLS inside isr.s up to date.
+
+////
+// Exit the current process.
+//
+// Arguments:
+//     status: Exit status code.
+//
+fn exit(status: usize) -> noreturn {
+    // TODO: implement properly.
+    tty.panic("EXIT");
+}
+
+////
+// Create a new thread in the current process.
+//
+// Arguments:
+//     entry_point: The entry point of the new thread.
+//
+// Returns:
+//     The TID of the new thread.
+//
+fn createThread(entry_point: usize) -> u16 {
+    return thread.create(entry_point).tid;
+}
 
 ////
 // Wrap vmem.mapZone to expose it as a syscall for daemons.

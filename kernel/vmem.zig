@@ -2,6 +2,7 @@ const interrupt = @import("interrupt.zig");
 const isr = @import("isr.zig");
 const layout = @import("layout.zig");
 const pmem = @import("pmem.zig");
+const thread = @import("thread.zig");
 const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
 const assert = @import("std").debug.assert;
@@ -173,7 +174,7 @@ pub fn createAddressSpace() -> usize {
 ////
 // Handler for page faults interrupts.
 //
-fn pageFault() -> noreturn {
+fn pageFault() {
     // Get the faulting address from the CR2 register.
     const address = x86.readCR2();
     // Get the error code from the interrupt stack.
@@ -182,6 +183,11 @@ fn pageFault() -> noreturn {
     const err       = if (code & PAGE_PRESENT != 0) "protection" else "non-present";
     const operation = if (code & PAGE_WRITE   != 0) "write"      else "read";
     const privilege = if (code & PAGE_USER    != 0) "user"       else "kernel";
+
+    // Handle return from thread.
+    if (address == layout.THREAD_DESTROY) {
+        return thread.destroy();
+    }
 
     // Trigger a kernel panic with details about the error.
     tty.panic(

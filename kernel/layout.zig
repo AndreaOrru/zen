@@ -8,6 +8,9 @@ pub const IDENTITY = 0x800000;
 pub const TMP  = 0x800000;
 pub const HEAP = 0x900000;
 
+// Magic addresses.
+pub const THREAD_DESTROY  = 0xDEADC0DE;
+
 // Beginning of user space.
 pub const USER            = USER_STACKS;
 pub const USER_STACKS     = 0x1000000;

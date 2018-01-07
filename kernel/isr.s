@@ -7,7 +7,7 @@ N_EXCEPTIONS = 32
 IRQ_0  = N_EXCEPTIONS
 IRQ_16 = IRQ_0 + 16
 
-N_SYSCALLS   = 4
+N_SYSCALLS   = 6
 SYSCALL_GATE = 128
 
 // Template for the Interrupt Service Routines.
