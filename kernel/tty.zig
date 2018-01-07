@@ -29,16 +29,16 @@ pub const Color = enum(u4) {
 // Character with attributes.
 const VGAEntry = packed struct {
     char:       u8,
-    foreground: u4,
-    background: u4,
+    foreground: Color,
+    background: Color,
 };
 
 // VRAM buffer.
 const vram = @intToPtr(&volatile VGAEntry, layout.VRAM)[0..0x4000];
 
-var background = u4(Color.Black);      // Background color.
-var foreground = u4(Color.LightGrey);  // Foreground color.
-var cursor = usize(0);                 // Cursor position.
+var background = Color.Black;      // Background color.
+var foreground = Color.LightGrey;  // Foreground color.
+var cursor = usize(0);             // Cursor position.
 
 ////
 // Initialize the terminal.
@@ -70,7 +70,7 @@ pub fn clear() {
 //     fg: The color to set.
 //
 pub fn setForeground(fg: Color) {
-    foreground = u4(fg);
+    foreground = fg;
 }
 
 ////
@@ -80,7 +80,7 @@ pub fn setForeground(fg: Color) {
 //     bg: The color to set.
 //
 pub fn setBackground(bg: Color) {
-    background = u4(bg);
+    background = bg;
 }
 
 ////
@@ -110,7 +110,7 @@ fn printCallback(context: void, string: []const u8) -> %void {
 pub fn colorPrintf(fg: Color, comptime format: []const u8, args: ...) {
     var save_foreground = foreground;
 
-    foreground = u4(fg);
+    foreground = fg;
     printf(format, args);
 
     foreground = save_foreground;
