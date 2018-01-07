@@ -1,7 +1,5 @@
-const zen = @import("zen");
+const zen = @import("std").os.zen;
 
-export fn main() -> noreturn {
+pub fn main() -> %void {
     zen.send(zen.MBOX_TERMINAL, 'X');
-
-    while (true) {}
 }

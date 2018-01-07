@@ -60,10 +60,7 @@ fn buildKernel(b: &Builder) -> []const u8 {
 fn buildDaemon(b: &Builder, comptime name: []const u8) -> []const u8 {
     const daemon = b.addExecutable(name, "daemons/" ++ name ++ "/main.zig");
     daemon.setOutputPath("daemons/" ++ name ++ "/" ++ name);
-
-    daemon.setTarget(builtin.Arch.i386, builtin.Os.freestanding, builtin.Environ.gnu);
-    daemon.setLinkerScriptPath("daemons/linker.ld");
-    daemon.addPackagePath("zen", "lib/zen.zig");
+    daemon.setTarget(builtin.Arch.i386, builtin.Os.zen, builtin.Environ.gnu);
 
     b.default_step.dependOn(&daemon.step);
     return daemon.getOutputPath();
