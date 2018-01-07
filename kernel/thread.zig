@@ -31,7 +31,7 @@ pub const Thread = struct {
 //     The initialized context.
 //
 fn initContext(entry_point: usize, stack: usize) -> isr.Context {
-    isr.Context {
+    return isr.Context {
         .cs  = gdt.USER_CODE | gdt.USER_RPL,
         .ss  = gdt.USER_DATA | gdt.USER_RPL,
         .eip = entry_point,
@@ -41,7 +41,7 @@ fn initContext(entry_point: usize, stack: usize) -> isr.Context {
         .registers = isr.Registers.init(),
         .interrupt_n = 0,
         .error_code  = 0,
-    }
+    };
 }
 
 ////

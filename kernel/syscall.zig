@@ -62,5 +62,5 @@ export fn invalidSyscall() -> noreturn {
 fn SYSCALL(syscall: var) -> fn() {
     // TODO: type check.
 
-    @ptrCast(fn(), syscall)
+    return @ptrCast(fn(), syscall);
 }

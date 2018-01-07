@@ -63,13 +63,13 @@ const TSS = packed struct {
 //     flags: Segment flags.
 //
 fn makeEntry(base: usize, limit: usize, access: u8, flags: u4) -> GDTEntry {
-    GDTEntry { .limit_low  = u16( limit        & 0xFFFF),
-               .base_low   = u16( base         & 0xFFFF),
-               .base_mid   =  u8((base  >> 16) & 0xFF  ),
-               .access     =  u8( access               ),
-               .limit_high =  u4((limit >> 16) & 0xF   ),
-               .flags      =  u4( flags                ),
-               .base_high  =  u8((base  >> 24) & 0xFF  ), }
+    return GDTEntry { .limit_low  = u16( limit        & 0xFFFF),
+                      .base_low   = u16( base         & 0xFFFF),
+                      .base_mid   =  u8((base  >> 16) & 0xFF  ),
+                      .access     =  u8( access               ),
+                      .limit_high =  u4((limit >> 16) & 0xF   ),
+                      .flags      =  u4( flags                ),
+                      .base_high  =  u8((base  >> 24) & 0xFF  ), };
 }
 
 // Fill in the GDT.

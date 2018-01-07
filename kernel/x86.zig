@@ -12,7 +12,7 @@ pub const PAGE_SIZE: usize = 4096;
 //     The given address as type T (usize or a pointer).
 //
 fn intOrPtr(comptime T: type, address: usize) -> T {
-    if (T == usize) address else @intToPtr(T, address)
+    return if (T == usize) address else @intToPtr(T, address);
 }
 
 ////
@@ -25,7 +25,7 @@ fn intOrPtr(comptime T: type, address: usize) -> T {
 //     The given address as type usize.
 //
 fn int(address: var) -> usize {
-    if (@typeOf(address) == usize) address else @ptrToInt(address)
+    return if (@typeOf(address) == usize) address else @ptrToInt(address);
 }
 
 ////
@@ -123,7 +123,7 @@ pub inline fn invlpg(v_addr: usize) {
 // Read the CR2 control register.
 //
 pub inline fn readCR2() -> usize {
-    asm volatile ("mov %%cr2, %[result]" : [result] "=r" (-> usize))
+    return asm volatile ("mov %%cr2, %[result]" : [result] "=r" (-> usize));
 }
 
 ////
@@ -143,8 +143,8 @@ pub inline fn writeCR3(pd: usize) {
 //     The read byte.
 //
 pub inline fn inb(port: u16) -> u8 {
-    asm volatile ("inb %[port], %[result]" : [result] "={al}" (-> u8)
-                                           : [port]   "N{dx}" (port))
+    return asm volatile ("inb %[port], %[result]" : [result] "={al}" (-> u8)
+                                                  : [port]   "N{dx}" (port));
 }
 
 ////

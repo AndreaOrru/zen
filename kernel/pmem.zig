@@ -15,7 +15,7 @@ pub var stack_end:  usize = undefined;
 // Return the amount of variable elements (in bytes).
 //
 pub fn available() -> usize {
-    stack_index * x86.PAGE_SIZE
+    return stack_index * x86.PAGE_SIZE;
 }
 
 ////

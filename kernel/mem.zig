@@ -33,13 +33,13 @@ const Block = struct {
     //     The biggest possible free block.
     //
     pub fn init() -> Block {
-        Block {
+        return Block {
             .free = true,
             .prev = null,
             .next = null,
             .prev_free = null,
             .next_free = null,
-        }
+        };
     }
 
     ////
@@ -60,7 +60,7 @@ const Block = struct {
     // Return a slice of the usable portion of the block.
     //
     pub fn data(self: &Block) -> []u8 {
-        @intToPtr(&u8, @ptrToInt(self) + @sizeOf(Block))[0..self.size()]
+        return @intToPtr(&u8, @ptrToInt(self) + @sizeOf(Block))[0..self.size()];
     }
 
     ////
@@ -73,7 +73,7 @@ const Block = struct {
     //     The associated block strucutre.
     //
     pub fn fromData(bytes: &u8) -> &Block {
-        @intToPtr(&Block, @ptrToInt(bytes) - @sizeOf(Block))
+        return @intToPtr(&Block, @ptrToInt(bytes) - @sizeOf(Block));
     }
 };
 

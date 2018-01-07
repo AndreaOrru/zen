@@ -22,13 +22,13 @@ pub const PAGE_GLOBAL    = (1 << 8);
 pub const PAGE_ALLOCATED = (1 << 9);
 
 // Calculate the PD and PT indexes given a virtual address.
-fn pdIndex(v_addr: usize) -> usize {  v_addr >> 22 }
-fn ptIndex(v_addr: usize) -> usize { (v_addr >> 12) & 0x3FF }
+fn pdIndex(v_addr: usize) -> usize { return  v_addr >> 22; }
+fn ptIndex(v_addr: usize) -> usize { return (v_addr >> 12) & 0x3FF; }
 
 // Return pointers to the PD and PT entries given a virtual address.
-fn pdEntry(v_addr: usize) -> &PageEntry { &PD[pdIndex(v_addr)] }
+fn pdEntry(v_addr: usize) -> &PageEntry { return &PD[pdIndex(v_addr)]; }
 fn ptEntry(v_addr: usize) -> &PageEntry {
-    &PTs[(pdIndex(v_addr) * 0x400) + ptIndex(v_addr)]
+    return &PTs[(pdIndex(v_addr) * 0x400) + ptIndex(v_addr)];
 }
 
 ////
