@@ -109,8 +109,8 @@ fn realloc(self: &mem.Allocator, old_mem: []u8, new_size: usize, alignment: u29)
     }
 
     // If the enlargement failed:
-    free(self, old_mem);                                     // Free the current block.
-    var new_mem = %return alloc(self, new_size, alignment);  // Allocate a bigger one.
+    free(self, old_mem);                                 // Free the current block.
+    var new_mem = try alloc(self, new_size, alignment);  // Allocate a bigger one.
     // Copy the data in the new location.
     mem.copy(u8, new_mem, old_mem);  // FIXME: this should be @memmove.
     return new_mem;
