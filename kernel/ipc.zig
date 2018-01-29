@@ -19,7 +19,7 @@ var mailboxes: [256]&Mailbox = undefined;
 // Arguments:
 //     id: The number of the mailbox.
 //
-pub fn createMailbox(id: u16) {
+pub fn createMailbox(id: u16) void {
     // TODO: check that the ID is not reserved.
 
     var mailbox = mem.allocator.create(Mailbox) catch unreachable;
@@ -39,7 +39,7 @@ pub fn createMailbox(id: u16) {
 //     mailbox_id: The number of the mailbox.
 //     data: The message to send.
 //
-pub fn send(mailbox_id: u16, data: usize) {
+pub fn send(mailbox_id: u16, data: usize) void {
     // TODO: Check if the mailbox exists.
 
     var mailbox = mailboxes[mailbox_id];
@@ -68,7 +68,7 @@ pub fn send(mailbox_id: u16, data: usize) {
 // Returns:
 //     The received message, immediately or after unblocking.
 //
-pub fn receive(mailbox_id: u16) -> usize {
+pub fn receive(mailbox_id: u16) usize {
     var mailbox = mailboxes[mailbox_id];
 
     if (mailbox.messages.popFirst()) |first| {

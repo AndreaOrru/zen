@@ -39,7 +39,7 @@ const idtr = IDTRegister {
 //     flags: Type and attributes.
 //     offset: Address of the ISR.
 //
-pub fn setGate(n: u8, flags: u8, offset: extern fn()) {
+pub fn setGate(n: u8, flags: u8, offset: extern fn()void) void {
     const intOffset = @ptrToInt(offset);
 
     idt[n].offset_low  = u16(intOffset & 0xFFFF);
@@ -52,7 +52,7 @@ pub fn setGate(n: u8, flags: u8, offset: extern fn()) {
 ////
 // Initialize the Interrupt Descriptor Table.
 //
-pub fn initialize() {
+pub fn initialize() void {
     tty.step("Setting up the Interrupt Descriptor Table");
 
     interrupt.initialize();

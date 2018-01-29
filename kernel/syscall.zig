@@ -6,7 +6,7 @@ const tty = @import("tty.zig");
 const vmem = @import("vmem.zig");
 
 // Registered syscall handlers.
-export var syscall_handlers = []fn() {
+export var syscall_handlers = []fn() void {
     SYSCALL(exit),               // 0
     SYSCALL(ipc.createMailbox),  // 1
     SYSCALL(ipc.send),           // 2
@@ -22,7 +22,7 @@ export var syscall_handlers = []fn() {
 // Arguments:
 //     status: Exit status code.
 //
-fn exit(status: usize) -> noreturn {
+fn exit(status: usize) noreturn {
     // TODO: implement properly.
     tty.panic("EXIT");
 }
@@ -36,7 +36,7 @@ fn exit(status: usize) -> noreturn {
 // Returns:
 //     The TID of the new thread.
 //
-fn createThread(entry_point: usize) -> u16 {
+fn createThread(entry_point: usize) u16 {
     return thread.create(entry_point).tid;
 }
 
@@ -51,7 +51,7 @@ fn createThread(entry_point: usize) -> u16 {
 // Returns:
 //     true if the mapping was successful, false otherwise.
 //
-fn map(v_addr: usize, p_addr: usize, size: usize, writable: bool) -> bool {
+fn map(v_addr: usize, p_addr: usize, size: usize, writable: bool) bool {
     // TODO: Only daemons can call this.
     // TODO: Validate p_addr.
 
@@ -69,7 +69,7 @@ fn map(v_addr: usize, p_addr: usize, size: usize, writable: bool) -> bool {
 ////
 // Handle the call of an invalid syscall.
 //
-export fn invalidSyscall() -> noreturn {
+export fn invalidSyscall() noreturn {
     const n = isr.context.registers.eax;
     tty.panic("invalid syscall number {d}", n);
 
@@ -87,8 +87,8 @@ export fn invalidSyscall() -> noreturn {
 // Returns:
 //     The casted funciton.
 //
-fn SYSCALL(syscall: var) -> fn() {
+fn SYSCALL(syscall: var) fn()void {
     // TODO: type check.
 
-    return @ptrCast(fn(), syscall);
+    return @ptrCast(fn()void, syscall);
 }
