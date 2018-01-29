@@ -28,7 +28,7 @@ var next_pid: u16 = 1;
 //     Pointer to the new process structure.
 //
 pub fn create(elf_addr: usize) -> &Process {
-    var process = %%mem.allocator.create(Process);
+    var process = mem.allocator.create(Process) catch unreachable;
     *process = Process {
         .pid            = next_pid,
         .page_directory = vmem.createAddressSpace(),

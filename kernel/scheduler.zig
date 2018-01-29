@@ -60,7 +60,7 @@ pub fn switchProcess(process: &Process) {
 //     new_thread: The thread to be added.
 //
 pub fn new(new_thread: &Thread) {
-    ready_queue.append(%%ready_queue.createNode(new_thread, &mem.allocator));
+    ready_queue.append(ready_queue.createNode(new_thread, &mem.allocator) catch unreachable);
     contextSwitch(new_thread);
 }
 

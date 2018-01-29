@@ -81,7 +81,7 @@ pub fn create(entry_point: usize) -> &Thread {
     var stack = getStack(local_tid);
     vmem.mapZone(stack, null, STACK_SIZE, vmem.PAGE_WRITE | vmem.PAGE_USER);
 
-    var thread = %%mem.allocator.create(Thread);
+    var thread = mem.allocator.create(Thread) catch unreachable;
     *thread = Thread {
         .context   = initContext(entry_point, stack),
         .process   = scheduler.current_process,

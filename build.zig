@@ -22,14 +22,14 @@ pub fn build(b: &Builder) {
         "qemu-system-i386",
         "-display", "curses",
         "-kernel", kernel,
-        "-initrd", %%join(b.allocator, ',', receiver, sender),
+        "-initrd", join(b.allocator, ',', receiver, sender) catch unreachable,
     };
     const debug_params = [][]const u8 {"-s", "-S"};
 
     var qemu_params       = Array([]const u8).init(b.allocator);
     var qemu_debug_params = Array([]const u8).init(b.allocator);
-    for (common_params) |p| { %%qemu_params.append(p); %%qemu_debug_params.append(p); }
-    for (debug_params)  |p| {                          %%qemu_debug_params.append(p); }
+    for (common_params) |p| { qemu_params.append(p) catch unreachable; qemu_debug_params.append(p) catch unreachable; }
+    for (debug_params)  |p| {                                          qemu_debug_params.append(p) catch unreachable; }
 
     const run_qemu       = b.addCommand(".", b.env_map, qemu_params.toSlice());
     const run_qemu_debug = b.addCommand(".", b.env_map, qemu_debug_params.toSlice());

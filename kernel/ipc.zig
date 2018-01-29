@@ -22,7 +22,7 @@ var mailboxes: [256]&Mailbox = undefined;
 pub fn createMailbox(id: u16) {
     // TODO: check that the ID is not reserved.
 
-    var mailbox = %%mem.allocator.create(Mailbox);
+    var mailbox = mem.allocator.create(Mailbox) catch unreachable;
     *mailbox = Mailbox {
         .id       = id,
         .messages = List(usize).init(),
@@ -52,7 +52,7 @@ pub fn send(mailbox_id: u16, data: usize) {
         // Wake it and deliver the message.
     } else {
         // No thread is waiting to receive.
-        var message = %%mailbox.messages.createNode(data, &mem.allocator);
+        var message = mailbox.messages.createNode(data, &mem.allocator) catch unreachable;
         mailbox.messages.append(message);
         // Put the message in the queue.
     }
