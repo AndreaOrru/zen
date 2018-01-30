@@ -31,7 +31,7 @@ fn unhandled() noreturn {
 //     n: Index of the interrupt.
 //     handler: Interrupt handler.
 //
-pub fn register(n: u8, handler: fn()void)void {
+pub fn register(n: u8, handler: fn()void) void {
     interrupt_handlers[n] = handler;
 }
 
@@ -42,7 +42,7 @@ pub fn register(n: u8, handler: fn()void)void {
 //     irq: Index of the IRQ.
 //     handler: IRQ handler.
 //
-pub fn registerIRQ(irq: u8, handler: fn()void)void {
+pub fn registerIRQ(irq: u8, handler: fn()void) void {
     register(irq + 32, handler);
     maskIRQ(irq, false);  // Unmask the IRQ.
 }
@@ -54,7 +54,7 @@ pub fn registerIRQ(irq: u8, handler: fn()void)void {
 //     irq: Index of the IRQ.
 //     mask: Whether to mask (true) or unmask (false).
 //
-pub fn maskIRQ(irq: u8, mask: bool) void{
+pub fn maskIRQ(irq: u8, mask: bool) void {
     // Figure out if master or slave PIC owns the IRQ.
     const port = if (irq < 8) u16(PIC1_DATA) else u16(PIC2_DATA);
     const old = x86.inb(port);  // Retrieve the current mask.
@@ -70,7 +70,7 @@ pub fn maskIRQ(irq: u8, mask: bool) void{
 ////
 // Remap the PICs so that IRQs don't override software interrupts.
 //
-fn remapPIC() void{
+fn remapPIC() void {
     // ICW1: start initialization sequence.
     x86.outb(PIC1_CMD, ICW1_INIT | ICW1_ICW4);
     x86.outb(PIC2_CMD, ICW1_INIT | ICW1_ICW4);
@@ -95,7 +95,7 @@ fn remapPIC() void{
 ////
 // Initialize interrupts.
 //
-pub fn initialize() void{
+pub fn initialize() void {
     remapPIC();
     isr.install();
 }

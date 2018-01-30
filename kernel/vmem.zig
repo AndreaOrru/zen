@@ -132,7 +132,7 @@ pub fn unmapZone(v_addr: usize, size: usize) void {
 // Arguments:
 //     phys_pd: Physical pointer to the page directory.
 //
-extern fn setupPaging(phys_pd: usize)void ;
+extern fn setupPaging(phys_pd: usize)void;
 
 ////
 // Fill a page table with zeroes.
