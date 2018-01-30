@@ -18,7 +18,7 @@ const PIT_FREQUENCY = 1193182;
 // Arguments:
 //     hz: Frequency of the timer.
 //
-pub fn initialize(hz: u32) {
+pub fn initialize(hz: u32) void {
     tty.step("Configuring the System Timer");
     tty.colorPrintf(Color.White, " {d} Hz", hz);
 
@@ -38,6 +38,6 @@ pub fn initialize(hz: u32) {
 ////
 // Register an handler for the timer.
 //
-pub fn registerHandler(handler: fn()) {
+pub fn registerHandler(handler: fn()void) void {
     interrupt.registerIRQ(0, handler);
 }

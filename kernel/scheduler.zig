@@ -15,7 +15,7 @@ var ready_queue: List(&Thread) = undefined;     // Queue of threads ready for ex
 // Schedule to the next thread in the queue.
 // Called at each timer tick.
 //
-fn schedule() {
+fn schedule() void {
     if (ready_queue.popFirst()) |next| {
         ready_queue.append(next);
         const next_thread = next.data;
@@ -32,7 +32,7 @@ fn schedule() {
 // Arguments:
 //     thread: The thread to switch to.
 //
-fn contextSwitch(thread: &Thread) {
+fn contextSwitch(thread: &Thread) void {
     switchProcess(thread.process);
 
     isr.context = &thread.context;
@@ -45,7 +45,7 @@ fn contextSwitch(thread: &Thread) {
 // Arguments:
 //     process: The process to switch to.
 //
-pub fn switchProcess(process: &Process) {
+pub fn switchProcess(process: &Process) void {
     if (current_process != process) {
         x86.writeCR3(process.page_directory);
         current_process = process;
@@ -59,8 +59,8 @@ pub fn switchProcess(process: &Process) {
 // Arguments:
 //     new_thread: The thread to be added.
 //
-pub fn new(new_thread: &Thread) {
-    ready_queue.append(%%ready_queue.createNode(new_thread, &mem.allocator));
+pub fn new(new_thread: &Thread) void {
+    ready_queue.append(ready_queue.createNode(new_thread, &mem.allocator) catch unreachable);
     contextSwitch(new_thread);
 }
 
@@ -71,7 +71,7 @@ pub fn new(new_thread: &Thread) {
 // Arguments:
 //     thread: The thread to be enqueued.
 //
-pub fn enqueue(thread: &List(&Thread).Node) {
+pub fn enqueue(thread: &List(&Thread).Node) void {
     // Last element in the queue is the thread currently being executed.
     // So put this thread in the second to last position.
     if (ready_queue.last) |last| {
@@ -88,7 +88,7 @@ pub fn enqueue(thread: &List(&Thread).Node) {
 // Returns:
 //     The descheduled thread.
 //
-pub fn dequeue() -> ?&List(&Thread).Node {
+pub fn dequeue() ?&List(&Thread).Node {
     const thread = ready_queue.pop() ?? return null;
     schedule();
     return thread;
@@ -97,7 +97,7 @@ pub fn dequeue() -> ?&List(&Thread).Node {
 ////
 // Return the thread currently being executed.
 //
-pub fn current() -> ?&Thread {
+pub fn current() ?&Thread {
     const last = ready_queue.last ?? return null;
     return last.data;
 }
@@ -105,7 +105,7 @@ pub fn current() -> ?&Thread {
 ////
 // Initialize the scheduler.
 //
-pub fn initialize() {
+pub fn initialize() void {
     tty.step("Initializing the Scheduler");
 
     ready_queue = List(&Thread).init();

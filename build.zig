@@ -3,7 +3,7 @@ const Builder = @import("std").build.Builder;
 const builtin = @import("builtin");
 const join = @import("std").mem.join;
 
-pub fn build(b: &Builder) {
+pub fn build(b: &Builder) %void {
     ////
     // Default step.
     //
@@ -22,14 +22,14 @@ pub fn build(b: &Builder) {
         "qemu-system-i386",
         "-display", "curses",
         "-kernel", kernel,
-        "-initrd", %%join(b.allocator, ',', receiver, sender),
+        "-initrd", join(b.allocator, ',', receiver, sender) catch unreachable,
     };
     const debug_params = [][]const u8 {"-s", "-S"};
 
     var qemu_params       = Array([]const u8).init(b.allocator);
     var qemu_debug_params = Array([]const u8).init(b.allocator);
-    for (common_params) |p| { %%qemu_params.append(p); %%qemu_debug_params.append(p); }
-    for (debug_params)  |p| {                          %%qemu_debug_params.append(p); }
+    for (common_params) |p| { qemu_params.append(p) catch unreachable; qemu_debug_params.append(p) catch unreachable; }
+    for (debug_params)  |p| {                                          qemu_debug_params.append(p) catch unreachable; }
 
     const run_qemu       = b.addCommand(".", b.env_map, qemu_params.toSlice());
     const run_qemu_debug = b.addCommand(".", b.env_map, qemu_debug_params.toSlice());
@@ -40,7 +40,7 @@ pub fn build(b: &Builder) {
     qemu_debug.dependOn(&run_qemu_debug.step);
 }
 
-fn buildKernel(b: &Builder) -> []const u8 {
+fn buildKernel(b: &Builder) []const u8 {
     const kernel = b.addExecutable("zen", "kernel/kmain.zig");
     kernel.setBuildMode(b.standardReleaseOptions());
     kernel.setOutputPath("zen");
@@ -57,7 +57,7 @@ fn buildKernel(b: &Builder) -> []const u8 {
     return kernel.getOutputPath();
 }
 
-fn buildDaemon(b: &Builder, comptime name: []const u8) -> []const u8 {
+fn buildDaemon(b: &Builder, comptime name: []const u8) []const u8 {
     const daemon = b.addExecutable(name, "daemons/" ++ name ++ "/main.zig");
     daemon.setOutputPath("daemons/" ++ name ++ "/" ++ name);
     daemon.setTarget(builtin.Arch.i386, builtin.Os.zen, builtin.Environ.gnu);

@@ -23,12 +23,12 @@ pub const PAGE_GLOBAL    = (1 << 8);
 pub const PAGE_ALLOCATED = (1 << 9);
 
 // Calculate the PD and PT indexes given a virtual address.
-fn pdIndex(v_addr: usize) -> usize { return  v_addr >> 22; }
-fn ptIndex(v_addr: usize) -> usize { return (v_addr >> 12) & 0x3FF; }
+fn pdIndex(v_addr: usize) usize { return  v_addr >> 22; }
+fn ptIndex(v_addr: usize) usize { return (v_addr >> 12) & 0x3FF; }
 
 // Return pointers to the PD and PT entries given a virtual address.
-fn pdEntry(v_addr: usize) -> &PageEntry { return &PD[pdIndex(v_addr)]; }
-fn ptEntry(v_addr: usize) -> &PageEntry {
+fn pdEntry(v_addr: usize) &PageEntry { return &PD[pdIndex(v_addr)]; }
+fn ptEntry(v_addr: usize) &PageEntry {
     return &PTs[(pdIndex(v_addr) * 0x400) + ptIndex(v_addr)];
 }
 
@@ -40,7 +40,7 @@ fn ptEntry(v_addr: usize) -> &PageEntry {
 //     p_addr: Physical address to map the page to (or null to allocate it).
 //     flags: Paging flags (protection etc.).
 //
-pub fn map(v_addr: usize, p_addr: ?usize, flags: u32) {
+pub fn map(v_addr: usize, p_addr: ?usize, flags: u32) void {
     // Do not touch the identity mapped area.
     assert (v_addr >= layout.IDENTITY);
 
@@ -82,7 +82,7 @@ pub fn map(v_addr: usize, p_addr: ?usize, flags: u32) {
 // Arguments:
 //     v_addr: Virtual address of the page to be unmapped.
 //
-pub fn unmap(v_addr: usize) {
+pub fn unmap(v_addr: usize) void {
     assert (v_addr >= layout.IDENTITY);
 
     const pd_entry = pdEntry(v_addr);
@@ -105,7 +105,7 @@ pub fn unmap(v_addr: usize) {
 //     size: Size of the memory zone.
 //     flags: Paging flags (protection etc.)
 //
-pub fn mapZone(v_addr: usize, p_addr: ?usize, size: usize, flags: u32) {
+pub fn mapZone(v_addr: usize, p_addr: ?usize, size: usize, flags: u32) void {
     var i: usize = 0;
     while (i < size) : (i += x86.PAGE_SIZE) {
         map(v_addr + i, if (p_addr) |p| p + i else null, flags);
@@ -119,7 +119,7 @@ pub fn mapZone(v_addr: usize, p_addr: ?usize, size: usize, flags: u32) {
 //     v_addr: Beginning of the virtual memory zone.
 //     size: Size of the memory zone.
 //
-pub fn unmapZone(v_addr: usize, size: usize) {
+pub fn unmapZone(v_addr: usize, size: usize) void {
     var i: usize = 0;
     while (i < size) : (i += x86.PAGE_SIZE) {
         unmap(v_addr + i);
@@ -132,7 +132,7 @@ pub fn unmapZone(v_addr: usize, size: usize) {
 // Arguments:
 //     phys_pd: Physical pointer to the page directory.
 //
-extern fn setupPaging(phys_pd: usize);
+extern fn setupPaging(phys_pd: usize)void;
 
 ////
 // Fill a page table with zeroes.
@@ -140,7 +140,7 @@ extern fn setupPaging(phys_pd: usize);
 // Arguments:
 //     page_table: The address of the table.
 //
-fn zeroPageTable(page_table: &PageEntry) {
+fn zeroPageTable(page_table: &PageEntry) void {
     const pt = @ptrCast(&u8, page_table);
     @memset(pt, 0, x86.PAGE_SIZE);
 }
@@ -151,7 +151,7 @@ fn zeroPageTable(page_table: &PageEntry) {
 // Returns:
 //     The address of the new Page Directory.
 //
-pub fn createAddressSpace() -> usize {
+pub fn createAddressSpace() usize {
     // Allocate space for a new Page Directory.
     const phys_pd = pmem.allocate();
     const virt_pd = @intToPtr(&PageEntry, layout.TMP);
@@ -174,7 +174,7 @@ pub fn createAddressSpace() -> usize {
 ////
 // Handler for page faults interrupts.
 //
-fn pageFault() {
+fn pageFault() void {
     // Get the faulting address from the CR2 register.
     const address = x86.readCR2();
     // Get the error code from the interrupt stack.
@@ -202,7 +202,7 @@ fn pageFault() {
 ////
 // Initialize the virtual memory system.
 //
-pub fn initialize() {
+pub fn initialize() void {
     tty.step("Initializing Paging");
 
     // Ensure we map all the page stack.

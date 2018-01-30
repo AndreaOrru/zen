@@ -30,7 +30,7 @@ pub const Thread = struct {
 // Returns:
 //     The initialized context.
 //
-fn initContext(entry_point: usize, stack: usize) -> isr.Context {
+fn initContext(entry_point: usize, stack: usize) isr.Context {
     // Insert a trap return address to destroy the thread on return.
     var stack_top = @intToPtr(&usize, stack + STACK_SIZE - @sizeOf(usize));
     *stack_top = layout.THREAD_DESTROY;
@@ -57,7 +57,7 @@ fn initContext(entry_point: usize, stack: usize) -> isr.Context {
 // Returns:
 //     The address of the beginning of the stack.
 //
-fn getStack(local_tid: u8) -> usize {
+fn getStack(local_tid: u8) usize {
     const stack = layout.USER_STACKS + (2 * (local_tid - 1) * STACK_SIZE);
 
     assert (stack < layout.USER_STACKS_END);
@@ -74,14 +74,14 @@ fn getStack(local_tid: u8) -> usize {
 // Returns:
 //     Pointer to the new thread structure.
 //
-pub fn create(entry_point: usize) -> &Thread {
+pub fn create(entry_point: usize) &Thread {
     // Get the next available local TID inside the current process.
     var local_tid = scheduler.current_process.next_local_tid;
     // Calculate the address of the thread stack and map it.
     var stack = getStack(local_tid);
     vmem.mapZone(stack, null, STACK_SIZE, vmem.PAGE_WRITE | vmem.PAGE_USER);
 
-    var thread = %%mem.allocator.create(Thread);
+    var thread = mem.allocator.create(Thread) catch unreachable;
     *thread = Thread {
         .context   = initContext(entry_point, stack),
         .process   = scheduler.current_process,
@@ -99,7 +99,7 @@ pub fn create(entry_point: usize) -> &Thread {
 ////
 // Destroy the current thread and schedule a new one.
 //
-pub fn destroy() {
+pub fn destroy() void {
     // Unmap the thread stack.
     var thread = ??scheduler.current();
     var stack = getStack(thread.local_tid);

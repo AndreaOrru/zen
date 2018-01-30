@@ -14,14 +14,14 @@ pub var stack_end:  usize = undefined;
 ////
 // Return the amount of variable elements (in bytes).
 //
-pub fn available() -> usize {
+pub fn available() usize {
     return stack_index * x86.PAGE_SIZE;
 }
 
 ////
 // Request a free physical page and return its address.
 //
-pub fn allocate() -> usize {
+pub fn allocate() usize {
     if (available() == 0)
         tty.panic("out of memory");
 
@@ -35,7 +35,7 @@ pub fn allocate() -> usize {
 // Arguments:
 //     address: Address of the page to be freed.
 //
-pub fn free(address: usize) {
+pub fn free(address: usize) void {
     stack[stack_index] = x86.pageBase(address);
     stack_index += 1;
 }
@@ -46,7 +46,7 @@ pub fn free(address: usize) {
 // Arguments:
 //     info: Information structure from bootloader.
 //
-pub fn initialize(info: &const MultibootInfo) {
+pub fn initialize(info: &const MultibootInfo) void {
     tty.step("Indexing Physical Memory");
 
     // Ensure the bootloader has given us the memory map.

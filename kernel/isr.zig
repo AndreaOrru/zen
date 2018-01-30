@@ -1,19 +1,19 @@
 const idt = @import("idt.zig");
 
 // Interrupt Service Routines defined externally in assembly.
-extern fn  isr0(); extern fn  isr1(); extern fn  isr2(); extern fn  isr3();
-extern fn  isr4(); extern fn  isr5(); extern fn  isr6(); extern fn  isr7();
-extern fn  isr8(); extern fn  isr9(); extern fn isr10(); extern fn isr11();
-extern fn isr12(); extern fn isr13(); extern fn isr14(); extern fn isr15();
-extern fn isr16(); extern fn isr17(); extern fn isr18(); extern fn isr19();
-extern fn isr20(); extern fn isr21(); extern fn isr22(); extern fn isr23();
-extern fn isr24(); extern fn isr25(); extern fn isr26(); extern fn isr27();
-extern fn isr28(); extern fn isr29(); extern fn isr30(); extern fn isr31();
-extern fn isr32(); extern fn isr33(); extern fn isr34(); extern fn isr35();
-extern fn isr36(); extern fn isr37(); extern fn isr38(); extern fn isr39();
-extern fn isr40(); extern fn isr41(); extern fn isr42(); extern fn isr43();
-extern fn isr44(); extern fn isr45(); extern fn isr46(); extern fn isr47();
-extern fn isr128();
+extern fn  isr0()void; extern fn  isr1()void; extern fn  isr2()void; extern fn  isr3()void;
+extern fn  isr4()void; extern fn  isr5()void; extern fn  isr6()void; extern fn  isr7()void;
+extern fn  isr8()void; extern fn  isr9()void; extern fn isr10()void; extern fn isr11()void;
+extern fn isr12()void; extern fn isr13()void; extern fn isr14()void; extern fn isr15()void;
+extern fn isr16()void; extern fn isr17()void; extern fn isr18()void; extern fn isr19()void;
+extern fn isr20()void; extern fn isr21()void; extern fn isr22()void; extern fn isr23()void;
+extern fn isr24()void; extern fn isr25()void; extern fn isr26()void; extern fn isr27()void;
+extern fn isr28()void; extern fn isr29()void; extern fn isr30()void; extern fn isr31()void;
+extern fn isr32()void; extern fn isr33()void; extern fn isr34()void; extern fn isr35()void;
+extern fn isr36()void; extern fn isr37()void; extern fn isr38()void; extern fn isr39()void;
+extern fn isr40()void; extern fn isr41()void; extern fn isr42()void; extern fn isr43()void;
+extern fn isr44()void; extern fn isr45()void; extern fn isr46()void; extern fn isr47()void;
+extern fn isr128()void;
 
 // Context saved by Interrupt Service Routines.
 pub const Context = packed struct {
@@ -29,7 +29,7 @@ pub const Context = packed struct {
     esp:    u32,
     ss:     u32,
 
-    pub inline fn setReturnValue(self: &Context, value: usize) {
+    pub inline fn setReturnValue(self: &Context, value: usize) void {
         self.registers.eax = value;
     }
 };
@@ -39,7 +39,7 @@ pub const Registers = packed struct {
     edi: u32, esi: u32, ebp: u32, esp: u32,
     ebx: u32, edx: u32, ecx: u32, eax: u32,
 
-    pub fn init() -> Registers {
+    pub fn init() Registers {
         return Registers {
             .edi = 0, .esi = 0, .ebp = 0, .esp = 0,
             .ebx = 0, .edx = 0, .ecx = 0, .eax = 0,
@@ -53,7 +53,7 @@ pub export var context: &volatile Context = undefined;
 ////
 // Install the Interrupt Service Routines in the IDT.
 //
-pub fn install() {
+pub fn install() void {
     // Exceptions.
     idt.setGate(0,  idt.INTERRUPT_GATE, isr0);
     idt.setGate(1,  idt.INTERRUPT_GATE, isr1);
