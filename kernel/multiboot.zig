@@ -60,7 +60,7 @@ pub const MultibootInfo = packed struct {
     ////
     // Return the ending address of the last module.
     //
-    pub fn lastModuleEnd(self: &const MultibootInfo) -> usize {
+    pub fn lastModuleEnd(self: &const MultibootInfo) usize {
         const mods = @intToPtr(&MultibootModule, self.mods_addr);
         return mods[self.mods_count - 1].mod_end;
     }
@@ -68,7 +68,7 @@ pub const MultibootInfo = packed struct {
     ////
     // Load all the modules passed by the bootloader.
     //
-    pub fn loadModules(self: &const MultibootInfo) {
+    pub fn loadModules(self: &const MultibootInfo) void {
         const mods = @intToPtr(&MultibootModule, self.mods_addr)[0..self.mods_count];
 
         for (mods) |mod| {

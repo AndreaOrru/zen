@@ -43,7 +43,7 @@ var cursor = usize(0);             // Cursor position.
 ////
 // Initialize the terminal.
 //
-pub fn initialize() {
+pub fn initialize() void {
     // Disable cursor.
     x86.outb(0x3D4, 0xA);
     x86.outb(0x3D5, 1 << 5);
@@ -54,7 +54,7 @@ pub fn initialize() {
 ////
 // Clear the screen.
 //
-pub fn clear() {
+pub fn clear() void {
     cursor = 0;
 
     while (cursor < VGA_HEIGHT * VGA_WIDTH)
@@ -69,7 +69,7 @@ pub fn clear() {
 // Arguments:
 //     fg: The color to set.
 //
-pub fn setForeground(fg: Color) {
+pub fn setForeground(fg: Color) void {
     foreground = fg;
 }
 
@@ -79,7 +79,7 @@ pub fn setForeground(fg: Color) {
 // Arguments:
 //     bg: The color to set.
 //
-pub fn setBackground(bg: Color) {
+pub fn setBackground(bg: Color) void {
     background = bg;
 }
 
@@ -90,12 +90,12 @@ pub fn setBackground(bg: Color) {
 //     format: Format string.
 //     args: Parameters for format specifiers.
 //
-pub fn printf(comptime format: []const u8, args: ...) {
+pub fn printf(comptime format: []const u8, args: ...) void {
     _ = fmt.format({}, printCallback, format, args);
 }
 
 // Callback for printf.
-fn printCallback(context: void, string: []const u8) -> %void {
+fn printCallback(context: void, string: []const u8) %void {
     write(string);
 }
 
@@ -107,7 +107,7 @@ fn printCallback(context: void, string: []const u8) -> %void {
 //     format: Format string.
 //     args: Parameters for format specifiers.
 //
-pub fn colorPrintf(fg: Color, comptime format: []const u8, args: ...) {
+pub fn colorPrintf(fg: Color, comptime format: []const u8, args: ...) void {
     var save_foreground = foreground;
 
     foreground = fg;
@@ -122,7 +122,7 @@ pub fn colorPrintf(fg: Color, comptime format: []const u8, args: ...) {
 // Arguments:
 //     string: String to be printed.
 //
-pub fn write(string: []const u8) {
+pub fn write(string: []const u8) void {
     for (string) |c| writeChar(c);
 }
 
@@ -132,7 +132,7 @@ pub fn write(string: []const u8) {
 // Arguments:
 //     char: Char to be printed.
 //
-pub fn writeChar(char: u8) {
+pub fn writeChar(char: u8) void {
     switch (char) {
         // Newline:
         '\n' => {
@@ -161,7 +161,7 @@ pub fn writeChar(char: u8) {
 // Arguments:
 //     offset: Number of characters from the left border.
 //
-pub fn alignLeft(offset: usize) {
+pub fn alignLeft(offset: usize) void {
     while (cursor % VGA_WIDTH != offset)
         writeChar(' ');
 }
@@ -172,7 +172,7 @@ pub fn alignLeft(offset: usize) {
 // Arguments:
 //     offset: Number of characters from the right border.
 //
-pub fn alignRight(offset: usize) {
+pub fn alignRight(offset: usize) void {
     alignLeft(VGA_WIDTH - offset);
 }
 
@@ -182,7 +182,7 @@ pub fn alignRight(offset: usize) {
 // Arguments:
 //     str_len: Length of the string to be centered.
 //
-pub fn alignCenter(str_len: usize) {
+pub fn alignCenter(str_len: usize) void {
     alignLeft((VGA_WIDTH - str_len) / 2);
 }
 
@@ -193,7 +193,7 @@ pub fn alignCenter(str_len: usize) {
 //     format: Format string.
 //     args: Parameters for format specifiers.
 //
-pub fn panic(comptime format: []const u8, args: ...) -> noreturn {
+pub fn panic(comptime format: []const u8, args: ...) noreturn {
     writeChar('\n');
 
     setBackground(Color.Red);
@@ -209,7 +209,7 @@ pub fn panic(comptime format: []const u8, args: ...) -> noreturn {
 //     format: Format string.
 //     args: Parameters for format specifiers.
 //
-pub fn step(comptime format: []const u8, args: ...) {
+pub fn step(comptime format: []const u8, args: ...) void {
     colorPrintf(Color.LightBlue, ">> ");
     printf(format ++ "...", args);
 }
@@ -217,7 +217,7 @@ pub fn step(comptime format: []const u8, args: ...) {
 ////
 // Signal that a loading step completed successfully.
 //
-pub fn stepOK() {
+pub fn stepOK() void {
     const ok = " [ OK ]";
 
     alignRight(ok.len);

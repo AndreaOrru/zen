@@ -59,7 +59,7 @@ const TSS = packed struct {
 //     access: Access byte.
 //     flags: Segment flags.
 //
-fn makeEntry(base: usize, limit: usize, access: u8, flags: u4) -> GDTEntry {
+fn makeEntry(base: usize, limit: usize, access: u8, flags: u4) GDTEntry {
     return GDTEntry { .limit_low  = u16( limit        & 0xFFFF),
                       .base_low   = u16( base         & 0xFFFF),
                       .base_mid   =  u8((base  >> 16) & 0xFF  ),
@@ -101,7 +101,7 @@ var tss = TSS {
 // Arguments:
 //     esp0: Stack for Ring 0.
 //
-pub fn setKernelStack(esp0: usize) {
+pub fn setKernelStack(esp0: usize) void {
     tss.esp0 = esp0;
 }
 
@@ -111,12 +111,12 @@ pub fn setKernelStack(esp0: usize) {
 // Arguments:
 //     gdtr: Pointer to the GDTR.
 //
-extern fn loadGDT(gdtr: &const GDTRegister);
+extern fn loadGDT(gdtr: &const GDTRegister)void;
 
 ////
 // Initialize the Global Descriptor Table.
 //
-pub fn initialize() {
+pub fn initialize() void {
     tty.step("Setting up the Global Descriptor Table");
 
     // Initialize GDT.

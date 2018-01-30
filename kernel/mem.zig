@@ -32,7 +32,7 @@ const Block = struct {
     // Returns:
     //     The biggest possible free block.
     //
-    pub fn init() -> Block {
+    pub fn init() Block {
         return Block {
             .free = true,
             .prev = null,
@@ -48,7 +48,7 @@ const Block = struct {
     // Returns:
     //     The size of the usable portion of the block.
     //
-    pub fn size(self: &Block) -> usize {
+    pub fn size(self: &Block) usize {
         // Block can end at the beginning of the next block, or at the end of the heap.
         const end = if (self.next) |next_block| @ptrToInt(next_block)
                     else @ptrToInt(heap.ptr) + heap.len;
@@ -59,7 +59,7 @@ const Block = struct {
     ////
     // Return a slice of the usable portion of the block.
     //
-    pub fn data(self: &Block) -> []u8 {
+    pub fn data(self: &Block) []u8 {
         return @intToPtr(&u8, @ptrToInt(self) + @sizeOf(Block))[0..self.size()];
     }
 
@@ -72,13 +72,13 @@ const Block = struct {
     // Returns:
     //     The associated block strucutre.
     //
-    pub fn fromData(bytes: &u8) -> &Block {
+    pub fn fromData(bytes: &u8) &Block {
         return @intToPtr(&Block, @ptrToInt(bytes) - @sizeOf(Block));
     }
 };
 
 // Implement standard alloc function - see std.mem for reference.
-fn alloc(self: &mem.Allocator, size: usize, alignment: u29) -> %[]u8 {
+fn alloc(self: &mem.Allocator, size: usize, alignment: u29) %[]u8 {
     // TODO: align properly.
 
     // Find a block that's big enough.
@@ -94,7 +94,7 @@ fn alloc(self: &mem.Allocator, size: usize, alignment: u29) -> %[]u8 {
 }
 
 // Implement standard realloc function - see std.mem for reference.
-fn realloc(self: &mem.Allocator, old_mem: []u8, new_size: usize, alignment: u29) -> %[]u8 {
+fn realloc(self: &mem.Allocator, old_mem: []u8, new_size: usize, alignment: u29) %[]u8 {
     // Try to increase the size of the current block.
     var block = Block.fromData(old_mem.ptr);
     mergeRight(block);
@@ -117,7 +117,7 @@ fn realloc(self: &mem.Allocator, old_mem: []u8, new_size: usize, alignment: u29)
 }
 
 // Implement standard free function - see std.mem for reference.
-fn free(self: &mem.Allocator, old_mem: []u8) {
+fn free(self: &mem.Allocator, old_mem: []u8) void {
     var block = Block.fromData(old_mem.ptr);
 
     freeBlock(block);  // Reinsert the block in the free list.
@@ -135,7 +135,7 @@ fn free(self: &mem.Allocator, old_mem: []u8) {
 // Returns:
 //     A suitable block, or null.
 //
-fn searchFreeBlock(size: usize) -> ?&Block {
+fn searchFreeBlock(size: usize) ?&Block {
     var i = free_list;
 
     while (i) |block| : (i = block.next_free) {
@@ -151,7 +151,7 @@ fn searchFreeBlock(size: usize) -> ?&Block {
 // Arguments:
 //     block: The block to be freed.
 //
-fn freeBlock(block: &Block) {
+fn freeBlock(block: &Block) void {
     assert (block.free == false);
 
     // Place the block at the front of the list.
@@ -170,7 +170,7 @@ fn freeBlock(block: &Block) {
 // Arguments:
 //     block: The block to be occupied.
 //
-fn occupyBlock(block: &Block) {
+fn occupyBlock(block: &Block) void {
     assert (block.free == true);
 
     if (block.prev_free) |prev_free| {
@@ -197,7 +197,7 @@ fn occupyBlock(block: &Block) {
 // Arguments:
 //     block: The block to be splitted.
 //
-fn splitBlock(block: &Block, left_sz: usize) {
+fn splitBlock(block: &Block, left_sz: usize) void {
     // Check that there is enough space for a second block.
     assert (block.size() - left_sz > @sizeOf(Block));
 
@@ -226,7 +226,7 @@ fn splitBlock(block: &Block, left_sz: usize) {
 // Arguments:
 //     block: The block to merge (not necessarily free).
 //
-fn mergeRight(block: &Block) {
+fn mergeRight(block: &Block) void {
     // If there's a block to the right...
     if (block.next) |next| {
         // ...and it's free:
@@ -248,7 +248,7 @@ fn mergeRight(block: &Block) {
 // Arguments:
 //     block: The block to merge (not necessarily free).
 //
-fn mergeLeft(block: &Block) {
+fn mergeLeft(block: &Block) void {
     if (block.prev) |prev| {
         if (prev.free) {
             mergeRight(prev);
@@ -262,7 +262,7 @@ fn mergeLeft(block: &Block) {
 // Arguments:
 //     capacity: Maximum size of the kernel heap.
 //
-pub fn initialize(capacity: usize) {
+pub fn initialize(capacity: usize) void {
     tty.step("Initializing Dynamic Memory Allocation");
 
     // Ensure the heap doesn't overflow into user space.

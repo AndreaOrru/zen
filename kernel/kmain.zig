@@ -18,7 +18,7 @@ const Color = tty.Color;
 // Arguments:
 //     message: Reason for the panic.
 //
-pub fn panic(message: []const u8) -> noreturn {
+pub fn panic(message: []const u8, stack_trace: ?&@import("builtin").StackTrace) noreturn {
     tty.writeChar('\n');
 
     tty.setBackground(Color.Red);
@@ -34,7 +34,7 @@ pub fn panic(message: []const u8) -> noreturn {
 //     magic: Magic number from bootloader.
 //     info: Information structure from bootloader.
 //
-export fn kmain(magic: u32, info: &const MultibootInfo) -> noreturn {
+export fn kmain(magic: u32, info: &const MultibootInfo) noreturn {
     tty.initialize();
 
     assert (magic == MULTIBOOT_BOOTLOADER_MAGIC);
