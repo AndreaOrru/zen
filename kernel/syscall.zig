@@ -6,7 +6,7 @@ const tty = @import("tty.zig");
 const vmem = @import("vmem.zig");
 
 // Registered syscall handlers.
-export var syscall_handlers = []fn() void {
+export var syscall_handlers = []fn()void {
     SYSCALL(exit),               // 0
     SYSCALL(ipc.createMailbox),  // 1
     SYSCALL(ipc.send),           // 2
