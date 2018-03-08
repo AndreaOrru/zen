@@ -78,7 +78,7 @@ const Block = struct {
 };
 
 // Implement standard alloc function - see std.mem for reference.
-fn alloc(self: &mem.Allocator, size: usize, alignment: u29) %[]u8 {
+fn alloc(self: &mem.Allocator, size: usize, alignment: u29) ![]u8 {
     // TODO: align properly.
 
     // Find a block that's big enough.
@@ -94,7 +94,7 @@ fn alloc(self: &mem.Allocator, size: usize, alignment: u29) %[]u8 {
 }
 
 // Implement standard realloc function - see std.mem for reference.
-fn realloc(self: &mem.Allocator, old_mem: []u8, new_size: usize, alignment: u29) %[]u8 {
+fn realloc(self: &mem.Allocator, old_mem: []u8, new_size: usize, alignment: u29) ![]u8 {
     // Try to increase the size of the current block.
     var block = Block.fromData(old_mem.ptr);
     mergeRight(block);

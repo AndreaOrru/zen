@@ -3,7 +3,7 @@ const Builder = @import("std").build.Builder;
 const builtin = @import("builtin");
 const join = @import("std").mem.join;
 
-pub fn build(b: &Builder) %void {
+pub fn build(b: &Builder) void {
     ////
     // Default step.
     //

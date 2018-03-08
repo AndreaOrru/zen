@@ -90,12 +90,13 @@ pub fn setBackground(bg: Color) void {
 //     format: Format string.
 //     args: Parameters for format specifiers.
 //
+const Errors = error {};
 pub fn printf(comptime format: []const u8, args: ...) void {
-    _ = fmt.format({}, printCallback, format, args);
+    _ = fmt.format({}, Errors, printCallback, format, args);
 }
 
 // Callback for printf.
-fn printCallback(context: void, string: []const u8) %void {
+fn printCallback(context: void, string: []const u8) Errors!void {
     write(string);
 }
 
