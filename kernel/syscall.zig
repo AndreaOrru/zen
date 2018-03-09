@@ -6,7 +6,7 @@ const tty = @import("tty.zig");
 const vmem = @import("vmem.zig");
 
 // Registered syscall handlers.
-export var syscall_handlers = []fn()void {
+pub var handlers = []fn()void {
     SYSCALL(exit),               // 0
     SYSCALL(ipc.createMailbox),  // 1
     SYSCALL(ipc.send),           // 2
@@ -69,7 +69,7 @@ fn map(v_addr: usize, p_addr: usize, size: usize, writable: bool) bool {
 ////
 // Handle the call of an invalid syscall.
 //
-export fn invalidSyscall() noreturn {
+pub fn invalid() noreturn {
     const n = isr.context.registers.eax;
     tty.panic("invalid syscall number {d}", n);
 
