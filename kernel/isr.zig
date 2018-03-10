@@ -29,8 +29,8 @@ pub const Context = packed struct {
     esp:    u32,
     ss:     u32,
 
-    pub inline fn setReturnValue(self: &Context, value: usize) void {
-        self.registers.eax = value;
+    pub inline fn setReturnValue(self: &volatile Context, value: var) void {
+        self.registers.eax = usize(value);
     }
 };
 

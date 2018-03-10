@@ -63,13 +63,12 @@ export fn interruptDispatch() void {
 
         // Syscalls.
         SYSCALL => {
-            tty.panic("SYSCALLS CURRENTLY BROKEN");
-            // const syscall_n = isr.context.registers.eax;
-            // if (syscall_n < syscall.handlers.len) {
-            //     syscall.handlers[syscall_n]();
-            // } else {
-            //     syscall.invalid();
-            // }
+            const syscall_n = isr.context.registers.eax;
+            if (syscall_n < syscall.handlers.len) {
+                syscall.handlers[syscall_n]();
+            } else {
+                syscall.invalid();
+            }
         },
 
         else => unreachable
