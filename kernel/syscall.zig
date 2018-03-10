@@ -67,7 +67,7 @@ fn SYSCALL(comptime function: var) fn()void {
 // Returns:
 //     The syscall argument casted to the requested type.
 //
-fn getArg(comptime n: u8, comptime T: type) T {
+inline fn getArg(comptime n: u8, comptime T: type) T {
     const value = switch (n) {
         0 => isr.context.registers.ecx,
         1 => isr.context.registers.edx,
@@ -93,7 +93,7 @@ fn getArg(comptime n: u8, comptime T: type) T {
 // Arguments:
 //     status: Exit status code.
 //
-fn exit(status: usize) noreturn {
+inline fn exit(status: usize) noreturn {
     // TODO: implement properly.
     tty.panic("EXIT");
 }
@@ -107,7 +107,7 @@ fn exit(status: usize) noreturn {
 // Returns:
 //     The TID of the new thread.
 //
-fn createThread(entry_point: usize) u16 {
+inline fn createThread(entry_point: usize) u16 {
     return thread.create(entry_point).tid;
 }
 
@@ -122,7 +122,7 @@ fn createThread(entry_point: usize) u16 {
 // Returns:
 //     true if the mapping was successful, false otherwise.
 //
-fn map(v_addr: usize, p_addr: usize, size: usize, writable: bool) bool {
+inline fn map(v_addr: usize, p_addr: usize, size: usize, writable: bool) bool {
     // TODO: Only daemons can call this.
     // TODO: Validate p_addr.
 
