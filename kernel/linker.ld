@@ -17,7 +17,7 @@ SECTIONS {
     }
 
     .bss : ALIGN(4K) {
-        *(COMMON)
         *(.bss)
+        *(COMMON)
     }
 }

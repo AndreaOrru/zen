@@ -7,9 +7,11 @@ pub fn main() void {
     _ = zen.map(0x20000000, 0xB8000, 0x8000, true);
     zen.createMailbox(zen.MBOX_TERMINAL);
 
+    var i: usize = 0;
     while (true) {
         const message = zen.receive(zen.MBOX_TERMINAL);
 
-        vram[2*(80*15 + 40)] = u8(message);
+        vram[2*(80*15 + i)] = u8(message);
+        i += 1;
     }
 }

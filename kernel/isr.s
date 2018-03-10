@@ -1,14 +1,8 @@
+// Kernel stack for interrupt handling.
 KERNEL_STACK = 0x80000
-
+// GDT selectors.
 KERNEL_DS = 0x10
 USER_DS   = 0x23
-
-N_EXCEPTIONS = 32
-IRQ_0  = N_EXCEPTIONS
-IRQ_16 = IRQ_0 + 16
-
-N_SYSCALLS   = 6
-SYSCALL_GATE = 128
 
 // Template for the Interrupt Service Routines.
 .macro isrGenerate n
@@ -20,80 +14,37 @@ SYSCALL_GATE = 128
         .if (\n != 8 && !(\n >= 10 && \n <= 14) && \n != 17)
             push $0
         .endif
-        push $\n  // Push the interrupt number.
-        pusha     // Save the registers state.
-
-        // Enforce kernel data segment.
-        mov $KERNEL_DS, %bp
-        mov %bp, %ds
-        mov %bp, %es
-
-        // IRQ7 may be spurious - check.
-        .if (\n == (IRQ_0 + 7))
-            // Read the In-Service Register.
-            mov $0x0B, %al
-            out %al, $0x20
-            inb $0x20, %al
-            // If bit 7 isn't set, ignore the IRQ.
-            and $(1 << 7), %al
-            jz 3f
-        .endif
-
-        // Only exceptions can happen in kernel mode. The context doesn't
-        // point to this very stack in that case, so we need to update it.
-        .if (\n < N_EXCEPTIONS)
-            mov %esp, context
-        // A syscall can cause a change of context. We need to keep a reference to
-        // the current one, so that we can later inject the syscall's return value.
-        .elseif (\n == SYSCALL_GATE)
-            mov context, %ebp
-        .endif
-        mov $KERNEL_STACK, %esp  // Switch to global kernel stack.
-
-        // Call the designated interrupt or syscall handler.
-        .if (\n == SYSCALL_GATE)
-            // Check if the syscall number is valid.
-            cmp $N_SYSCALLS, %eax
-            jl 1f
-            call invalidSyscall
-            jmp 2f
-
-            // TODO: change the calling convention to use registers directly.
-1:          push %edi
-            push %esi
-            push %ebx
-            // First two parameters are passed through ECX and EDX.
-            call *syscall_handlers(,%eax, 4)
-           	mov %eax, 32(%ebp)  // Save the return value into the caller's context.
-        .else
-            call *(interrupt_handlers + (\n * 4))
-        .endif
-
-        // NOTE: From here on, assume we have interrupted user mode.
-        // The kernel can only be interrupted by non-recoverable exceptions,
-        // and the following code will be unreachable in that case.
-
-        // Only for IRQs: send "End Of Interrupt" signal.
-        .if (\n >= IRQ_0 && \n < IRQ_16)
-            mov $0x20, %al
-            // Signal the slave PIC as well for IRQs >= 8.
-            .if (\n >= 40)
-                out %al, $0xA0
-            .endif
-            out %al, $0x20
-        .endif
-
-2:      mov context, %esp  // Get thread state (any thread, potentially).
-
-        // Enforce user data segment.
-3:      mov $USER_DS, %bp
-        mov %bp, %ds
-        mov %bp, %es
-
-        popa          // Restore the registers state.
-        add $8, %esp  // Remove interrupt number and error code from stack.
-        iret
+        push $\n       // Push the interrupt number.
+        jmp isrCommon  // Jump to the common handler.
 .endmacro
+
+// Common code for all Interrupt Service Routines.
+isrCommon:
+    pusha  // Save the registers state.
+
+    // Setup kernel data segment.
+    mov $KERNEL_DS, %ax
+    mov %ax, %ds
+    mov %ax, %es
+
+    // Save the pointer to the current context and switch to the kernel stack.
+    mov %esp, context
+    mov $KERNEL_STACK, %esp
+
+    call interruptDispatch  // Handle the interrupt event.
+
+    // Restore the pointer to the context (of a different thread, potentially).
+    mov context, %esp
+
+    // Setup user data segment.
+    mov $USER_DS, %ax
+    mov %ax, %ds
+    mov %ax, %es
+
+    popa          // Restore the registers state.
+    add $8, %esp  // Remove interrupt number and error code from stack.
+    iret
+.type isrCommon, @function
 
 // Exceptions.
 isrGenerate 0

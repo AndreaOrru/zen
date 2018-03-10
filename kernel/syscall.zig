@@ -6,7 +6,7 @@ const tty = @import("tty.zig");
 const vmem = @import("vmem.zig");
 
 // Registered syscall handlers.
-export var syscall_handlers = []fn()void {
+pub var handlers = []fn()void {
     SYSCALL(exit),               // 0
     SYSCALL(ipc.createMailbox),  // 1
     SYSCALL(ipc.send),           // 2
@@ -14,7 +14,78 @@ export var syscall_handlers = []fn()void {
     SYSCALL(map),                // 4
     SYSCALL(createThread),       // 5
 };
-// NOTE: keep N_SYSCALLS inside isr.s up to date.
+
+////
+// Transform a normal function (with standard calling convention) into
+// a syscall handler, which takes parameters from the context of the
+// user thread that called it. Handles return values as well.
+//
+// Arguments:
+//     function: The function to be transformed into a syscall.
+//
+// Returns:
+//     A syscall handler that wraps the given function.
+//
+fn SYSCALL(comptime function: var) fn()void {
+    const signature = @typeOf(function);
+
+    return struct {
+        // Return the n-th argument passed to the function.
+        fn arg(comptime n: u8) @ArgType(signature, n) {
+            return getArg(n, @ArgType(signature, n));
+        }
+
+        // Wrapper.
+        fn syscall() void {
+            // Fetch the right number of arguments and call the function.
+            const result = switch (signature.arg_count) {
+                0 => function(),
+                1 => function(arg(0)),
+                2 => function(arg(0), arg(1)),
+                3 => function(arg(0), arg(1), arg(2)),
+                4 => function(arg(0), arg(1), arg(2), arg(3)),
+                5 => function(arg(0), arg(1), arg(2), arg(3), arg(4)),
+                6 => function(arg(0), arg(1), arg(2), arg(3), arg(4), arg(5)),
+                else => unreachable
+            };
+
+            // Handle the return value if present.
+            if (@typeOf(result) != void) {
+                isr.context.setReturnValue(result);
+            }
+        }
+    }.syscall;
+}
+
+////
+// Fetch the n-th syscall argument of type T from the caller context.
+//
+// Arguments:
+//     n: Argument index.
+//     T: Argument type.
+//
+// Returns:
+//     The syscall argument casted to the requested type.
+//
+fn getArg(comptime n: u8, comptime T: type) T {
+    const value = switch (n) {
+        0 => isr.context.registers.ecx,
+        1 => isr.context.registers.edx,
+        2 => isr.context.registers.ebx,
+        3 => isr.context.registers.esi,
+        4 => isr.context.registers.edi,
+        5 => isr.context.registers.ebp,
+        else => unreachable
+    };
+
+    if (T == bool) {
+        return value != 0;
+    } else {
+        return T(value);
+    }
+
+    // TODO: handle pointers.
+}
 
 ////
 // Exit the current process.
@@ -69,26 +140,9 @@ fn map(v_addr: usize, p_addr: usize, size: usize, writable: bool) bool {
 ////
 // Handle the call of an invalid syscall.
 //
-export fn invalidSyscall() noreturn {
+pub fn invalid() noreturn {
     const n = isr.context.registers.eax;
     tty.panic("invalid syscall number {d}", n);
 
     // TODO: kill the current process and go on.
-}
-
-////
-// Cast any syscall into a generic pointer to function.
-// The assembly stub will pass 5 parameters regardless.
-// Only basic types are supported (i.e., no optionals).
-//
-// Arguments:
-//     syscall: The function to cast.
-//
-// Returns:
-//     The casted funciton.
-//
-fn SYSCALL(syscall: var) fn()void {
-    // TODO: type check.
-
-    return @ptrCast(fn()void, syscall);
 }
