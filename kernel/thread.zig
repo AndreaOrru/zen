@@ -13,8 +13,7 @@ const STACK_SIZE = x86.PAGE_SIZE;  // Size of thread stacks.
 var next_tid: u16 = 1;             // Keep track of the used TIDs.
 
 // Structure representing a thread.
-const link = "link";
-pub const ThreadList = List(Thread, link);
+pub const ThreadList = List(Thread, "link");
 pub const Thread = struct {
     context: isr.Context,
     process: &Process,
@@ -22,7 +21,7 @@ pub const Thread = struct {
     local_tid: u8,
     tid: u16,
 
-    link: List(Thread, link).Node,
+    link: List(Thread, "link").Node,
 };
 // TODO: simplify once #679 is solved.
 
