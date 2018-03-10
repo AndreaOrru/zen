@@ -6,10 +6,10 @@ const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
 const Process = @import("process.zig").Process;
 const Thread = @import("thread.zig").Thread;
-const List = @import("std").LinkedList;
+const ThreadList = @import("thread.zig").ThreadList;
 
 pub var current_process: &Process = undefined;  // The process that is currently executing.
-var ready_queue: List(&Thread) = undefined;     // Queue of threads ready for execution.
+var ready_queue: ThreadList = undefined;        // Queue of threads ready for execution.
 
 ////
 // Schedule to the next thread in the queue.
@@ -18,7 +18,7 @@ var ready_queue: List(&Thread) = undefined;     // Queue of threads ready for ex
 fn schedule() void {
     if (ready_queue.popFirst()) |next| {
         ready_queue.append(next);
-        const next_thread = next.data;
+        const next_thread = next.toData();
 
         contextSwitch(next_thread);
     } else {
@@ -60,7 +60,7 @@ pub fn switchProcess(process: &Process) void {
 //     new_thread: The thread to be added.
 //
 pub fn new(new_thread: &Thread) void {
-    ready_queue.append(ready_queue.createNode(new_thread, &mem.allocator) catch unreachable);
+    ready_queue.append(&new_thread.link);
     contextSwitch(new_thread);
 }
 
@@ -71,14 +71,14 @@ pub fn new(new_thread: &Thread) void {
 // Arguments:
 //     thread: The thread to be enqueued.
 //
-pub fn enqueue(thread: &List(&Thread).Node) void {
+pub fn enqueue(thread: &Thread) void {
     // Last element in the queue is the thread currently being executed.
     // So put this thread in the second to last position.
     if (ready_queue.last) |last| {
-        ready_queue.insertBefore(last, thread);
+        ready_queue.insertBefore(last, &thread.link);
     } else {
         // If the queue is empty, simply insert the thread.
-        ready_queue.prepend(thread);
+        ready_queue.prepend(&thread.link);
     }
 }
 
@@ -88,10 +88,10 @@ pub fn enqueue(thread: &List(&Thread).Node) void {
 // Returns:
 //     The descheduled thread.
 //
-pub fn dequeue() ?&List(&Thread).Node {
+pub fn dequeue() ?&Thread {
     const thread = ready_queue.pop() ?? return null;
     schedule();
-    return thread;
+    return thread.toData();
 }
 
 ////
@@ -99,7 +99,7 @@ pub fn dequeue() ?&List(&Thread).Node {
 //
 pub fn current() ?&Thread {
     const last = ready_queue.last ?? return null;
-    return last.data;
+    return last.toData();
 }
 
 ////
@@ -108,7 +108,7 @@ pub fn current() ?&Thread {
 pub fn initialize() void {
     tty.step("Initializing the Scheduler");
 
-    ready_queue = List(&Thread).init();
+    ready_queue = ThreadList.init();
     timer.registerHandler(schedule);
 
     tty.stepOK();

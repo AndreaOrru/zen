@@ -7,18 +7,24 @@ const scheduler = @import("scheduler.zig");
 const x86 = @import("x86.zig");
 const assert = @import("std").debug.assert;
 const Process = @import("process.zig").Process;
+const List = @import("std").IntrusiveLinkedList;
 
 const STACK_SIZE = x86.PAGE_SIZE;  // Size of thread stacks.
 var next_tid: u16 = 1;             // Keep track of the used TIDs.
 
 // Structure representing a thread.
+const link = "link";
+pub const ThreadList = List(Thread, link);
 pub const Thread = struct {
     context: isr.Context,
     process: &Process,
 
     local_tid: u8,
     tid: u16,
+
+    link: List(Thread, link).Node,
 };
+// TODO: simplify once #679 is solved.
 
 ////
 // Set up the initial context of a thread.
@@ -87,6 +93,7 @@ pub fn create(entry_point: usize) &Thread {
         .process   = scheduler.current_process,
         .local_tid = local_tid,
         .tid       = next_tid,
+        .link      = ThreadList.Node.initIntrusive(),
     };
 
     thread.process.next_local_tid += 1;

@@ -2,12 +2,13 @@ const mem = @import("mem.zig");
 const scheduler = @import("scheduler.zig");
 const List = @import("std").LinkedList;
 const Thread = @import("thread.zig").Thread;
+const ThreadList = @import("thread.zig").ThreadList;
 
 // Structure representing a mailbox.
 pub const Mailbox = struct {
     id:            u16,
     messages:      List(usize),
-    waiting_queue: List(&Thread),
+    waiting_queue: ThreadList,
 };
 
 // Keep track of the existing Mailboxes.
@@ -26,7 +27,7 @@ pub fn createMailbox(id: u16) void {
     *mailbox = Mailbox {
         .id       = id,
         .messages = List(usize).init(),
-        .waiting_queue = List(&Thread).init(),
+        .waiting_queue = ThreadList.init(),
     };
 
     mailboxes[id] = mailbox;
@@ -46,9 +47,9 @@ pub fn send(mailbox_id: u16, data: usize) void {
 
     if (mailbox.waiting_queue.popFirst()) |first| {
         // There's a thread waiting to receive.
-        var thread = first.data;
+        var thread = first.toData();
         thread.context.setReturnValue(data);
-        scheduler.enqueue(first);
+        scheduler.enqueue(thread);
         // Wake it and deliver the message.
     } else {
         // No thread is waiting to receive.
@@ -78,7 +79,7 @@ pub fn receive(mailbox_id: u16) usize {
     } else {
         // No message in the queue, block the thread.
         var thread = ??scheduler.dequeue();
-        mailbox.waiting_queue.append(thread);
+        mailbox.waiting_queue.append(&thread.link);
     }
 
     return 0;
