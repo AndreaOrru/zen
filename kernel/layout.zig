@@ -1,4 +1,4 @@
-// Identify mapped area.
+// Identity mapped area.
 pub const STACK    = 0x80000;
 pub const VRAM     = 0xB8000;
 pub const KERNEL   = 0x100000;
