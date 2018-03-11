@@ -122,3 +122,10 @@ pub fn destroy(thread: &Thread) void {
 
     // TODO: handle case in which this was the last thread of the process.
 }
+
+////
+// Destroy the current thread and schedule a new one.
+//
+pub fn destroyCurrent() void {
+    destroy(??scheduler.current());
+}

@@ -94,8 +94,8 @@ inline fn getArg(comptime n: u8, comptime T: type) T {
 //     status: Exit status code.
 //
 inline fn exit(status: usize) void {
-    // TODO: implement properly.
-    thread.destroy(??@import("scheduler.zig").current());
+    // TODO: implement properly (should destroy the whole process).
+    thread.destroyCurrent();
 }
 
 ////

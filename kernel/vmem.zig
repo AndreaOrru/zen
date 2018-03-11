@@ -186,7 +186,7 @@ fn pageFault() void {
 
     // Handle return from thread.
     if (address == layout.THREAD_DESTROY) {
-        return thread.destroy(??@import("scheduler.zig").current());
+        return thread.destroyCurrent();
     }
 
     // Trigger a kernel panic with details about the error.
