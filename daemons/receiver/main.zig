@@ -11,7 +11,7 @@ pub fn main() void {
     while (true) {
         const message = zen.receive(zen.MBOX_TERMINAL);
 
-        vram[2*(80*15 + i)] = u8(message);
+        vram[2*(80*17 + i)] = u8(message);
         i += 1;
     }
 }

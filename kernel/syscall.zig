@@ -93,9 +93,9 @@ inline fn getArg(comptime n: u8, comptime T: type) T {
 // Arguments:
 //     status: Exit status code.
 //
-inline fn exit(status: usize) noreturn {
+inline fn exit(status: usize) void {
     // TODO: implement properly.
-    tty.panic("EXIT");
+    thread.destroy(??@import("scheduler.zig").current());
 }
 
 ////

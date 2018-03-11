@@ -95,6 +95,20 @@ pub fn dequeue() ?&Thread {
 }
 
 ////
+// Remove a thread from the scheduling queue.
+//
+// Arguments:
+//     thread: The thread to be removed.
+//
+pub fn remove(thread: &Thread) void {
+    if (thread == ??current()) {
+        _ = dequeue();
+    } else {
+        ready_queue.remove(&thread.link);
+    }
+}
+
+////
 // Return the thread currently being executed.
 //
 pub fn current() ?&Thread {

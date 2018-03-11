@@ -103,15 +103,22 @@ pub fn create(entry_point: usize) &Thread {
 }
 
 ////
-// Destroy the current thread and schedule a new one.
+// Destroy a thread and schedule a new one if necessary.
 //
-pub fn destroy() void {
+// Arguments:
+//     thread: The thread to be destroyed.
+//
+pub fn destroy(thread: &Thread) void {
+    // TODO: remove this limitation.
+    assert (scheduler.current_process == thread.process);
+
     // Unmap the thread stack.
-    var thread = ??scheduler.current();
     var stack = getStack(thread.local_tid);
     vmem.unmapZone(stack, STACK_SIZE);
 
     // Get the thread off the scheduler and deallocate its structure.
-    _ = ??scheduler.dequeue();
+    scheduler.remove(thread);
     mem.allocator.destroy(thread);
+
+    // TODO: handle case in which this was the last thread of the process.
 }

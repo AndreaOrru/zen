@@ -1,9 +1,9 @@
 const zen = @import("std").os.zen;
 
 fn thread() void {
+    zen.send(zen.MBOX_TERMINAL, '>');
+    zen.send(zen.MBOX_TERMINAL, ' ');
     zen.send(zen.MBOX_TERMINAL, 'X');
-
-    while (true) {}
 }
 
 pub fn main() void {
@@ -11,6 +11,6 @@ pub fn main() void {
 
     zen.send(zen.MBOX_TERMINAL, 'Y');
     zen.send(zen.MBOX_TERMINAL, 'Z');
-
-    while (true) {}
+    zen.send(zen.MBOX_TERMINAL, ' ');
+    zen.send(zen.MBOX_TERMINAL, '<');
 }
