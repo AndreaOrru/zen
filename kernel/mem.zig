@@ -90,7 +90,7 @@ fn alloc(self: &mem.Allocator, size: usize, alignment: u29) ![]u8 {
     }
     occupyBlock(block);  // Remove the block from the free list.
 
-    return block.data();
+    return block.data()[0..size];
 }
 
 // Implement standard realloc function - see std.mem for reference.
