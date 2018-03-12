@@ -169,7 +169,19 @@ pub fn createAddressSpace() usize {
     return phys_pd;
 }
 
-// TODO: destroyAddressSpace
+pub fn destroyAddressSpace() void {
+    var i: usize = pdIndex(layout.USER);
+    while (i < 1023) : (i += 1) {
+        const v_addr = i * 0x400000;
+        const pd_entry = pdEntry(v_addr);
+        if (*pd_entry == 0) continue;
+
+        unmapZone(v_addr, 0x400000);
+    }
+
+    // TODO: deallocate page directory.
+    // TODO: deallocate page tables.
+}
 
 ////
 // Handler for page faults interrupts.
