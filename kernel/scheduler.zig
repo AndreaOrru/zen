@@ -6,7 +6,7 @@ const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
 const Process = @import("process.zig").Process;
 const Thread = @import("thread.zig").Thread;
-const ThreadQueue = @import("thread.zig").ThreadQueue;
+const ThreadQueue = @import("thread.zig").Queue;
 
 pub var current_process: &Process = undefined;  // The process that is currently executing.
 var ready_queue: ThreadQueue = undefined;       // Queue of threads ready for execution.

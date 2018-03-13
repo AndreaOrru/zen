@@ -2,7 +2,7 @@ const mem = @import("mem.zig");
 const scheduler = @import("scheduler.zig");
 const List = @import("std").LinkedList;
 const Thread = @import("thread.zig").Thread;
-const ThreadQueue = @import("thread.zig").ThreadQueue;
+const ThreadQueue = @import("thread.zig").Queue;
 
 // Structure representing a mailbox.
 pub const Mailbox = struct {

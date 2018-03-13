@@ -164,13 +164,19 @@ pub fn createAddressSpace() usize {
     while (i < pdIndex(layout.USER)) : (i += 1) {
         virt_pd[i] = PD[i];
     }
+    // Last PD entry -> PD itself (to map page tables at the end of memory).
     virt_pd[1023] = phys_pd | PAGE_PRESENT | PAGE_WRITE;
 
     return phys_pd;
 }
 
+////
+// Unmap and deallocate all userspace in the current address space.
+//
 pub fn destroyAddressSpace() void {
     var i: usize = pdIndex(layout.USER);
+
+    // NOTE: Preserve 1024th entry (contains the page tables).
     while (i < 1023) : (i += 1) {
         const v_addr = i * 0x400000;
         const pd_entry = pdEntry(v_addr);

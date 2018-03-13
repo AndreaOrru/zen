@@ -13,9 +13,9 @@ const STACK_SIZE = x86.PAGE_SIZE;  // Size of thread stacks.
 var next_tid: u16 = 1;             // Keep track of the used TIDs.
 
 // List of threads inside a process.
-pub const ThreadList  = List(Thread, "process_link");
+pub const List = List(Thread, "process_link");
 // Queue of threads (for scheduler and mailboxes).
-pub const ThreadQueue = List(Thread, "queue_link");
+pub const Queue = List(Thread, "queue_link");
 
 // Structure representing a thread.
 pub const Thread = struct {
@@ -27,10 +27,11 @@ pub const Thread = struct {
 
     // TODO: simplify once #679 is solved.
     process_link: List(Thread, "process_link").Node,
-    queue_link:   List(Thread, "queue_link").Node,
+    queue_link:   Queue(Thread, "queue_link").Node,
 
     ////
     // Create a new thread inside the current process.
+    // NOTE: Do not call this function directly. Use Process.createThread instead.
     //
     // Arguments:
     //     entry_point: The entry point of the new thread.
@@ -51,8 +52,8 @@ pub const Thread = struct {
             .process      = process,
             .local_tid    = local_tid,
             .tid          = next_tid,
-            .process_link = ThreadList.Node.initIntrusive(),
-            .queue_link   = ThreadQueue.Node.initIntrusive(),
+            .process_link = List.Node.initIntrusive(),
+            .queue_link   = Queue.Node.initIntrusive(),
         };
         next_tid += 1;
 
@@ -69,14 +70,19 @@ pub const Thread = struct {
         var stack = getStack(self.local_tid);
         vmem.unmapZone(stack, STACK_SIZE);
 
-        // Get the thread off the scheduler and deallocate its structure.
-        scheduler.remove(self);
+        // Get the thread off the process and scheduler, and deallocate its structure.
         self.process.removeThread(self);
         mem.allocator.destroy(self);
-
-        // TODO: handle case in which this was the last thread of the process.
     }
 };
+
+////
+// Destroy the current thread and schedule a new one.
+//
+pub fn destroyCurrent() void {
+    const thread = ??scheduler.current();
+    thread.destroy();
+}
 
 ////
 // Set up the initial context of a thread.
@@ -121,13 +127,4 @@ fn getStack(local_tid: u8) usize {
     assert (stack < layout.USER_STACKS_END);
 
     return stack;
-}
-
-
-////
-// Destroy the current thread and schedule a new one.
-//
-pub fn destroyCurrent() void {
-    const thread = ??scheduler.current();
-    thread.destroy();
 }
