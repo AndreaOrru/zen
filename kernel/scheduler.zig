@@ -6,10 +6,10 @@ const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
 const Process = @import("process.zig").Process;
 const Thread = @import("thread.zig").Thread;
-const ThreadList = @import("thread.zig").ThreadList;
+const ThreadQueue = @import("thread.zig").ThreadQueue;
 
 pub var current_process: &Process = undefined;  // The process that is currently executing.
-var ready_queue: ThreadList = undefined;        // Queue of threads ready for execution.
+var ready_queue: ThreadQueue = undefined;       // Queue of threads ready for execution.
 
 ////
 // Schedule to the next thread in the queue.
@@ -60,7 +60,7 @@ pub fn switchProcess(process: &Process) void {
 //     new_thread: The thread to be added.
 //
 pub fn new(new_thread: &Thread) void {
-    ready_queue.append(&new_thread.link);
+    ready_queue.append(&new_thread.queue_link);
     contextSwitch(new_thread);
 }
 
@@ -75,10 +75,10 @@ pub fn enqueue(thread: &Thread) void {
     // Last element in the queue is the thread currently being executed.
     // So put this thread in the second to last position.
     if (ready_queue.last) |last| {
-        ready_queue.insertBefore(last, &thread.link);
+        ready_queue.insertBefore(last, &thread.queue_link);
     } else {
         // If the queue is empty, simply insert the thread.
-        ready_queue.prepend(&thread.link);
+        ready_queue.prepend(&thread.queue_link);
     }
 }
 
@@ -104,7 +104,7 @@ pub fn remove(thread: &Thread) void {
     if (thread == ??current()) {
         _ = dequeue();
     } else {
-        ready_queue.remove(&thread.link);
+        ready_queue.remove(&thread.queue_link);
     }
 }
 
@@ -122,7 +122,7 @@ pub fn current() ?&Thread {
 pub fn initialize() void {
     tty.step("Initializing the Scheduler");
 
-    ready_queue = ThreadList.init();
+    ready_queue = ThreadQueue.init();
     timer.registerHandler(schedule);
 
     tty.stepOK();

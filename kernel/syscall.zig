@@ -1,7 +1,8 @@
 const isr = @import("isr.zig");
 const ipc = @import("ipc.zig");
 const layout = @import("layout.zig");
-const thread = @import("thread.zig");
+const scheduler = @import("scheduler.zig");
+const process = @import("process.zig");
 const tty = @import("tty.zig");
 const vmem = @import("vmem.zig");
 
@@ -94,8 +95,8 @@ inline fn getArg(comptime n: u8, comptime T: type) T {
 //     status: Exit status code.
 //
 inline fn exit(status: usize) void {
-    // TODO: implement properly (should destroy the whole process).
-    thread.destroyCurrent();
+    // TODO: handle return status.
+    scheduler.current_process.destroy();
 }
 
 ////
@@ -108,7 +109,8 @@ inline fn exit(status: usize) void {
 //     The TID of the new thread.
 //
 inline fn createThread(entry_point: usize) u16 {
-    return thread.create(entry_point).tid;
+    const thread = scheduler.current_process.createThread(entry_point);
+    return thread.tid;
 }
 
 ////

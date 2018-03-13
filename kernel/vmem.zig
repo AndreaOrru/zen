@@ -2,7 +2,7 @@ const interrupt = @import("interrupt.zig");
 const isr = @import("isr.zig");
 const layout = @import("layout.zig");
 const pmem = @import("pmem.zig");
-const thread = @import("thread.zig");
+const scheduler = @import("scheduler.zig");
 const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
 const assert = @import("std").debug.assert;
@@ -164,12 +164,30 @@ pub fn createAddressSpace() usize {
     while (i < pdIndex(layout.USER)) : (i += 1) {
         virt_pd[i] = PD[i];
     }
+    // Last PD entry -> PD itself (to map page tables at the end of memory).
     virt_pd[1023] = phys_pd | PAGE_PRESENT | PAGE_WRITE;
 
     return phys_pd;
 }
 
-// TODO: destroyAddressSpace
+////
+// Unmap and deallocate all userspace in the current address space.
+//
+pub fn destroyAddressSpace() void {
+    var i: usize = pdIndex(layout.USER);
+
+    // NOTE: Preserve 1024th entry (contains the page tables).
+    while (i < 1023) : (i += 1) {
+        const v_addr = i * 0x400000;
+        const pd_entry = pdEntry(v_addr);
+        if (*pd_entry == 0) continue;
+
+        unmapZone(v_addr, 0x400000);
+    }
+
+    // TODO: deallocate page directory.
+    // TODO: deallocate page tables.
+}
 
 ////
 // Handler for page faults interrupts.
@@ -186,7 +204,8 @@ fn pageFault() void {
 
     // Handle return from thread.
     if (address == layout.THREAD_DESTROY) {
-        return thread.destroyCurrent();
+        const thread = ??scheduler.current();
+        return thread.destroy();
     }
 
     // Trigger a kernel panic with details about the error.

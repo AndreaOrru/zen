@@ -12,8 +12,12 @@ const List = @import("std").IntrusiveLinkedList;
 const STACK_SIZE = x86.PAGE_SIZE;  // Size of thread stacks.
 var next_tid: u16 = 1;             // Keep track of the used TIDs.
 
+// List of threads inside a process.
+pub const ThreadList  = List(Thread, "process_link");
+// Queue of threads (for scheduler and mailboxes).
+pub const ThreadQueue = List(Thread, "queue_link");
+
 // Structure representing a thread.
-pub const ThreadList = List(Thread, "link");
 pub const Thread = struct {
     context: isr.Context,
     process: &Process,
@@ -21,9 +25,56 @@ pub const Thread = struct {
     local_tid: u8,
     tid: u16,
 
-    link: List(Thread, "link").Node,
+    // TODO: simplify once #679 is solved.
+    process_link: List(Thread, "process_link").Node,
+    queue_link:   List(Thread, "queue_link").Node,
+
+    ////
+    // Create a new thread inside the current process.
+    // NOTE: Do not call this function directly. Use Process.createThread instead.
+    //
+    // Arguments:
+    //     entry_point: The entry point of the new thread.
+    //
+    // Returns:
+    //     Pointer to the new thread structure.
+    //
+    fn init(process: &Process, local_tid: u8, entry_point: usize) &Thread {
+        assert (scheduler.current_process == process);
+
+        // Calculate the address of the thread stack and map it.
+        const stack = getStack(local_tid);
+        vmem.mapZone(stack, null, STACK_SIZE, vmem.PAGE_WRITE | vmem.PAGE_USER);
+
+        const thread = mem.allocator.create(Thread) catch unreachable;
+        *thread = Thread {
+            .context      = initContext(entry_point, stack),
+            .process      = process,
+            .local_tid    = local_tid,
+            .tid          = next_tid,
+            .process_link = ThreadList.Node.initIntrusive(),
+            .queue_link   = ThreadQueue.Node.initIntrusive(),
+        };
+        next_tid += 1;
+
+        return thread;
+    }
+
+    ////
+    // Destroy the thread and schedule a new one if necessary.
+    //
+    pub fn destroy(self: &Thread) void {
+        assert (scheduler.current_process == self.process);
+
+        // Unmap the thread stack.
+        var stack = getStack(self.local_tid);
+        vmem.unmapZone(stack, STACK_SIZE);
+
+        // Get the thread off the process and scheduler, and deallocate its structure.
+        self.process.removeThread(self);
+        mem.allocator.destroy(self);
+    }
 };
-// TODO: simplify once #679 is solved.
 
 ////
 // Set up the initial context of a thread.
@@ -68,64 +119,4 @@ fn getStack(local_tid: u8) usize {
     assert (stack < layout.USER_STACKS_END);
 
     return stack;
-}
-
-////
-// Create a new thread inside the current process.
-//
-// Arguments:
-//     entry_point: The entry point of the new thread.
-//
-// Returns:
-//     Pointer to the new thread structure.
-//
-pub fn create(entry_point: usize) &Thread {
-    // Get the next available local TID inside the current process.
-    var local_tid = scheduler.current_process.next_local_tid;
-    // Calculate the address of the thread stack and map it.
-    var stack = getStack(local_tid);
-    vmem.mapZone(stack, null, STACK_SIZE, vmem.PAGE_WRITE | vmem.PAGE_USER);
-
-    var thread = mem.allocator.create(Thread) catch unreachable;
-    *thread = Thread {
-        .context   = initContext(entry_point, stack),
-        .process   = scheduler.current_process,
-        .local_tid = local_tid,
-        .tid       = next_tid,
-        .link      = ThreadList.Node.initIntrusive(),
-    };
-
-    thread.process.next_local_tid += 1;
-    next_tid += 1;
-
-    scheduler.new(thread);
-    return thread;
-}
-
-////
-// Destroy a thread and schedule a new one if necessary.
-//
-// Arguments:
-//     thread: The thread to be destroyed.
-//
-pub fn destroy(thread: &Thread) void {
-    // TODO: remove this limitation.
-    assert (scheduler.current_process == thread.process);
-
-    // Unmap the thread stack.
-    var stack = getStack(thread.local_tid);
-    vmem.unmapZone(stack, STACK_SIZE);
-
-    // Get the thread off the scheduler and deallocate its structure.
-    scheduler.remove(thread);
-    mem.allocator.destroy(thread);
-
-    // TODO: handle case in which this was the last thread of the process.
-}
-
-////
-// Destroy the current thread and schedule a new one.
-//
-pub fn destroyCurrent() void {
-    destroy(??scheduler.current());
 }
