@@ -96,7 +96,7 @@ pub const Process = struct {
     // Arguments:
     //     thread: The thread to be removed.
     //
-    pub fn removeThread(self: &Process, thread: &Thread) void {
+    fn removeThread(self: &Process, thread: &Thread) void {
         scheduler.remove(thread);
         self.threads.remove(&thread.process_link);
 

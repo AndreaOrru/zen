@@ -2,7 +2,7 @@ const interrupt = @import("interrupt.zig");
 const isr = @import("isr.zig");
 const layout = @import("layout.zig");
 const pmem = @import("pmem.zig");
-const thread = @import("thread.zig");
+const scheduler = @import("scheduler.zig");
 const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
 const assert = @import("std").debug.assert;
@@ -204,7 +204,8 @@ fn pageFault() void {
 
     // Handle return from thread.
     if (address == layout.THREAD_DESTROY) {
-        return thread.destroyCurrent();
+        const thread = ??scheduler.current();
+        return thread.destroy();
     }
 
     // Trigger a kernel panic with details about the error.

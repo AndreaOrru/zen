@@ -39,7 +39,7 @@ pub const Thread = struct {
     // Returns:
     //     Pointer to the new thread structure.
     //
-    pub fn init(process: &Process, local_tid: u8, entry_point: usize) &Thread {
+    fn init(process: &Process, local_tid: u8, entry_point: usize) &Thread {
         assert (scheduler.current_process == process);
 
         // Calculate the address of the thread stack and map it.
@@ -75,14 +75,6 @@ pub const Thread = struct {
         mem.allocator.destroy(self);
     }
 };
-
-////
-// Destroy the current thread and schedule a new one.
-//
-pub fn destroyCurrent() void {
-    const thread = ??scheduler.current();
-    thread.destroy();
-}
 
 ////
 // Set up the initial context of a thread.
