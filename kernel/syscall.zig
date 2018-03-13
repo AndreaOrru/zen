@@ -96,7 +96,7 @@ inline fn getArg(comptime n: u8, comptime T: type) T {
 //
 inline fn exit(status: usize) void {
     // TODO: handle return status.
-    process.destroyCurrent();
+    scheduler.current_process.destroy();
 }
 
 ////

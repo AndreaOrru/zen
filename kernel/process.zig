@@ -1,9 +1,10 @@
+const assert = @import("std").debug.assert;
 const elf = @import("elf.zig");
 const mem = @import("mem.zig");
 const scheduler = @import("scheduler.zig");
 const vmem = @import("vmem.zig");
 const Thread = @import("thread.zig").Thread;
-const ThreadList = @import("thread.zig").List;
+const ThreadList = @import("thread.zig").ThreadList;
 
 // Keep track of the used PIDs.
 var next_pid: u16 = 1;

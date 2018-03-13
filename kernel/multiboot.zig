@@ -1,6 +1,6 @@
-const process = @import("process.zig");
 const tty = @import("tty.zig");
 const cstr = @import("std").cstr;
+const Process = @import("process.zig").Process;
 
 // This should be in EAX.
 pub const MULTIBOOT_BOOTLOADER_MAGIC = 0x2BADB002;
@@ -75,7 +75,7 @@ pub const MultibootInfo = packed struct {
             const cmdline = cstr.toSlice(@intToPtr(&u8, mod.cmdline));
             tty.step("Loading \"{}\"", cmdline);
 
-            _ = process.create(mod.mod_start);
+            _ = Process.create(mod.mod_start);
             // TODO: deallocate the original memory.
 
             tty.stepOK();

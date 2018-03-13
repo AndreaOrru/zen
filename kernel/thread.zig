@@ -13,9 +13,9 @@ const STACK_SIZE = x86.PAGE_SIZE;  // Size of thread stacks.
 var next_tid: u16 = 1;             // Keep track of the used TIDs.
 
 // List of threads inside a process.
-pub const List = List(Thread, "process_link");
+pub const ThreadList  = List(Thread, "process_link");
 // Queue of threads (for scheduler and mailboxes).
-pub const Queue = List(Thread, "queue_link");
+pub const ThreadQueue = List(Thread, "queue_link");
 
 // Structure representing a thread.
 pub const Thread = struct {
@@ -27,7 +27,7 @@ pub const Thread = struct {
 
     // TODO: simplify once #679 is solved.
     process_link: List(Thread, "process_link").Node,
-    queue_link:   Queue(Thread, "queue_link").Node,
+    queue_link:   List(Thread, "queue_link").Node,
 
     ////
     // Create a new thread inside the current process.
@@ -40,7 +40,7 @@ pub const Thread = struct {
     //     Pointer to the new thread structure.
     //
     pub fn init(process: &Process, local_tid: u8, entry_point: usize) &Thread {
-        assert (scheduler.current_process == self.process);
+        assert (scheduler.current_process == process);
 
         // Calculate the address of the thread stack and map it.
         const stack = getStack(local_tid);
@@ -52,8 +52,8 @@ pub const Thread = struct {
             .process      = process,
             .local_tid    = local_tid,
             .tid          = next_tid,
-            .process_link = List.Node.initIntrusive(),
-            .queue_link   = Queue.Node.initIntrusive(),
+            .process_link = ThreadList.Node.initIntrusive(),
+            .queue_link   = ThreadQueue.Node.initIntrusive(),
         };
         next_tid += 1;
 
