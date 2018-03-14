@@ -9,9 +9,10 @@ pub fn main() void {
 
     var i: usize = 0;
     while (true) {
-        const message = zen.receive(zen.MBOX_TERMINAL);
+        var message: zen.Message = undefined;
+        zen.receive(zen.MBOX_TERMINAL, &message);
 
-        vram[2*(80*17 + i)] = u8(message);
+        vram[2*(80*17 + i)] = u8(message.data);
         i += 1;
     }
 }

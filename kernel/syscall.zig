@@ -5,6 +5,7 @@ const scheduler = @import("scheduler.zig");
 const process = @import("process.zig");
 const tty = @import("tty.zig");
 const vmem = @import("vmem.zig");
+const TypeId = @import("builtin").TypeId;
 
 // Registered syscall handlers.
 pub var handlers = []fn()void {
@@ -81,6 +82,9 @@ inline fn getArg(comptime n: u8, comptime T: type) T {
 
     if (T == bool) {
         return value != 0;
+    } else if (@typeId(T) == TypeId.Pointer) {
+        // TODO: validate this pointer.
+        return @intToPtr(T, value);
     } else {
         return T(value);
     }

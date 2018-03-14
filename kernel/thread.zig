@@ -6,6 +6,7 @@ const vmem = @import("vmem.zig");
 const scheduler = @import("scheduler.zig");
 const x86 = @import("x86.zig");
 const assert = @import("std").debug.assert;
+const Message = @import("std").os.zen.Message;
 const Process = @import("process.zig").Process;
 const List = @import("std").IntrusiveLinkedList;
 
@@ -28,6 +29,9 @@ pub const Thread = struct {
     // TODO: simplify once #679 is solved.
     process_link: List(Thread, "process_link").Node,
     queue_link:   List(Thread, "queue_link").Node,
+
+    // User space address where the thread expects to receive messages.
+    message_destination: &Message,
 
     ////
     // Create a new thread inside the current process.
@@ -54,6 +58,7 @@ pub const Thread = struct {
             .tid          = next_tid,
             .process_link = ThreadList.Node.initIntrusive(),
             .queue_link   = ThreadQueue.Node.initIntrusive(),
+            .message_destination = undefined,
         };
         next_tid += 1;
 
@@ -73,6 +78,8 @@ pub const Thread = struct {
         // Get the thread off the process and scheduler, and deallocate its structure.
         self.process.removeThread(self);
         mem.allocator.destroy(self);
+
+        // TODO: get the thread off IPC waiting queues.
     }
 };
 

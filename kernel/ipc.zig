@@ -1,18 +1,20 @@
 const mem = @import("mem.zig");
 const scheduler = @import("scheduler.zig");
+const Array = @import("std").ArrayList;
 const List = @import("std").LinkedList;
+const Message = @import("std").os.zen.Message;
 const Thread = @import("thread.zig").Thread;
 const ThreadQueue = @import("thread.zig").ThreadQueue;
 
 // Structure representing a mailbox.
 pub const Mailbox = struct {
     id:            u16,
-    messages:      List(usize),
+    messages:      List(Message),
     waiting_queue: ThreadQueue,
 };
 
 // Keep track of the existing Mailboxes.
-var mailboxes: [256]&Mailbox = undefined;
+var mailboxes = Array(&Mailbox).init(&mem.allocator);
 
 ////
 // Create a new mailbox with the given ID.
@@ -22,15 +24,18 @@ var mailboxes: [256]&Mailbox = undefined;
 //
 pub fn createMailbox(id: u16) void {
     // TODO: check that the ID is not reserved.
+    if (mailboxes.len < id) {
+        mailboxes.resize(id + 1) catch unreachable;
+    }
 
-    var mailbox = mem.allocator.create(Mailbox) catch unreachable;
+    const mailbox = mem.allocator.create(Mailbox) catch unreachable;
     *mailbox = Mailbox {
         .id       = id,
-        .messages = List(usize).init(),
+        .messages = List(Message).init(),
         .waiting_queue = ThreadQueue.init(),
     };
 
-    mailboxes[id] = mailbox;
+    mailboxes.items[id] = mailbox;
 }
 
 ////
@@ -42,19 +47,22 @@ pub fn createMailbox(id: u16) void {
 //
 pub fn send(mailbox_id: u16, data: usize) void {
     // TODO: Check if the mailbox exists.
-
-    var mailbox = mailboxes[mailbox_id];
+    const mailbox = mailboxes.at(mailbox_id);
+    const message = Message {
+        .from = 10,
+        .data = data,
+    };
 
     if (mailbox.waiting_queue.popFirst()) |first| {
         // There's a thread waiting to receive.
-        var thread = first.toData();
-        thread.context.setReturnValue(data);
-        scheduler.enqueue(thread);
+        const thread = first.toData();
+        scheduler.new(thread);
+        *thread.message_destination = message;
         // Wake it and deliver the message.
     } else {
         // No thread is waiting to receive.
-        var message = mailbox.messages.createNode(data, &mem.allocator) catch unreachable;
-        mailbox.messages.append(message);
+        const node = mailbox.messages.createNode(message, &mem.allocator) catch unreachable;
+        mailbox.messages.append(node);
         // Put the message in the queue.
     }
 }
@@ -69,18 +77,17 @@ pub fn send(mailbox_id: u16, data: usize) void {
 // Returns:
 //     The received message, immediately or after unblocking.
 //
-pub fn receive(mailbox_id: u16) usize {
-    var mailbox = mailboxes[mailbox_id];
+pub fn receive(mailbox_id: u16, destination: &Message) void {
+    const mailbox = mailboxes.at(mailbox_id);
 
     if (mailbox.messages.popFirst()) |first| {
         // There's a message in the queue, deliver immediately.
-        var message = first.data;
-        return message;
+        const message = first.data;
+        *destination = message;
     } else {
         // No message in the queue, block the thread.
-        var thread = ??scheduler.dequeue();
+        const thread = ??scheduler.dequeue();
+        thread.message_destination = destination;
         mailbox.waiting_queue.append(&thread.queue_link);
     }
-
-    return 0;
 }
