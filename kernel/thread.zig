@@ -6,6 +6,8 @@ const vmem = @import("vmem.zig");
 const scheduler = @import("scheduler.zig");
 const x86 = @import("x86.zig");
 const assert = @import("std").debug.assert;
+const Mailbox = @import("ipc.zig").Mailbox;
+const Message = @import("std").os.zen.Message;
 const Process = @import("process.zig").Process;
 const List = @import("std").IntrusiveLinkedList;
 
@@ -19,15 +21,18 @@ pub const ThreadQueue = List(Thread, "queue_link");
 
 // Structure representing a thread.
 pub const Thread = struct {
+    // TODO: simplify once #679 is solved.
+    process_link: List(Thread, "process_link").Node,
+    queue_link:   List(Thread, "queue_link").Node,
+
     context: isr.Context,
     process: &Process,
 
     local_tid: u8,
     tid: u16,
 
-    // TODO: simplify once #679 is solved.
-    process_link: List(Thread, "process_link").Node,
-    queue_link:   List(Thread, "queue_link").Node,
+    message_destination: &Message,  // Address where to deliver messages.
+    mailbox: Mailbox,               // Private thread mailbox.
 
     ////
     // Create a new thread inside the current process.
@@ -54,6 +59,8 @@ pub const Thread = struct {
             .tid          = next_tid,
             .process_link = ThreadList.Node.initIntrusive(),
             .queue_link   = ThreadQueue.Node.initIntrusive(),
+            .mailbox      = Mailbox.init(),
+            .message_destination = undefined,
         };
         next_tid += 1;
 
@@ -73,6 +80,8 @@ pub const Thread = struct {
         // Get the thread off the process and scheduler, and deallocate its structure.
         self.process.removeThread(self);
         mem.allocator.destroy(self);
+
+        // TODO: get the thread off IPC waiting queues.
     }
 };
 

@@ -5,15 +5,16 @@ const scheduler = @import("scheduler.zig");
 const process = @import("process.zig");
 const tty = @import("tty.zig");
 const vmem = @import("vmem.zig");
+const TypeId = @import("builtin").TypeId;
 
 // Registered syscall handlers.
 pub var handlers = []fn()void {
-    SYSCALL(exit),               // 0
-    SYSCALL(ipc.createMailbox),  // 1
-    SYSCALL(ipc.send),           // 2
-    SYSCALL(ipc.receive),        // 3
-    SYSCALL(map),                // 4
-    SYSCALL(createThread),       // 5
+    SYSCALL(exit),            // 0
+    SYSCALL(ipc.createPort),  // 1
+    SYSCALL(ipc.send),        // 2
+    SYSCALL(ipc.receive),     // 3
+    SYSCALL(map),             // 4
+    SYSCALL(createThread),    // 5
 };
 
 ////
@@ -81,6 +82,9 @@ inline fn getArg(comptime n: u8, comptime T: type) T {
 
     if (T == bool) {
         return value != 0;
+    } else if (@typeId(T) == TypeId.Pointer) {
+        // TODO: validate this pointer.
+        return @intToPtr(T, value);
     } else {
         return T(value);
     }
