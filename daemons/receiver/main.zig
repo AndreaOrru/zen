@@ -16,7 +16,7 @@ pub fn main() void {
         var message = Message.withReceiver(Terminal);
         zen.receive(&message);
 
-        vram[2*(80*17 + i)] = u8(message.payload);
+        vram[2*(80*15 + i)] = u8(message.payload);
         i += 1;
     }
 }

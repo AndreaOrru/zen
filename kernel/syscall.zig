@@ -1,3 +1,4 @@
+const interrupt = @import("interrupt.zig");
 const isr = @import("isr.zig");
 const ipc = @import("ipc.zig");
 const layout = @import("layout.zig");
@@ -5,16 +6,19 @@ const scheduler = @import("scheduler.zig");
 const process = @import("process.zig");
 const tty = @import("tty.zig");
 const vmem = @import("vmem.zig");
+const x86 = @import("x86.zig");
 const TypeId = @import("builtin").TypeId;
 
 // Registered syscall handlers.
 pub var handlers = []fn()void {
-    SYSCALL(exit),            // 0
-    SYSCALL(ipc.createPort),  // 1
-    SYSCALL(ipc.send),        // 2
-    SYSCALL(ipc.receive),     // 3
-    SYSCALL(map),             // 4
-    SYSCALL(createThread),    // 5
+    SYSCALL(exit),                    // 0
+    SYSCALL(ipc.createPort),          // 1
+    SYSCALL(ipc.send),                // 2
+    SYSCALL(ipc.receive),             // 3
+    SYSCALL(interrupt.subscribeIRQ),  // 4
+    SYSCALL(x86.inb),                 // 5
+    SYSCALL(map),                     // 6
+    SYSCALL(createThread),            // 7
 };
 
 ////

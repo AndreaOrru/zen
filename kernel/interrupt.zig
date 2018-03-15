@@ -1,7 +1,12 @@
+const std = @import("std");
 const isr = @import("isr.zig");
+const scheduler = @import("scheduler.zig");
 const syscall = @import("syscall.zig");
 const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
+const send = @import("ipc.zig").send;
+const MailboxId = std.os.zen.MailboxId;
+const Message = std.os.zen.Message;
 
 // PIC ports.
 const PIC1_CMD  = 0x20;
@@ -27,6 +32,8 @@ const SYSCALL = 128;
 
 // Registered interrupt handlers.
 var handlers = []fn()void { unhandled } ** 48;
+
+var irq_subscribers = []MailboxId { MailboxId.Kernel } ** 16;
 
 ////
 // Default interrupt handler.
@@ -72,6 +79,11 @@ export fn interruptDispatch() void {
         },
 
         else => unreachable
+    }
+
+    if (scheduler.current() == null) {
+        x86.sti();
+        x86.hlt();
     }
 }
 
@@ -153,6 +165,29 @@ pub fn maskIRQ(irq: u8, mask: bool) void {
     } else {
         x86.outb(port, old & ~(u8(1) << u3(irq % 8)));
     }
+}
+
+fn notifyIRQ() void {
+    const irq = isr.context.interrupt_n - IRQ_0;
+    const subscriber = irq_subscribers[irq];
+
+    switch (subscriber) {
+        MailboxId.Kernel => return,
+        MailboxId.Port => {
+            const message = Message {
+                .sender   = MailboxId.Kernel,
+                .receiver = subscriber,
+                .payload  = irq,
+            };
+            send(message);
+        },
+        else => unreachable,
+    }
+}
+
+pub fn subscribeIRQ(irq: u8, mailbox_id: &const MailboxId) void {
+    irq_subscribers[irq] = *mailbox_id;
+    registerIRQ(irq, notifyIRQ);
 }
 
 ////

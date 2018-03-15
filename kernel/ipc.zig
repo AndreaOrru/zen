@@ -56,10 +56,10 @@ pub fn createPort(id: u16) void {
 // Arguments:
 //     message: Pointer to the message to be sent.
 //
-pub fn send(message: &volatile Message) void {
+pub fn send(message: &const Message) void {
     // TODO: validate `from` and `to` mailboxes.
     const mailbox = getMailbox(message.receiver);
-    const message_copy = *message;
+    const message_copy = *message;  // FIXME: this should be volatile?
     // NOTE: We need a copy in kernel space, because we are
     // potentially switching address spaces.
 
