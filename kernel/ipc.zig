@@ -1,16 +1,32 @@
+const std = @import("std");
 const mem = @import("mem.zig");
 const scheduler = @import("scheduler.zig");
-const Array = @import("std").ArrayList;
-const List = @import("std").LinkedList;
-const MailboxId = @import("std").os.zen.MailboxId;
-const Message = @import("std").os.zen.Message;
+const Array = std.ArrayList;
+const IntrusiveList = std.IntrusiveLinkedList;
+const List = std.LinkedList;
+const MailboxId = std.os.zen.MailboxId;
+const Message = std.os.zen.Message;
 const Thread = @import("thread.zig").Thread;
 const ThreadQueue = @import("thread.zig").ThreadQueue;
 
 // Structure representing a mailbox.
 pub const Mailbox = struct {
     messages:      List(Message),
-    waiting_queue: ThreadQueue,
+    waiting_queue: IntrusiveList(Thread, "queue_link"),
+    // TODO: simplify once #679 is resolved.
+
+    ////
+    // Initialize a mailbox.
+    //
+    // Returns:
+    //     An empty mailbox.
+    //
+    pub fn init() Mailbox {
+        return Mailbox {
+            .messages = List(Message).init(),
+            .waiting_queue = ThreadQueue.init(),
+        };
+    }
 };
 
 // Keep track of the existing mailboxes.
@@ -29,23 +45,20 @@ pub fn createPort(id: u16) void {
     }
 
     const mailbox = mem.allocator.create(Mailbox) catch unreachable;
-    *mailbox = Mailbox {
-        .messages = List(Message).init(),
-        .waiting_queue = ThreadQueue.init(),
-    };
+    *mailbox = Mailbox.init();
 
     ports.items[id] = mailbox;
 }
 
 ////
-// Send a message to a mailbox.
+// Asynchronously send a message to a mailbox.
 //
 // Arguments:
-//     message:
+//     message: Pointer to the message to be sent.
 //
 pub fn send(message: &volatile Message) void {
     // TODO: validate `from` and `to` mailboxes.
-    const mailbox = getMailbox(message.to);
+    const mailbox = getMailbox(message.receiver);
     const message_copy = *message;
     // NOTE: We need a copy in kernel space, because we are
     // potentially switching address spaces.
@@ -69,11 +82,11 @@ pub fn send(message: &volatile Message) void {
 // Block if there are no messages.
 //
 // Arguments:
-//     destination:
+//     destination: Address where to deliver the message.
 //
 pub fn receive(destination: &Message) void {
     // TODO: validate `from` and `to` mailboxes.
-    const mailbox = getMailbox(destination.to);
+    const mailbox = getMailbox(destination.receiver);
 
     if (mailbox.messages.popFirst()) |first| {
         // There's a message in the queue, deliver immediately.
@@ -87,9 +100,18 @@ pub fn receive(destination: &Message) void {
     }
 }
 
+////
+// Get the mailbox associated with the given mailbox ID.
+//
+// Arguments:
+//     mailbox_id: The ID of the mailbox.
+//
+// Returns:
+//     The address of the mailbox.
+//
 fn getMailbox(mailbox_id: &const MailboxId) &Mailbox {
     return switch (*mailbox_id) {
-        MailboxId.Me     => &(??scheduler.current()).mailbox,
+        MailboxId.This   => &(??scheduler.current()).mailbox,
         MailboxId.Kernel => unreachable,
         MailboxId.Port   => |id| ports.at(id),
         //MailboxId.Thread => |tid| thread.get(tid).mailbox,

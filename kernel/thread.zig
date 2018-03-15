@@ -21,18 +21,18 @@ pub const ThreadQueue = List(Thread, "queue_link");
 
 // Structure representing a thread.
 pub const Thread = struct {
+    // TODO: simplify once #679 is solved.
+    process_link: List(Thread, "process_link").Node,
+    queue_link:   List(Thread, "queue_link").Node,
+
     context: isr.Context,
     process: &Process,
 
     local_tid: u8,
     tid: u16,
 
-    // TODO: simplify once #679 is solved.
-    process_link: List(Thread, "process_link").Node,
-    queue_link:   List(Thread, "queue_link").Node,
-
-    // User space address where the thread expects to receive messages.
-    message_destination: &Message,
+    message_destination: &Message,  // Address where to deliver messages.
+    mailbox: Mailbox,               // Private thread mailbox.
 
     ////
     // Create a new thread inside the current process.
@@ -59,6 +59,7 @@ pub const Thread = struct {
             .tid          = next_tid,
             .process_link = ThreadList.Node.initIntrusive(),
             .queue_link   = ThreadQueue.Node.initIntrusive(),
+            .mailbox      = Mailbox.init(),
             .message_destination = undefined,
         };
         next_tid += 1;
