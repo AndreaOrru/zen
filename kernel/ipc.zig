@@ -2,83 +2,78 @@ const mem = @import("mem.zig");
 const scheduler = @import("scheduler.zig");
 const Array = @import("std").ArrayList;
 const List = @import("std").LinkedList;
+const MailboxId = @import("std").os.zen.MailboxId;
 const Message = @import("std").os.zen.Message;
 const Thread = @import("thread.zig").Thread;
 const ThreadQueue = @import("thread.zig").ThreadQueue;
 
 // Structure representing a mailbox.
 pub const Mailbox = struct {
-    id:            u16,
     messages:      List(Message),
     waiting_queue: ThreadQueue,
 };
 
-// Keep track of the existing Mailboxes.
-var mailboxes = Array(&Mailbox).init(&mem.allocator);
+// Keep track of the existing mailboxes.
+var ports = Array(&Mailbox).init(&mem.allocator);
 
 ////
-// Create a new mailbox with the given ID.
+// Create a new port with the given ID.
 //
 // Arguments:
-//     id: The number of the mailbox.
+//     id: The index of the port.
 //
-pub fn createMailbox(id: u16) void {
+pub fn createPort(id: u16) void {
     // TODO: check that the ID is not reserved.
-    if (mailboxes.len < id) {
-        mailboxes.resize(id + 1) catch unreachable;
+    if (ports.len <= id) {
+        ports.resize(id + 1) catch unreachable;
     }
 
     const mailbox = mem.allocator.create(Mailbox) catch unreachable;
     *mailbox = Mailbox {
-        .id       = id,
         .messages = List(Message).init(),
         .waiting_queue = ThreadQueue.init(),
     };
 
-    mailboxes.items[id] = mailbox;
+    ports.items[id] = mailbox;
 }
 
 ////
-// Send a message to the given mailbox.
+// Send a message to a mailbox.
 //
 // Arguments:
-//     mailbox_id: The number of the mailbox.
-//     data: The message to send.
+//     message:
 //
-pub fn send(mailbox_id: u16, data: usize) void {
-    // TODO: Check if the mailbox exists.
-    const mailbox = mailboxes.at(mailbox_id);
-    const message = Message {
-        .from = 10,
-        .data = data,
-    };
+pub fn send(message: &volatile Message) void {
+    // TODO: validate `from` and `to` mailboxes.
+    const mailbox = getMailbox(message.to);
+    const message_copy = *message;
+    // NOTE: We need a copy in kernel space, because we are
+    // potentially switching address spaces.
 
     if (mailbox.waiting_queue.popFirst()) |first| {
         // There's a thread waiting to receive.
         const thread = first.toData();
         scheduler.new(thread);
-        *thread.message_destination = message;
+        *thread.message_destination = message_copy;
         // Wake it and deliver the message.
     } else {
         // No thread is waiting to receive.
-        const node = mailbox.messages.createNode(message, &mem.allocator) catch unreachable;
+        const node = mailbox.messages.createNode(message_copy, &mem.allocator) catch unreachable;
         mailbox.messages.append(node);
         // Put the message in the queue.
     }
 }
 
 ////
-// Receive a message from the given mailbox.
+// Receive a message from a mailbox.
 // Block if there are no messages.
 //
 // Arguments:
-//     mailbox_id: The number of the mailbox.
+//     destination:
 //
-// Returns:
-//     The received message, immediately or after unblocking.
-//
-pub fn receive(mailbox_id: u16, destination: &Message) void {
-    const mailbox = mailboxes.at(mailbox_id);
+pub fn receive(destination: &Message) void {
+    // TODO: validate `from` and `to` mailboxes.
+    const mailbox = getMailbox(destination.to);
 
     if (mailbox.messages.popFirst()) |first| {
         // There's a message in the queue, deliver immediately.
@@ -90,4 +85,13 @@ pub fn receive(mailbox_id: u16, destination: &Message) void {
         thread.message_destination = destination;
         mailbox.waiting_queue.append(&thread.queue_link);
     }
+}
+
+fn getMailbox(mailbox_id: &const MailboxId) &Mailbox {
+    return switch (*mailbox_id) {
+        MailboxId.Me     => &(??scheduler.current()).mailbox,
+        MailboxId.Kernel => unreachable,
+        MailboxId.Port   => |id| ports.at(id),
+        //MailboxId.Thread => |tid| thread.get(tid).mailbox,
+    };
 }

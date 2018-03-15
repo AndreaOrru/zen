@@ -6,6 +6,7 @@ const vmem = @import("vmem.zig");
 const scheduler = @import("scheduler.zig");
 const x86 = @import("x86.zig");
 const assert = @import("std").debug.assert;
+const Mailbox = @import("ipc.zig").Mailbox;
 const Message = @import("std").os.zen.Message;
 const Process = @import("process.zig").Process;
 const List = @import("std").IntrusiveLinkedList;
