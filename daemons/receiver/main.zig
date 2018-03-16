@@ -13,10 +13,10 @@ pub fn main() void {
 
     var i: usize = 0;
     while (true) {
-        var message = Message.withReceiver(Terminal);
+        var message = Message.from(Terminal);
         zen.receive(&message);
 
-        vram[2*(80*17 + i)] = u8(message.payload);
+        vram[2*(80*15 + i)] = u8(message.payload);
         i += 1;
     }
 }

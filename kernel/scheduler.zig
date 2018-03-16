@@ -21,8 +21,6 @@ fn schedule() void {
         const next_thread = next.toData();
 
         contextSwitch(next_thread);
-    } else {
-        tty.panic("no threads to schedule");
     }
 }
 
@@ -111,7 +109,7 @@ pub fn remove(thread: &Thread) void {
 ////
 // Return the thread currently being executed.
 //
-pub fn current() ?&Thread {
+pub inline fn current() ?&Thread {
     const last = ready_queue.last ?? return null;
     return last.toData();
 }
