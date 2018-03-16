@@ -29,7 +29,7 @@ pub const Mailbox = struct {
     }
 };
 
-// Keep track of the existing mailboxes.
+// Keep track of the registered ports.
 var ports = Array(&Mailbox).init(&mem.allocator);
 
 ////
