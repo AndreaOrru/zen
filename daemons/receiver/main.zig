@@ -8,7 +8,7 @@ const size   = 0x8000;
 const vram   = @intToPtr(&volatile u8, v_addr)[0..size];
 
 pub fn main() void {
-    zen.createPort(Terminal.Port);
+    zen.createPort(Terminal);
     _ = zen.map(v_addr, p_addr, size, true);
 
     var i: usize = 0;

@@ -1,13 +1,14 @@
 const std = @import("std");
 const mem = @import("mem.zig");
 const scheduler = @import("scheduler.zig");
+const thread = @import("thread.zig");
 const Array = std.ArrayList;
 const IntrusiveList = std.IntrusiveLinkedList;
 const List = std.LinkedList;
 const MailboxId = std.os.zen.MailboxId;
 const Message = std.os.zen.Message;
-const Thread = @import("thread.zig").Thread;
-const ThreadQueue = @import("thread.zig").ThreadQueue;
+const Thread = thread.Thread;
+const ThreadQueue = thread.ThreadQueue;
 
 // Structure representing a mailbox.
 pub const Mailbox = struct {
@@ -42,6 +43,7 @@ pub fn createPort(id: u16) void {
     // TODO: check that the ID is not reserved.
     if (ports.len <= id) {
         ports.resize(id + 1) catch unreachable;
+        // FIXME: fairly dangerous - leaves a lot of uninitialized Mailboxes.
     }
 
     const mailbox = mem.allocator.create(Mailbox) catch unreachable;
@@ -57,17 +59,16 @@ pub fn createPort(id: u16) void {
 //     message: Pointer to the message to be sent.
 //
 pub fn send(message: &const Message) void {
-    // TODO: validate `from` and `to` mailboxes.
+    // NOTE: We need a copy in kernel space, because we
+    // are potentially switching address spaces.
+    const message_copy = processOutgoingMessage(message);  // FIXME: this should be volatile?
     const mailbox = getMailbox(message.receiver);
-    const message_copy = *message;  // FIXME: this should be volatile?
-    // NOTE: We need a copy in kernel space, because we are
-    // potentially switching address spaces.
 
     if (mailbox.waiting_queue.popFirst()) |first| {
         // There's a thread waiting to receive.
-        const thread = first.toData();
-        scheduler.new(thread);
-        *thread.message_destination = message_copy;
+        const receiving_thread = first.toData();
+        scheduler.new(receiving_thread);
+        *receiving_thread.message_destination = message_copy;
         // Wake it and deliver the message.
     } else {
         // No thread is waiting to receive.
@@ -85,7 +86,7 @@ pub fn send(message: &const Message) void {
 //     destination: Address where to deliver the message.
 //
 pub fn receive(destination: &Message) void {
-    // TODO: validate `from` and `to` mailboxes.
+    // TODO: validation, i.e. check if the thread has the right permissions.
     const mailbox = getMailbox(destination.receiver);
 
     if (mailbox.messages.popFirst()) |first| {
@@ -94,9 +95,9 @@ pub fn receive(destination: &Message) void {
         *destination = message;
     } else {
         // No message in the queue, block the thread.
-        const thread = ??scheduler.dequeue();
-        thread.message_destination = destination;
-        mailbox.waiting_queue.append(&thread.queue_link);
+        const current_thread = ??scheduler.dequeue();
+        current_thread.message_destination = destination;
+        mailbox.waiting_queue.append(&current_thread.queue_link);
     }
 }
 
@@ -114,6 +115,29 @@ fn getMailbox(mailbox_id: &const MailboxId) &Mailbox {
         MailboxId.This   => &(??scheduler.current()).mailbox,
         MailboxId.Kernel => unreachable,
         MailboxId.Port   => |id| ports.at(id),
-        //MailboxId.Thread => |tid| thread.get(tid).mailbox,
+        MailboxId.Thread => |tid| &(??thread.get(tid)).mailbox,
     };
+}
+
+////
+// Validate the outgoing message. If the validation succeeds,
+// return a copy of a message with an explicit sender field.
+//
+// Arguments:
+//     message: The original message.
+//
+// Returns:
+//     A copy of the message with an explicit sender field.
+//
+fn processOutgoingMessage(message: &const Message) Message {
+    const sender = ??scheduler.current();
+    var message_copy = *message;
+
+    switch (message.sender) {
+        MailboxId.This => message_copy.sender = MailboxId { .Thread = sender.tid },
+        // MailboxId.Port   => TODO: ensure the sender owns the port.
+        // MailboxId.Kernel => TODO: ensure the sender is really the kernel.
+        else => {},
+    }
+    return message_copy;
 }

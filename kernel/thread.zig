@@ -1,3 +1,4 @@
+const std = @import("std");
 const gdt = @import("gdt.zig");
 const isr = @import("isr.zig");
 const layout = @import("layout.zig");
@@ -5,14 +6,17 @@ const mem = @import("mem.zig");
 const vmem = @import("vmem.zig");
 const scheduler = @import("scheduler.zig");
 const x86 = @import("x86.zig");
-const assert = @import("std").debug.assert;
+const Array = std.ArrayList;
+const List = std.IntrusiveLinkedList;
 const Mailbox = @import("ipc.zig").Mailbox;
-const Message = @import("std").os.zen.Message;
+const Message = std.os.zen.Message;
 const Process = @import("process.zig").Process;
-const List = @import("std").IntrusiveLinkedList;
+const assert = std.debug.assert;
 
 const STACK_SIZE = x86.PAGE_SIZE;  // Size of thread stacks.
-var next_tid: u16 = 1;             // Keep track of the used TIDs.
+
+// Keep track of all the threads.
+var threads = Array(?&Thread).init(&mem.allocator);
 
 // List of threads inside a process.
 pub const ThreadList  = List(Thread, "process_link");
@@ -51,18 +55,20 @@ pub const Thread = struct {
         const stack = getStack(local_tid);
         vmem.mapZone(stack, null, STACK_SIZE, vmem.PAGE_WRITE | vmem.PAGE_USER);
 
+        // Allocate and initialize the thread structure.
         const thread = mem.allocator.create(Thread) catch unreachable;
         *thread = Thread {
             .context      = initContext(entry_point, stack),
             .process      = process,
             .local_tid    = local_tid,
-            .tid          = next_tid,
+            .tid          = u16(threads.len),
             .process_link = ThreadList.Node.initIntrusive(),
             .queue_link   = ThreadQueue.Node.initIntrusive(),
             .mailbox      = Mailbox.init(),
             .message_destination = undefined,
         };
-        next_tid += 1;
+        threads.append(@ptrCast(?&Thread, thread)) catch unreachable;
+        // TODO: simplify once #836 is solved.
 
         return thread;
     }
@@ -79,11 +85,25 @@ pub const Thread = struct {
 
         // Get the thread off the process and scheduler, and deallocate its structure.
         self.process.removeThread(self);
+        threads.items[self.tid] = null;
         mem.allocator.destroy(self);
 
         // TODO: get the thread off IPC waiting queues.
     }
 };
+
+////
+// Get a thread.
+//
+// Arguments:
+//     tid: The ID of the thread.
+//
+// Returns:
+//     Pointer to the thread, null if non-existent.
+//
+pub fn get(tid: u16) ?&Thread {
+    return threads.items[tid];
+}
 
 ////
 // Set up the initial context of a thread.

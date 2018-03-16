@@ -49,7 +49,7 @@ export fn kmain(magic: u32, info: &const MultibootInfo) noreturn {
     pmem.initialize(info);
     vmem.initialize();
     mem.initialize(0x10000);
-    timer.initialize(50);
+    timer.initialize(100);
     scheduler.initialize();
 
     tty.colorPrintf(Color.LightBlue, "\nLoading the daemons:\n");

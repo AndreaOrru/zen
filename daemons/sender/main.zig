@@ -17,7 +17,7 @@ const scancodes = []u8 {
 
 pub fn main() void {
     // Instruct the kernel to send IRQ1 notifications to the Keyboard port.
-    zen.createPort(Keyboard.Port);
+    zen.createPort(Keyboard);
     zen.subscribeIRQ(1, Keyboard);
 
     warn(">>> ");
