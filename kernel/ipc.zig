@@ -130,11 +130,10 @@ fn getMailbox(mailbox_id: &const MailboxId) &Mailbox {
 //     A copy of the message with an explicit sender field.
 //
 fn processOutgoingMessage(message: &const Message) Message {
-    const sender = ??scheduler.current();
     var message_copy = *message;
 
     switch (message.sender) {
-        MailboxId.This => message_copy.sender = MailboxId { .Thread = sender.tid },
+        MailboxId.This => message_copy.sender = MailboxId { .Thread = (??scheduler.current()).tid },
         // MailboxId.Port   => TODO: ensure the sender owns the port.
         // MailboxId.Kernel => TODO: ensure the sender is really the kernel.
         else => {},

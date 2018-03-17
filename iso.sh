@@ -1,7 +1,7 @@
 #!/bin/sh
 
 cp zen                       run/iso/boot/
-cp daemons/receiver/receiver run/iso/daemons/
-cp daemons/sender/sender     run/iso/daemons/
+cp servers/receiver/receiver run/iso/servers/
+cp servers/sender/sender     run/iso/servers/
 
 grub-mkrescue -o run/zen.iso run/iso/

@@ -122,7 +122,7 @@ inline fn createThread(entry_point: usize) u16 {
 }
 
 ////
-// Wrap vmem.mapZone to expose it as a syscall for daemons.
+// Wrap vmem.mapZone to expose it as a syscall for servers.
 //
 // Arguments:
 //     v_addr: Virtual address of the page to be mapped.
@@ -133,7 +133,7 @@ inline fn createThread(entry_point: usize) u16 {
 //     true if the mapping was successful, false otherwise.
 //
 inline fn map(v_addr: usize, p_addr: usize, size: usize, writable: bool) bool {
-    // TODO: Only daemons can call this.
+    // TODO: Only servers can call this.
     // TODO: Validate p_addr.
 
     if (v_addr < layout.USER) return false;

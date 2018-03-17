@@ -52,7 +52,7 @@ export fn kmain(magic: u32, info: &const MultibootInfo) noreturn {
     timer.initialize(100);
     scheduler.initialize();
 
-    tty.colorPrintf(Color.LightBlue, "\nLoading the daemons:\n");
+    tty.colorPrintf(Color.LightBlue, "\nLoading the servers:\n");
     info.loadModules();
 
     x86.sti();

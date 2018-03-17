@@ -8,8 +8,8 @@ pub fn build(b: &Builder) void {
     // Default step.
     //
     const kernel   = buildKernel(b);
-    const receiver = buildDaemon(b, "receiver");
-    const sender   = buildDaemon(b, "sender");
+    const receiver = buildServer(b, "receiver");
+    const sender   = buildServer(b, "sender");
 
 
     ////
@@ -57,11 +57,11 @@ fn buildKernel(b: &Builder) []const u8 {
     return kernel.getOutputPath();
 }
 
-fn buildDaemon(b: &Builder, comptime name: []const u8) []const u8 {
-    const daemon = b.addExecutable(name, "daemons/" ++ name ++ "/main.zig");
-    daemon.setOutputPath("daemons/" ++ name ++ "/" ++ name);
-    daemon.setTarget(builtin.Arch.i386, builtin.Os.zen, builtin.Environ.gnu);
+fn buildServer(b: &Builder, comptime name: []const u8) []const u8 {
+    const server = b.addExecutable(name, "servers/" ++ name ++ "/main.zig");
+    server.setOutputPath("servers/" ++ name ++ "/" ++ name);
+    server.setTarget(builtin.Arch.i386, builtin.Os.zen, builtin.Environ.gnu);
 
-    b.default_step.dependOn(&daemon.step);
-    return daemon.getOutputPath();
+    b.default_step.dependOn(&server.step);
+    return server.getOutputPath();
 }

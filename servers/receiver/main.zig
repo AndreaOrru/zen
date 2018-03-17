@@ -1,6 +1,6 @@
 const zen = @import("std").os.zen;
 const Message = zen.Message;
-const Terminal = zen.Service.Terminal;
+const Terminal = zen.Server.Terminal;
 
 const v_addr = 0x20000000;  // TODO: don't hardcode.
 const p_addr = 0xB8000;

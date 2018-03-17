@@ -1,6 +1,6 @@
 const std = @import("std");
 const zen = std.os.zen;
-const Keyboard = zen.Service.Keyboard;
+const Keyboard = zen.Server.Keyboard;
 const Message = zen.Message;
 const This = zen.MailboxId.This;
 const warn = std.debug.warn;
