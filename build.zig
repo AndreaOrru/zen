@@ -8,8 +8,8 @@ pub fn build(b: &Builder) void {
     // Default step.
     //
     const kernel   = buildKernel(b);
-    const receiver = buildServer(b, "receiver");
-    const sender   = buildServer(b, "sender");
+    const terminal = buildServer(b, "terminal");
+    const keyboard = buildServer(b, "keyboard");
 
 
     ////
@@ -22,7 +22,7 @@ pub fn build(b: &Builder) void {
         "qemu-system-i386",
         "-display", "curses",
         "-kernel", kernel,
-        "-initrd", join(b.allocator, ',', receiver, sender) catch unreachable,
+        "-initrd", join(b.allocator, ',', terminal, keyboard) catch unreachable,
     };
     const debug_params = [][]const u8 {"-s", "-S"};
 

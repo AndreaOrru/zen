@@ -1,7 +1,7 @@
 #!/bin/sh
 
 cp zen                       run/iso/boot/
-cp servers/receiver/receiver run/iso/servers/
-cp servers/sender/sender     run/iso/servers/
+cp servers/terminal/terminal run/iso/servers/
+cp servers/keyboard/keyboard run/iso/servers/
 
 grub-mkrescue -o run/zen.iso run/iso/
