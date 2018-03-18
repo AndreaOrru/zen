@@ -1,9 +1,14 @@
 const std = @import("std");
 const zen = std.os.zen;
 const Keyboard = zen.Server.Keyboard;
+const MailboxId = zen.MailboxId;
 const Message = zen.Message;
-const This = zen.MailboxId.This;
-const warn = std.debug.warn;
+
+// Circular buffer to hold keypress data.
+const BUFFER_SIZE = 1024;
+var buffer = []u8 { 0 } ** BUFFER_SIZE;
+var buffer_start: usize = 0;
+var buffer_end: usize = 0;
 
 // FIXME: Severely incomplete and poorly formatted.
 const scancodes = []u8 {
@@ -15,24 +20,78 @@ const scancodes = []u8 {
     '-', 0, 0, 0, '+', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
+// Thread that is blocked on a read.
+var waiting_thread: ?MailboxId = null;
+
+////
+// Handle keypresses.
+//
+fn handleKeyEvent() void {
+    // Check whether there's data in the keyboard buffer.
+    const status = zen.inb(0x64);
+    if ((status & 1) == 0) return;
+
+    // Fetch the scancode, and ignore key releases.
+    const code = zen.inb(0x60);
+    if ((code & 0x80) != 0) return;
+
+    // Fetch the character associated with the keypress.
+    const char = scancodes[code];
+
+    if (waiting_thread) |thread| {
+        // If a thread was blocked reading, send the character to it.
+        waiting_thread = null;
+        zen.send(Message {
+            .sender   = Keyboard,
+            .receiver = thread,
+            .type     = 0,
+            .payload  = char,
+        });
+    } else {
+        // Otherwise, save the character into the buffer.
+        buffer[buffer_end] = char;
+        buffer_end = (buffer_end + 1) % buffer.len;
+    }
+}
+
+////
+// Handle a read request from another thread.
+//
+fn handleRead(reader: &const MailboxId) void {
+    if (buffer_start == buffer_end) {
+        // If the buffer is empty, make the thread wait.
+        waiting_thread = *reader;
+    } else {
+        // Otherwise, fetch the first character from the buffer and send it.
+        const char = buffer[buffer_start];
+
+        zen.send(Message {
+            .sender   = Keyboard,
+            .receiver = *reader,
+            .type     = 0,
+            .payload  = char,
+        });
+
+        buffer_start = (buffer_start + 1) % buffer.len;
+    }
+}
+
+////
+// Entry point.
+//
 pub fn main() void {
     // Instruct the kernel to send IRQ1 notifications to the Keyboard port.
     zen.createPort(Keyboard);
     zen.subscribeIRQ(1, Keyboard);
-
-    warn(">>> ");
 
     // Receive messages from the Keyboard port.
     var message = Message.from(Keyboard);
     while (true) {
         zen.receive(&message);
 
-        if ((zen.inb(0x64) & 1) != 0) {
-            const code = zen.inb(0x60);
-            if ((code & 0x80) != 0) continue;
-
-            const key = scancodes[code];
-            warn("{c}", key);
+        switch (message.sender) {
+            MailboxId.Kernel => handleKeyEvent(),
+            else => handleRead(message.sender),
         }
     }
 }
