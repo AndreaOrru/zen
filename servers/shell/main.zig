@@ -28,7 +28,9 @@ pub fn main() void {
 //     command: Command string.
 //
 fn execute(command: []u8) void {
-    if (mem.eql(u8, command, "clear")) {
+    if (command.len == 0) {
+        return;
+    } else if (mem.eql(u8, command, "clear")) {
         clear();
     } else if (mem.eql(u8, command, "version")) {
         version();
@@ -58,14 +60,16 @@ fn readLine(stream: var, buffer: []u8) usize {
 
         if (char == 8) {
             // Backspace deletes the last character (if there's one).
-            if (i > 0) i -= 1;
+            if (i > 0) {
+                warn("{c}", char);
+                i -= 1;
+            }
         } else {
             // Save printable characters in the buffer.
+            warn("{c}", char);
             buffer[i] = char;
             i += 1;
         }
-
-        warn("{c}", char);
     }
 
     return i - 1;  // Exclude \n.
