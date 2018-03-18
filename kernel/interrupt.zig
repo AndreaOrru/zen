@@ -180,6 +180,7 @@ fn notifyIRQ() void {
             send(Message {
                 .sender   = MailboxId.Kernel,
                 .receiver = subscriber,
+                .type     = 0,
                 .payload  = irq,
             });
         },
