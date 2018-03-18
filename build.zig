@@ -10,6 +10,8 @@ pub fn build(b: &Builder) void {
     const kernel   = buildKernel(b);
     const terminal = buildServer(b, "terminal");
     const keyboard = buildServer(b, "keyboard");
+    // TODO: unprivileged processes, not servers.
+    const shell    = buildServer(b, "shell");
 
 
     ////
@@ -22,7 +24,7 @@ pub fn build(b: &Builder) void {
         "qemu-system-i386",
         "-display", "curses",
         "-kernel", kernel,
-        "-initrd", join(b.allocator, ',', terminal, keyboard) catch unreachable,
+        "-initrd", join(b.allocator, ',', terminal, keyboard, shell) catch unreachable,
     };
     const debug_params = [][]const u8 {"-s", "-S"};
 
