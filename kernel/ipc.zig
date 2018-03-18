@@ -93,6 +93,7 @@ pub fn receive(destination: &Message) void {
         // There's a message in the queue, deliver immediately.
         const message = first.data;
         *destination = message;
+        mem.allocator.destroy(first);
     } else {
         // No message in the queue, block the thread.
         const current_thread = ??scheduler.dequeue();
@@ -113,9 +114,9 @@ pub fn receive(destination: &Message) void {
 fn getMailbox(mailbox_id: &const MailboxId) &Mailbox {
     return switch (*mailbox_id) {
         MailboxId.This   => &(??scheduler.current()).mailbox,
-        MailboxId.Kernel => unreachable,
         MailboxId.Port   => |id| ports.at(id),
         MailboxId.Thread => |tid| &(??thread.get(tid)).mailbox,
+        else             => unreachable,
     };
 }
 
