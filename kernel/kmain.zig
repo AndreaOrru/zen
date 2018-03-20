@@ -34,7 +34,10 @@ pub fn panic(message: []const u8, stack_trace: ?&@import("builtin").StackTrace) 
 //     magic: Magic number from bootloader.
 //     info: Information structure from bootloader.
 //
-export fn kmain(magic: u32, info: &const MultibootInfo) noreturn {
+pub var info: &&const MultibootInfo = @intToPtr(&&const MultibootInfo, 0x1000);
+
+export fn kmain(magic: u32, boot_info: &const MultibootInfo) noreturn {
+    *info = boot_info;
     tty.initialize();
 
     assert (magic == MULTIBOOT_BOOTLOADER_MAGIC);
@@ -46,14 +49,14 @@ export fn kmain(magic: u32, info: &const MultibootInfo) noreturn {
     tty.colorPrintf(Color.LightBlue, "Booting the microkernel:\n");
     gdt.initialize();
     idt.initialize();
-    pmem.initialize(info);
+    pmem.initialize(boot_info);
     vmem.initialize();
     mem.initialize(0x10000);
     timer.initialize(100);
     scheduler.initialize();
 
     tty.colorPrintf(Color.LightBlue, "\nLoading the servers:\n");
-    info.loadModules();
+    boot_info.loadModules();
 
     x86.sti();
     x86.hlt();

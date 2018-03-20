@@ -24,6 +24,7 @@ pub fn build(b: &Builder) void {
         "qemu-system-i386",
         "-display", "curses",
         "-kernel", kernel,
+        "-append", join(b.allocator, ' ', terminal, keyboard, shell) catch unreachable,
         "-initrd", join(b.allocator, ',', terminal, keyboard, shell) catch unreachable,
     };
     const debug_params = [][]const u8 {"-s", "-S"};

@@ -1,5 +1,7 @@
+const std = @import("std");
 const tty = @import("tty.zig");
-const cstr = @import("std").cstr;
+const cstr = std.cstr;
+const mem = std.mem;
 const Process = @import("process.zig").Process;
 
 // This should be in EAX.
@@ -57,6 +59,24 @@ pub const MultibootInfo = packed struct {
     vbe_interface_off: u16,
     vbe_interface_len: u16,
 
+    fn bootModules(self: &const MultibootInfo) mem.SplitIterator {
+        const cmdline = cstr.toSlice(@intToPtr(&u8, self.cmdline));
+        var split_iterator =  mem.split(cmdline, " ");
+        _ = ??split_iterator.next();
+        return split_iterator;
+    }
+
+    fn shouldBoot(iterator: &const mem.SplitIterator, module: []const u8) bool {
+        var it = *iterator;
+        var maybe_module = it.next();
+
+        while (maybe_module) |mod| : (maybe_module = it.next()) {
+            if (mem.eql(u8, module, mod)) return true;
+        }
+
+        return false;
+    }
+
     ////
     // Return the ending address of the last module.
     //
@@ -69,12 +89,14 @@ pub const MultibootInfo = packed struct {
     // Load all the modules passed by the bootloader.
     //
     pub fn loadModules(self: &const MultibootInfo) void {
+        const bootMods = self.bootModules();
         const mods = @intToPtr(&MultibootModule, self.mods_addr)[0..self.mods_count];
 
         for (mods) |mod| {
             const cmdline = cstr.toSlice(@intToPtr(&u8, mod.cmdline));
-            tty.step("Loading \"{}\"", cmdline);
+            if (!shouldBoot(bootMods, cmdline)) continue;
 
+            tty.step("Loading \"{}\"", cmdline);
             _ = Process.create(mod.mod_start);
             // TODO: deallocate the original memory.
 

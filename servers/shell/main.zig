@@ -10,6 +10,8 @@ const warn = std.debug.warn;
 // Entry point.
 //
 pub fn main() void {
+    zenOfZig(5000000);
+
     var stdin_file = io.getStdIn() catch unreachable;
     var stdin = &io.FileInStream.init(&stdin_file).stream;
     var buffer: [1024]u8 = undefined;
@@ -19,6 +21,11 @@ pub fn main() void {
         const len = readLine(stdin, buffer[0..]);
         execute(buffer[0..len]);
     }
+}
+
+fn zenOfZig(n: usize) void {
+    var i: usize = 0;
+    while (i < n) : (i += 1) {}
 }
 
 ////
@@ -87,7 +94,7 @@ fn clear() void {
 fn help() void {
     warn("{}\n\n",
          \\List of supported commands:
-         \\    clear      Clear the screen
+         \\    clear      Clear screen
          \\    help       Show help message
          \\    version    Show Zen version
     );
