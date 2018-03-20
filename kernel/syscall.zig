@@ -32,7 +32,7 @@ inline fn wait(tid: u16) void {
 }
 
 inline fn portReady(port: u16) bool {
-    if (ipc.ports.len < port) return false;
+    if (port >= ipc.ports.len) return false;
     const mailbox = ipc.ports.items[port];
     if (mailbox == null) return false;
     return true;
