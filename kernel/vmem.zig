@@ -232,8 +232,8 @@ pub fn initialize() void {
     zeroPageTable(pd);
 
     // Identity map the kernel (first 8 MB) and point last entry of PD to the PD itself.
-    pd[0]    = 0x000000      | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL;
-    pd[1]    = 0x400000      | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL;
+    pd[0]    = 0x000000      | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL | PAGE_USER;
+    pd[1]    = 0x400000      | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL | PAGE_USER;
     pd[1023] = @ptrToInt(pd) | PAGE_PRESENT | PAGE_WRITE;
     // The recursive PD trick maps the whole paging hierarchy at the end of the address space.
 

@@ -31,7 +31,7 @@ pub const Mailbox = struct {
 };
 
 // Keep track of the registered ports.
-var ports = Array(&Mailbox).init(&mem.allocator);
+pub var ports = Array(?&Mailbox).init(&mem.allocator);
 
 ////
 // Create a new port with the given ID.
@@ -42,8 +42,11 @@ var ports = Array(&Mailbox).init(&mem.allocator);
 pub fn createPort(id: u16) void {
     // TODO: check that the ID is not reserved.
     if (ports.len <= id) {
+        var i = ports.len;
         ports.resize(id + 1) catch unreachable;
-        // FIXME: fairly dangerous - leaves a lot of uninitialized Mailboxes.
+        while (i < ports.len) : (i += 1){
+            ports.items[i] = null;
+        }
     }
 
     const mailbox = mem.allocator.create(Mailbox) catch unreachable;
@@ -112,12 +115,13 @@ pub fn receive(destination: &Message) void {
 //     The address of the mailbox.
 //
 fn getMailbox(mailbox_id: &const MailboxId) &Mailbox {
-    return switch (*mailbox_id) {
+    var mailbox = switch (*mailbox_id) {
         MailboxId.This   => &(??scheduler.current()).mailbox,
         MailboxId.Port   => |id| ports.at(id),
         MailboxId.Thread => |tid| &(??thread.get(tid)).mailbox,
         else             => unreachable,
     };
+    return ??mailbox;
 }
 
 ////

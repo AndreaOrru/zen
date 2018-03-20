@@ -1,9 +1,10 @@
-const Array = @import("std").ArrayList;
-const Builder = @import("std").build.Builder;
+const std = @import("std");
+const Array = std.ArrayList;
+const Builder = std.build.Builder;
 const builtin = @import("builtin");
-const join = @import("std").mem.join;
+const join = std.mem.join;
 
-pub fn build(b: &Builder) void {
+pub fn build(b: &Builder) !void {
     ////
     // Default step.
     //
@@ -12,6 +13,7 @@ pub fn build(b: &Builder) void {
     const keyboard = buildServer(b, "keyboard");
     // TODO: unprivileged processes, not servers.
     const shell    = buildServer(b, "shell");
+    const programs = try buildPrograms(b);
 
 
     ////
@@ -25,7 +27,7 @@ pub fn build(b: &Builder) void {
         "-display", "curses",
         "-kernel", kernel,
         "-append", join(b.allocator, ' ', terminal, keyboard, shell) catch unreachable,
-        "-initrd", join(b.allocator, ',', terminal, keyboard, shell) catch unreachable,
+        "-initrd", join(b.allocator, ',', terminal, keyboard, shell, programs) catch unreachable,
     };
     const debug_params = [][]const u8 {"-s", "-S"};
 
@@ -67,4 +69,31 @@ fn buildServer(b: &Builder, comptime name: []const u8) []const u8 {
 
     b.default_step.dependOn(&server.step);
     return server.getOutputPath();
+}
+
+fn buildPrograms(b: &Builder) ![]u8 {
+    var dir = std.os.Dir.open(b.allocator, "programs/") catch unreachable;
+    var paths = try b.allocator.alloc(u8, 1024);
+    var i: usize = 0;
+
+    while (try dir.next()) |entry| {
+        const name = entry.name;
+        const path = try join(b.allocator, '/', "programs", name, "main.zig");
+        const pathExec = try join(b.allocator, '/', path[0..path.len - 8], name);
+        const program = b.addExecutable(name, path);
+
+        program.setOutputPath(pathExec);
+        program.setTarget(builtin.Arch.i386, builtin.Os.zen, builtin.Environ.gnu);
+        b.default_step.dependOn(&program.step);
+
+        var j: usize = 0;
+        while (j < pathExec.len) : ({ i += 1; j += 1; }){
+                paths[i] = pathExec[j];
+        }
+        paths[i] = ',';
+        i += 1;
+    }
+
+    i -= 1;
+    return paths[0..i];
 }

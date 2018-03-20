@@ -4,6 +4,7 @@ const ipc = @import("ipc.zig");
 const layout = @import("layout.zig");
 const scheduler = @import("scheduler.zig");
 const process = @import("process.zig");
+const thread = @import("thread.zig");
 const tty = @import("tty.zig");
 const vmem = @import("vmem.zig");
 const x86 = @import("x86.zig");
@@ -19,7 +20,23 @@ pub var handlers = []fn()void {
     SYSCALL(x86.inb),                 // 5
     SYSCALL(map),                     // 6
     SYSCALL(createThread),            // 7
+    SYSCALL(createProcess),           // 8
+    SYSCALL(wait),                    // 9
+    SYSCALL(portReady),               // 10
 };
+
+inline fn wait(tid: u16) void {
+    const t = ??thread.get(tid);
+    const current_thread = ??scheduler.dequeue();
+    t.thread_waiting = current_thread.tid;
+}
+
+inline fn portReady(port: u16) bool {
+    if (ipc.ports.len < port) return false;
+    const mailbox = ipc.ports.items[port];
+    if (mailbox == null) return false;
+    return true;
+}
 
 ////
 // Transform a normal function (with standard calling convention) into
@@ -117,8 +134,15 @@ inline fn exit(status: usize) void {
 //     The TID of the new thread.
 //
 inline fn createThread(entry_point: usize) u16 {
-    const thread = scheduler.current_process.createThread(entry_point);
-    return thread.tid;
+    const t = scheduler.current_process.createThread(entry_point);
+    return t.tid;
+}
+
+inline fn createProcess(elf_addr: usize) void {
+    const current_thread = ??scheduler.current();
+    const proc = process.Process.create(elf_addr);
+    const tid = (??proc.threads.first).toData().tid;
+    current_thread.context.setReturnValue(tid);
 }
 
 ////

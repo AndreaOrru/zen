@@ -13,7 +13,7 @@ const Message = std.os.zen.Message;
 const Process = @import("process.zig").Process;
 const assert = std.debug.assert;
 
-const STACK_SIZE = x86.PAGE_SIZE;  // Size of thread stacks.
+const STACK_SIZE = x86.PAGE_SIZE * 4;  // Size of thread stacks.
 
 // Keep track of all the threads.
 var threads = Array(?&Thread).init(&mem.allocator);
@@ -34,6 +34,7 @@ pub const Thread = struct {
 
     local_tid: u8,
     tid: u16,
+    thread_waiting: ?u16,
 
     message_destination: &Message,  // Address where to deliver messages.
     mailbox: Mailbox,               // Private thread mailbox.
@@ -66,6 +67,7 @@ pub const Thread = struct {
             .queue_link   = ThreadQueue.Node.initIntrusive(),
             .mailbox      = Mailbox.init(),
             .message_destination = undefined,
+            .thread_waiting = null,
         };
         threads.append(@ptrCast(?&Thread, thread)) catch unreachable;
         // TODO: simplify once #836 is solved.
@@ -86,6 +88,11 @@ pub const Thread = struct {
         // Get the thread off the process and scheduler, and deallocate its structure.
         self.process.removeThread(self);
         threads.items[self.tid] = null;
+
+        if (self.thread_waiting) |t| {
+            scheduler.new(??get(t));
+        }
+
         mem.allocator.destroy(self);
 
         // TODO: get the thread off IPC waiting queues.
