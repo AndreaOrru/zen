@@ -117,7 +117,6 @@ fn writeChar(char: u8) void {
 // Entry point.
 //
 pub fn main() void {
-    zen.createPort(Terminal);
     _ = zen.map(v_addr, p_addr, size, true);
 
     while (true) {

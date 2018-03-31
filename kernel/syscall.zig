@@ -12,13 +12,12 @@ const TypeId = @import("builtin").TypeId;
 // Registered syscall handlers.
 pub var handlers = []fn()void {
     SYSCALL(exit),                    // 0
-    SYSCALL(ipc.createPort),          // 1
-    SYSCALL(ipc.send),                // 2
-    SYSCALL(ipc.receive),             // 3
-    SYSCALL(interrupt.subscribeIRQ),  // 4
-    SYSCALL(x86.inb),                 // 5
-    SYSCALL(map),                     // 6
-    SYSCALL(createThread),            // 7
+    SYSCALL(ipc.send),                // 1
+    SYSCALL(ipc.receive),             // 2
+    SYSCALL(interrupt.subscribeIRQ),  // 3
+    SYSCALL(x86.inb),                 // 4
+    SYSCALL(map),                     // 5
+    SYSCALL(createThread),            // 6
 };
 
 ////

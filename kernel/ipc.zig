@@ -37,18 +37,22 @@ fn hash_u16(x: u16) u32 { return x; }
 fn eql_u16(a: u16, b: u16) bool { return a == b; }
 
 ////
-// Create a new port with the given ID.
+// Get the port with the given ID, or create one if it doesn't exist.
 //
 // Arguments:
 //     id: The index of the port.
 //
-pub fn createPort(id: u16) void {
+pub fn getOrCreatePort(id: u16) &Mailbox {
     // TODO: check that the ID is not reserved.
-    // TODO: check that we are not overwriting an allocated port.
+    if (ports.get(id)) |entry| {
+        return entry.value;
+    }
+
     const mailbox = mem.allocator.create(Mailbox) catch unreachable;
     *mailbox = Mailbox.init();
 
     _ = ports.put(id, mailbox) catch unreachable;
+    return mailbox;
 }
 
 ////
@@ -113,8 +117,8 @@ pub fn receive(destination: &Message) void {
 fn getMailbox(mailbox_id: &const MailboxId) &Mailbox {
     return switch (*mailbox_id) {
         MailboxId.This   => &(??scheduler.current()).mailbox,
-        MailboxId.Port   => |id| (??ports.get(id)).value,
         MailboxId.Thread => |tid| &(??thread.get(tid)).mailbox,
+        MailboxId.Port   => |id| getOrCreatePort(id),
         else             => unreachable,
     };
 }

@@ -81,7 +81,6 @@ fn handleRead(reader: &const MailboxId) void {
 //
 pub fn main() void {
     // Instruct the kernel to send IRQ1 notifications to the Keyboard port.
-    zen.createPort(Keyboard);
     zen.subscribeIRQ(1, Keyboard);
 
     // Receive messages from the Keyboard port.
