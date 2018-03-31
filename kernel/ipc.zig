@@ -2,7 +2,7 @@ const std = @import("std");
 const mem = @import("mem.zig");
 const scheduler = @import("scheduler.zig");
 const thread = @import("thread.zig");
-const Array = std.ArrayList;
+const HashMap = std.HashMap;
 const IntrusiveList = std.IntrusiveLinkedList;
 const List = std.LinkedList;
 const MailboxId = std.os.zen.MailboxId;
@@ -31,7 +31,10 @@ pub const Mailbox = struct {
 };
 
 // Keep track of the registered ports.
-var ports = Array(&Mailbox).init(&mem.allocator);
+var ports = HashMap(u16, &Mailbox, hash_u16, eql_u16).init(&mem.allocator);
+
+fn hash_u16(x: u16) u32 { return x; }
+fn eql_u16(a: u16, b: u16) bool { return a == b; }
 
 ////
 // Create a new port with the given ID.
@@ -41,15 +44,11 @@ var ports = Array(&Mailbox).init(&mem.allocator);
 //
 pub fn createPort(id: u16) void {
     // TODO: check that the ID is not reserved.
-    if (ports.len <= id) {
-        ports.resize(id + 1) catch unreachable;
-        // FIXME: fairly dangerous - leaves a lot of uninitialized Mailboxes.
-    }
-
+    // TODO: check that we are not overwriting an allocated port.
     const mailbox = mem.allocator.create(Mailbox) catch unreachable;
     *mailbox = Mailbox.init();
 
-    ports.items[id] = mailbox;
+    _ = ports.put(id, mailbox) catch unreachable;
 }
 
 ////
@@ -114,7 +113,7 @@ pub fn receive(destination: &Message) void {
 fn getMailbox(mailbox_id: &const MailboxId) &Mailbox {
     return switch (*mailbox_id) {
         MailboxId.This   => &(??scheduler.current()).mailbox,
-        MailboxId.Port   => |id| ports.at(id),
+        MailboxId.Port   => |id| (??ports.get(id)).value,
         MailboxId.Thread => |tid| &(??thread.get(tid)).mailbox,
         else             => unreachable,
     };
