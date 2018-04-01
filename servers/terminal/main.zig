@@ -76,7 +76,7 @@ fn scrollDown() void {
 // Print a character to the screen.
 //
 // Arguments:
-//     char: Char to be printed.
+//     char: Character to be printed.
 //
 fn writeChar(char: u8) void {
     if (cursor == VGA_WIDTH * VGA_HEIGHT) {
@@ -84,32 +84,44 @@ fn writeChar(char: u8) void {
     }
 
     switch (char) {
-        // Newline:
+        // Newline.
         '\n' => {
             writeChar(' ');
             while (cursor % VGA_WIDTH != 0)
                 writeChar(' ');
         },
-        // Tab:
+        // Tab.
         '\t' => {
             writeChar(' ');
             while (cursor % 4 != 0)
                 writeChar(' ');
         },
-        // Backspace:
+        // Backspace.
         // FIXME: hardcoded 8 here is horrible.
         8 => {
             cursor -= 1;
             writeChar(' ');
             cursor -= 1;
         },
-        // Any other character:
+        // Any other character.
         else => {
             vram[cursor] = VGAEntry { .char       = char,
                                       .background = background,
                                       .foreground = foreground, };
             cursor += 1;
         },
+    }
+}
+
+////
+// Print a string to the screen.
+//
+// Arguments:
+//     string: String to be printed.
+//
+fn writeString(string: []const u8) void {
+    for (string) |char| {
+        writeChar(char);
     }
 }
 
@@ -125,7 +137,7 @@ pub fn main() void {
 
         switch (message.type) {
             0 => clear(),
-            1 => writeChar(u8(message.payload)),
+            1 => writeString(??message.buffer),
             else => unreachable,
         }
     }

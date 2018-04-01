@@ -1,7 +1,11 @@
 const std = @import("std");
+const layout = @import("layout.zig");
 const mem = @import("mem.zig");
+const pmem = @import("pmem.zig");
+const vmem = @import("vmem.zig");
 const scheduler = @import("scheduler.zig");
 const thread = @import("thread.zig");
+const x86 = @import("x86.zig");
 const HashMap = std.HashMap;
 const IntrusiveList = std.IntrusiveLinkedList;
 const List = std.LinkedList;
@@ -42,6 +46,9 @@ fn eql_u16(a: u16, b: u16) bool { return a == b; }
 // Arguments:
 //     id: The index of the port.
 //
+// Returns:
+//     Mailbox associated to the port.
+//
 pub fn getOrCreatePort(id: u16) &Mailbox {
     // TODO: check that the ID is not reserved.
     if (ports.get(id)) |entry| {
@@ -64,20 +71,19 @@ pub fn getOrCreatePort(id: u16) &Mailbox {
 pub fn send(message: &const Message) void {
     // NOTE: We need a copy in kernel space, because we
     // are potentially switching address spaces.
-    const message_copy = processOutgoingMessage(message);  // FIXME: this should be volatile?
+    const message_copy = processOutgoingMessage(message);  // FIXME: should this be volatile?
     const mailbox = getMailbox(message.receiver);
 
     if (mailbox.waiting_queue.popFirst()) |first| {
-        // There's a thread waiting to receive.
+        // There's a thread waiting to receive, wake it up.
         const receiving_thread = first.toData();
         scheduler.new(receiving_thread);
-        *receiving_thread.message_destination = message_copy;
-        // Wake it and deliver the message.
+        // Deliver the message into the receiver's address space.
+        deliverMessage(message_copy);
     } else {
-        // No thread is waiting to receive.
+        // No thread is waiting to receive, put the message in the queue.
         const node = mailbox.messages.createNode(message_copy, &mem.allocator) catch unreachable;
         mailbox.messages.append(node);
-        // Put the message in the queue.
     }
 }
 
@@ -91,17 +97,19 @@ pub fn send(message: &const Message) void {
 pub fn receive(destination: &Message) void {
     // TODO: validation, i.e. check if the thread has the right permissions.
     const mailbox = getMailbox(destination.receiver);
+    // Specify where the thread wants to get the message delivered.
+    const receiving_thread = ??scheduler.current();
+    receiving_thread.message_destination = destination;
 
     if (mailbox.messages.popFirst()) |first| {
         // There's a message in the queue, deliver immediately.
         const message = first.data;
-        *destination = message;
+        deliverMessage(message);
         mem.allocator.destroy(first);
     } else {
         // No message in the queue, block the thread.
-        const current_thread = ??scheduler.dequeue();
-        current_thread.message_destination = destination;
-        mailbox.waiting_queue.append(&current_thread.queue_link);
+        scheduler.remove(receiving_thread);
+        mailbox.waiting_queue.append(&receiving_thread.queue_link);
     }
 }
 
@@ -124,14 +132,15 @@ fn getMailbox(mailbox_id: &const MailboxId) &Mailbox {
 }
 
 ////
-// Validate the outgoing message. If the validation succeeds,
-// return a copy of a message with an explicit sender field.
+// Process the outgoing message. Return a copy of the message with
+// an explicit sender field and the physical address of a copy of
+// the message's buffer (if specified).
 //
 // Arguments:
 //     message: The original message.
 //
 // Returns:
-//     A copy of the message with an explicit sender field.
+//     A copy of the message, post processing.
 //
 fn processOutgoingMessage(message: &const Message) Message {
     var message_copy = *message;
@@ -142,5 +151,53 @@ fn processOutgoingMessage(message: &const Message) Message {
         // MailboxId.Kernel => TODO: ensure the sender is really the kernel.
         else => {},
     }
+
+    // Copy the message's buffer into a kernel buffer.
+    if (message.buffer) |buffer| {
+        // Allocate space for a copy of the buffer and map it somewhere.
+        const physical_buffer = pmem.allocate();
+        vmem.map(layout.TMP, physical_buffer, vmem.PAGE_WRITE);
+        const tmp_buffer = @intToPtr(&u8, layout.TMP)[0..x86.PAGE_SIZE];
+
+        // Copy the sender's buffer into the newly allocated space.
+        std.mem.copy(u8, tmp_buffer, buffer);
+
+        // Substitute the original pointer with the new physical one.
+        // When the receiving thread is ready, it will be mapped
+        // somewhere in its address space and this field will hold
+        // the final virtual address.
+        message_copy.buffer = @intToPtr(&u8, physical_buffer)[0..buffer.len];
+    }
+
     return message_copy;
+}
+
+////
+// Deliver a message to the current thread.
+//
+// Arguments:
+//     message: The message to be delivered.
+//
+fn deliverMessage(message: &const Message) void {
+    const receiver_thread = ??scheduler.current();
+    const destination = receiver_thread.message_destination;
+
+    // Copy the message structure.
+    *destination = *message;
+
+    // Map the message's buffer into the thread's address space.
+    if (message.buffer) |buffer| {
+        // TODO: leave empty pages in between destination buffers.
+        const destination_buffer = layout.USER_MESSAGES + (receiver_thread.local_tid * x86.PAGE_SIZE);
+
+        // Deallocate the physical memory used for the previous buffer.
+        if (vmem.virtualToPhysical(destination_buffer)) |old_physical| {
+            pmem.free(old_physical);
+        }
+        // Map the current message's buffer.
+        vmem.map(destination_buffer, @ptrToInt(buffer.ptr), vmem.PAGE_WRITE | vmem.PAGE_USER);
+
+        // Update the buffer field in the delivered message.
+        destination.buffer = @intToPtr(&u8, destination_buffer)[0..buffer.len];
+    }
 }

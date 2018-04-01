@@ -33,6 +33,24 @@ fn ptEntry(v_addr: usize) &PageEntry {
 }
 
 ////
+// Convert a virtual address to the physical address
+// it maps to (in the current address space).
+//
+// Arguments:
+//     v_addr: Virtual address to be converted.
+//
+// Returns:
+//     The physical address (if map exists), or null otherwise.
+//
+pub fn virtualToPhysical(v_addr: usize) ?usize {
+    const pd_entry = pdEntry(v_addr);
+    if (*pd_entry == 0) return null;
+    const pt_entry = ptEntry(v_addr);
+
+    return x86.pageBase(*pt_entry);
+}
+
+////
 // Map a virtual page to a physical one with the given flags.
 //
 // Arguments:
