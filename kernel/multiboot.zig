@@ -75,7 +75,7 @@ pub const MultibootInfo = packed struct {
             const cmdline = cstr.toSlice(@intToPtr(&u8, mod.cmdline));
             tty.step("Loading \"{}\"", cmdline);
 
-            _ = Process.create(mod.mod_start);
+            _ = Process.create(mod.mod_start, null);
             // TODO: deallocate the original memory.
 
             tty.stepOK();

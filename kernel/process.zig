@@ -1,8 +1,10 @@
-const assert = @import("std").debug.assert;
+const std = @import("std");
 const elf = @import("elf.zig");
 const mem = @import("mem.zig");
 const scheduler = @import("scheduler.zig");
 const vmem = @import("vmem.zig");
+const assert = std.debug.assert;
+const ArrayList = std.ArrayList;
 const Thread = @import("thread.zig").Thread;
 const ThreadList = @import("thread.zig").ThreadList;
 
@@ -26,7 +28,7 @@ pub const Process = struct {
     // Returns:
     //     Pointer to the new process structure.
     //
-    pub fn create(elf_addr: usize) &Process {
+    pub fn create(elf_addr: usize, args: ?[]const []const u8) &Process {
         var process = mem.allocator.create(Process) catch unreachable;
         *process = Process {
             .pid            = next_pid,
@@ -42,6 +44,7 @@ pub const Process = struct {
         const entry_point = elf.load(elf_addr);
         // ...and start executing it.
         const main_thread = process.createThread(entry_point);
+        insertArguments(main_thread, args ?? [][]const u8 {});
 
         return process;
     }
@@ -103,3 +106,51 @@ pub const Process = struct {
         // TODO: handle case in which this was the last thread of the process.
     }
 };
+
+////
+// Insert arguments into the process's main thread stack.
+//
+// Arguments:
+//     thread: The process's main thread.
+//     args: An array of strings (the arguments).
+//
+fn insertArguments(thread: &Thread, args: []const []const u8) void {
+    var stack = thread.context.esp;
+
+    // Store the pointers to the beginning of the argument strings.
+    var argv_list = ArrayList(&u8).init(&mem.allocator);
+    defer argv_list.deinit();
+
+    // Copy the arguments.
+    for (args) |arg| {
+        // Reserve space for the string and the null terminator.
+        stack -= arg.len + 1;
+        // Copy the null-terminated string into the stack.
+        var dest = @intToPtr(&u8, stack);
+        std.mem.copy(u8, dest[0..arg.len], arg);
+        dest[arg.len] = 0;
+        // Keep track of the argument positions.
+        argv_list.append(dest) catch unreachable;
+    }
+    // Ensure subsequent arguments are word-aligned.
+    stack -= stack % @sizeOf(usize);
+
+    // FIXME: we currently don't support envp.
+    stack -= @sizeOf(usize);
+    const envp = @intToPtr(&usize, stack);
+    *envp = 0;
+
+    // Reserve space for argv's entries and null terminator.
+    stack -= (args.len + 1) * @sizeOf(usize);
+    // Copy the null-terminated argv into the stack.
+    const argv = @intToPtr(&&u8, stack);
+    std.mem.copy(&u8, argv[0..args.len], argv_list.toSlice());
+    argv[args.len] = @intToPtr(&u8, 0);
+
+    // Write argc into the stack.
+    stack -= @sizeOf(usize);
+    var argc = @intToPtr(&usize, stack);
+    *argc = args.len;
+
+    thread.context.esp = stack;
+}
