@@ -16,8 +16,9 @@ pub var handlers = []fn()void {
     SYSCALL(ipc.receive),             // 2
     SYSCALL(interrupt.subscribeIRQ),  // 3
     SYSCALL(x86.inb),                 // 4
-    SYSCALL(map),                     // 5
-    SYSCALL(createThread),            // 6
+    SYSCALL(x86.outb),                // 5
+    SYSCALL(map),                     // 6
+    SYSCALL(createThread),            // 7
 };
 
 ////

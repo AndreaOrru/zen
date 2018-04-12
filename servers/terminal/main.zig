@@ -10,9 +10,9 @@ pub fn main() void {
     const buffer = 0x20000000;  // TODO: don't hardcode.
     _ = zen.map(buffer, VRAM_ADDR, VRAM_SIZE, true);
 
-    // TODO: restore state from kernel?
     var vga = VGA.init(buffer);
-    vga.cursor = usize(VGA_WIDTH * 16);
+    vga.fetchCursor();
+    enableCursor();
 
     while (true) {
         var message = Message.from(Terminal);

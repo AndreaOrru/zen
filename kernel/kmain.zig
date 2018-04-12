@@ -19,12 +19,7 @@ const Color = tty.Color;
 //     message: Reason for the panic.
 //
 pub fn panic(message: []const u8, stack_trace: ?&@import("builtin").StackTrace) noreturn {
-    tty.print("\n");
-
-    tty.setBackground(Color.Red);
-    tty.colorPrint(Color.White, "KERNEL PANIC: {}\n", message);
-
-    x86.hang();
+    tty.panic("{}", message);
 }
 
 ////

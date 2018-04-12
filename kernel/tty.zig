@@ -10,31 +10,8 @@ var vga = VGA.init(VRAM_ADDR);
 // Initialize the terminal.
 //
 pub fn initialize() void {
-    // Disable cursor.
-    x86.outb(0x3D4, 0xA);
-    x86.outb(0x3D5, 1 << 5);
-
+    disableCursor();
     vga.clear();
-}
-
-////
-// Set the default foreground color.
-//
-// Arguments:
-//     fg: The color to set.
-//
-pub fn setForeground(fg: Color) void {
-    vga.foreground = fg;
-}
-
-////
-// Set the default background color.
-//
-// Arguments:
-//     bg: The color to set.
-//
-pub fn setBackground(bg: Color) void {
-    vga.background = bg;
 }
 
 ////
@@ -111,9 +88,13 @@ pub fn alignCenter(str_len: usize) void {
 //     args: Parameters for format specifiers.
 //
 pub fn panic(comptime format: []const u8, args: ...) noreturn {
+    // We may be interrupting user mode, so we disable the hardware cursor
+    // and fetch its current position, and start writing from there.
+    disableCursor();
+    vga.fetchCursor();
     vga.writeChar('\n');
 
-    setBackground(Color.Red);
+    vga.background = Color.Red;
     colorPrint(Color.White, "KERNEL PANIC: " ++ format ++ "\n", args);
 
     x86.hang();

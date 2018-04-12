@@ -14,6 +14,7 @@ pub fn main() void {
     var stdin = &io.FileInStream.init(&stdin_file).stream;
     var buffer: [1024]u8 = undefined;
 
+    warn("\n");
     while (true) {
         warn(">>> ");
         const len = readLine(stdin, buffer[0..]);
