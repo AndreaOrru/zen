@@ -181,8 +181,7 @@ pub const VGA = struct {
         var cursor: usize = 0;
 
         zen.outb(0x3D4, 0x0E);
-        cursor |= zen.inb(0x3D5);
-        cursor <<= 8;
+        cursor |= usize(zen.inb(0x3D5)) << 8;
 
         zen.outb(0x3D4, 0x0F);
         cursor |= zen.inb(0x3D5);
