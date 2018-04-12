@@ -1,37 +1,7 @@
 const layout = @import("layout.zig");
 const x86 = @import("x86.zig");
 const fmt = @import("std").fmt;
-
-// Screen size.
-const VGA_WIDTH  = 80;
-const VGA_HEIGHT = 25;
-
-// Color codes.
-pub const Color = enum(u4) {
-    Black        = 0,
-    Blue         = 1,
-    Green        = 2,
-    Cyan         = 3,
-    Red          = 4,
-    Magenta      = 5,
-    Brown        = 6,
-    LightGrey    = 7,
-    DarkGrey     = 8,
-    LightBlue    = 9,
-    LightGreen   = 10,
-    LightCyan    = 11,
-    LightRed     = 12,
-    LightMagenta = 13,
-    LightBrown   = 14,
-    White        = 15,
-};
-
-// Character with attributes.
-const VGAEntry = packed struct {
-    char:       u8,
-    foreground: Color,
-    background: Color,
-};
+use @import("lib").tty;
 
 // VRAM buffer.
 const vram = @intToPtr(&volatile VGAEntry, layout.VRAM)[0..0x4000];

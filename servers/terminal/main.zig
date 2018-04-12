@@ -1,38 +1,7 @@
-const std = @import("std");
-const zen = std.os.zen;
+use @import("lib").tty;
+const zen = @import("std").os.zen;
 const Message = zen.Message;
 const Terminal = zen.Server.Terminal;
-
-// Color codes.
-const Color = enum(u4) {
-    Black        = 0,
-    Blue         = 1,
-    Green        = 2,
-    Cyan         = 3,
-    Red          = 4,
-    Magenta      = 5,
-    Brown        = 6,
-    LightGrey    = 7,
-    DarkGrey     = 8,
-    LightBlue    = 9,
-    LightGreen   = 10,
-    LightCyan    = 11,
-    LightRed     = 12,
-    LightMagenta = 13,
-    LightBrown   = 14,
-    White        = 15,
-};
-
-// Character with attributes.
-const VGAEntry = packed struct {
-    char:       u8,
-    foreground: Color,
-    background: Color,
-};
-
-// Screen size.
-const VGA_WIDTH  = 80;
-const VGA_HEIGHT = 25;
 
 // VRAM buffer.
 const v_addr = 0x20000000;  // TODO: don't hardcode.

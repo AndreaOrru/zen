@@ -44,7 +44,7 @@ pub fn build(b: &Builder) void {
 
 fn buildKernel(b: &Builder) []const u8 {
     const kernel = b.addExecutable("zen", "kernel/kmain.zig");
-    kernel.setBuildMode(b.standardReleaseOptions());
+    kernel.addPackagePath("lib", "lib/index.zig");
     kernel.setOutputPath("zen");
 
     kernel.addAssemblyFile("kernel/_start.s");
@@ -52,6 +52,7 @@ fn buildKernel(b: &Builder) []const u8 {
     kernel.addAssemblyFile("kernel/isr.s");
     kernel.addAssemblyFile("kernel/vmem.s");
 
+    kernel.setBuildMode(b.standardReleaseOptions());
     kernel.setTarget(builtin.Arch.i386, builtin.Os.freestanding, builtin.Environ.gnu);
     kernel.setLinkerScriptPath("kernel/linker.ld");
 
@@ -61,7 +62,10 @@ fn buildKernel(b: &Builder) []const u8 {
 
 fn buildServer(b: &Builder, comptime name: []const u8) []const u8 {
     const server = b.addExecutable(name, "servers/" ++ name ++ "/main.zig");
+    server.addPackagePath("lib", "lib/index.zig");
     server.setOutputPath("servers/" ++ name ++ "/" ++ name);
+
+    server.setBuildMode(b.standardReleaseOptions());
     server.setTarget(builtin.Arch.i386, builtin.Os.zen, builtin.Environ.gnu);
 
     b.default_step.dependOn(&server.step);
