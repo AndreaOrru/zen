@@ -277,6 +277,6 @@ pub fn initialize(capacity: usize) void {
     free_list = @ptrCast(&Block, heap.ptr);
     *??free_list = Block.init();
 
-    tty.colorPrintf(Color.White, " {d} KB", capacity / 1024);
+    tty.colorPrint(Color.White, " {d} KB", capacity / 1024);
     tty.stepOK();
 }

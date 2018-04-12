@@ -78,6 +78,6 @@ pub fn initialize(info: &const MultibootInfo) void {
         map += entry.size + @sizeOf(@typeOf(entry.size));
     }
 
-    tty.colorPrintf(Color.White, " {d} MB", available() / (1024 * 1024));
+    tty.colorPrint(Color.White, " {d} MB", available() / (1024 * 1024));
     tty.stepOK();
 }

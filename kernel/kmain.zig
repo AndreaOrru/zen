@@ -19,10 +19,10 @@ const Color = tty.Color;
 //     message: Reason for the panic.
 //
 pub fn panic(message: []const u8, stack_trace: ?&@import("builtin").StackTrace) noreturn {
-    tty.writeChar('\n');
+    tty.print("\n");
 
     tty.setBackground(Color.Red);
-    tty.colorPrintf(Color.White, "KERNEL PANIC: {}\n", message);
+    tty.colorPrint(Color.White, "KERNEL PANIC: {}\n", message);
 
     x86.hang();
 }
@@ -41,9 +41,9 @@ export fn kmain(magic: u32, info: &const MultibootInfo) noreturn {
 
     const title = "Zen - v0.0.1";
     tty.alignCenter(title.len);
-    tty.colorPrintf(Color.LightRed, title ++ "\n\n");
+    tty.colorPrint(Color.LightRed, title ++ "\n\n");
 
-    tty.colorPrintf(Color.LightBlue, "Booting the microkernel:\n");
+    tty.colorPrint(Color.LightBlue, "Booting the microkernel:\n");
     gdt.initialize();
     idt.initialize();
     pmem.initialize(info);
@@ -52,7 +52,7 @@ export fn kmain(magic: u32, info: &const MultibootInfo) noreturn {
     timer.initialize(100);
     scheduler.initialize();
 
-    tty.colorPrintf(Color.LightBlue, "\nLoading the servers:\n");
+    tty.colorPrint(Color.LightBlue, "\nLoading the servers:\n");
     info.loadModules();
 
     x86.sti();

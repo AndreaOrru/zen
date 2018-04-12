@@ -3,110 +3,24 @@ const zen = @import("std").os.zen;
 const Message = zen.Message;
 const Terminal = zen.Server.Terminal;
 
-// VRAM buffer.
-const v_addr = 0x20000000;  // TODO: don't hardcode.
-const p_addr = 0xB8000;
-const size   = 0x8000;
-const vram   = @intToPtr(&VGAEntry, v_addr)[0..(size / @sizeOf(VGAEntry))];
-
-var background = Color.Black;        // Background color.
-var foreground = Color.LightGrey;    // Foreground color.
-var cursor = usize(VGA_WIDTH * 16);  // Cursor position.
-
-////
-// Clear the screen.
-//
-
-fn clear() void {
-    cursor = 0;
-    while (cursor < VGA_HEIGHT * VGA_WIDTH)
-        writeChar(' ');
-    cursor = 0;
-}
-
-////
-// Scroll the screen one line down.
-//
-fn scrollDown() void {
-    // FIXME: express in native Zig.
-    const vram_raw = @ptrCast(&u8, vram.ptr);
-
-    const line_size   = VGA_WIDTH * @sizeOf(VGAEntry);
-    const screen_size = VGA_WIDTH * VGA_HEIGHT * @sizeOf(VGAEntry);
-
-    @memcpy(&vram_raw[0], &vram_raw[line_size], screen_size - line_size);
-
-    cursor -= VGA_WIDTH;
-    writeChar('\n');
-    cursor -= VGA_WIDTH;
-}
-
-////
-// Print a character to the screen.
-//
-// Arguments:
-//     char: Character to be printed.
-//
-fn writeChar(char: u8) void {
-    if (cursor == VGA_WIDTH * VGA_HEIGHT) {
-        scrollDown();
-    }
-
-    switch (char) {
-        // Newline.
-        '\n' => {
-            writeChar(' ');
-            while (cursor % VGA_WIDTH != 0)
-                writeChar(' ');
-        },
-        // Tab.
-        '\t' => {
-            writeChar(' ');
-            while (cursor % 4 != 0)
-                writeChar(' ');
-        },
-        // Backspace.
-        // FIXME: hardcoded 8 here is horrible.
-        8 => {
-            cursor -= 1;
-            writeChar(' ');
-            cursor -= 1;
-        },
-        // Any other character.
-        else => {
-            vram[cursor] = VGAEntry { .char       = char,
-                                      .background = background,
-                                      .foreground = foreground, };
-            cursor += 1;
-        },
-    }
-}
-
-////
-// Print a string to the screen.
-//
-// Arguments:
-//     string: String to be printed.
-//
-fn writeString(string: []const u8) void {
-    for (string) |char| {
-        writeChar(char);
-    }
-}
-
 ////
 // Entry point.
 //
 pub fn main() void {
-    _ = zen.map(v_addr, p_addr, size, true);
+    const buffer = 0x20000000;  // TODO: don't hardcode.
+    _ = zen.map(buffer, VRAM_ADDR, VRAM_SIZE, true);
+
+    // TODO: restore state from kernel?
+    var vga = VGA.init(buffer);
+    vga.cursor = usize(VGA_WIDTH * 16);
 
     while (true) {
         var message = Message.from(Terminal);
         zen.receive(&message);
 
         switch (message.type) {
-            0 => clear(),
-            1 => writeString(??message.buffer),
+            0 => vga.clear(),
+            1 => vga.writeString(??message.buffer),
             else => unreachable,
         }
     }

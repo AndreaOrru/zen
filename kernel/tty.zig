@@ -3,12 +3,8 @@ const x86 = @import("x86.zig");
 const fmt = @import("std").fmt;
 use @import("lib").tty;
 
-// VRAM buffer.
-const vram = @intToPtr(&volatile VGAEntry, layout.VRAM)[0..0x4000];
-
-var background = Color.Black;      // Background color.
-var foreground = Color.LightGrey;  // Foreground color.
-var cursor = usize(0);             // Cursor position.
+// Hold the VGA status.
+var vga = VGA.init(VRAM_ADDR);
 
 ////
 // Initialize the terminal.
@@ -18,19 +14,7 @@ pub fn initialize() void {
     x86.outb(0x3D4, 0xA);
     x86.outb(0x3D5, 1 << 5);
 
-    clear();
-}
-
-////
-// Clear the screen.
-//
-pub fn clear() void {
-    cursor = 0;
-
-    while (cursor < VGA_HEIGHT * VGA_WIDTH)
-        writeChar(' ');
-
-    cursor = 0;
+    vga.clear();
 }
 
 ////
@@ -40,7 +24,7 @@ pub fn clear() void {
 //     fg: The color to set.
 //
 pub fn setForeground(fg: Color) void {
-    foreground = fg;
+    vga.foreground = fg;
 }
 
 ////
@@ -50,7 +34,7 @@ pub fn setForeground(fg: Color) void {
 //     bg: The color to set.
 //
 pub fn setBackground(bg: Color) void {
-    background = bg;
+    vga.background = bg;
 }
 
 ////
@@ -61,13 +45,13 @@ pub fn setBackground(bg: Color) void {
 //     args: Parameters for format specifiers.
 //
 const Errors = error {};
-pub fn printf(comptime format: []const u8, args: ...) void {
+pub fn print(comptime format: []const u8, args: ...) void {
     _ = fmt.format({}, Errors, printCallback, format, args);
 }
 
-// Callback for printf.
+// Callback for print.
 fn printCallback(context: void, string: []const u8) Errors!void {
-    write(string);
+    vga.writeString(string);
 }
 
 ////
@@ -78,52 +62,13 @@ fn printCallback(context: void, string: []const u8) Errors!void {
 //     format: Format string.
 //     args: Parameters for format specifiers.
 //
-pub fn colorPrintf(fg: Color, comptime format: []const u8, args: ...) void {
-    var save_foreground = foreground;
+pub fn colorPrint(fg: Color, comptime format: []const u8, args: ...) void {
+    const save_foreground = vga.foreground;
 
-    foreground = fg;
-    printf(format, args);
+    vga.foreground = fg;
+    print(format, args);
 
-    foreground = save_foreground;
-}
-
-////
-// Print a string to the screen.
-//
-// Arguments:
-//     string: String to be printed.
-//
-pub fn write(string: []const u8) void {
-    for (string) |c| writeChar(c);
-}
-
-////
-// Print a character to the screen.
-//
-// Arguments:
-//     char: Char to be printed.
-//
-pub fn writeChar(char: u8) void {
-    switch (char) {
-        // Newline:
-        '\n' => {
-            writeChar(' ');
-            alignLeft(0);
-        },
-        // Tab:
-        '\t' => {
-            writeChar(' ');
-            while (cursor % 4 != 0)
-                writeChar(' ');
-        },
-        // Any other character:
-        else => {
-            vram[cursor] = VGAEntry { .char       = char,
-                                      .background = background,
-                                      .foreground = foreground, };
-            cursor += 1;
-        },
-    }
+    vga.foreground = save_foreground;
 }
 
 ////
@@ -133,8 +78,9 @@ pub fn writeChar(char: u8) void {
 //     offset: Number of characters from the left border.
 //
 pub fn alignLeft(offset: usize) void {
-    while (cursor % VGA_WIDTH != offset)
-        writeChar(' ');
+    while (vga.cursor % VGA_WIDTH != offset) {
+        vga.writeChar(' ');
+    }
 }
 
 ////
@@ -165,10 +111,10 @@ pub fn alignCenter(str_len: usize) void {
 //     args: Parameters for format specifiers.
 //
 pub fn panic(comptime format: []const u8, args: ...) noreturn {
-    writeChar('\n');
+    vga.writeChar('\n');
 
     setBackground(Color.Red);
-    colorPrintf(Color.White, "KERNEL PANIC: " ++ format ++ "\n", args);
+    colorPrint(Color.White, "KERNEL PANIC: " ++ format ++ "\n", args);
 
     x86.hang();
 }
@@ -181,8 +127,8 @@ pub fn panic(comptime format: []const u8, args: ...) noreturn {
 //     args: Parameters for format specifiers.
 //
 pub fn step(comptime format: []const u8, args: ...) void {
-    colorPrintf(Color.LightBlue, ">> ");
-    printf(format ++ "...", args);
+    colorPrint(Color.LightBlue, ">> ");
+    print(format ++ "...", args);
 }
 
 ////
@@ -192,5 +138,5 @@ pub fn stepOK() void {
     const ok = " [ OK ]";
 
     alignRight(ok.len);
-    colorPrintf(Color.LightGreen, ok);
+    colorPrint(Color.LightGreen, ok);
 }
