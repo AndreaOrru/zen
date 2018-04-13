@@ -1,7 +1,6 @@
 const builtin = @import("builtin");
 const mem = @import("std").mem;
 
-// TODO: simplify once #913 is solved.
 const zen = if (builtin.os == builtin.Os.zen)
     @import("std").os.zen
 else
