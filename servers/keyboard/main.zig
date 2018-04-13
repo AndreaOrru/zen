@@ -41,9 +41,8 @@ fn handleKeyEvent() void {
     if (waiting_thread) |thread| {
         // If a thread was blocked reading, send the character to it.
         waiting_thread = null;
-        zen.send(Message.to(thread, 0)
-                        .as(Keyboard)
-                        .data(char));
+        zen.send(Message.to(thread, 0, char)
+                        .as(Keyboard));
     } else {
         // Otherwise, save the character into the buffer.
         buffer[buffer_end] = char;
@@ -62,9 +61,8 @@ fn handleRead(reader: &const MailboxId) void {
         // Otherwise, fetch the first character from the buffer and send it.
         const char = buffer[buffer_start];
 
-        zen.send(Message.to(*reader, 0)
-                        .as(Keyboard)
-                        .data(char));
+        zen.send(Message.to(*reader, 0, char)
+                        .as(Keyboard));
 
         buffer_start = (buffer_start + 1) % buffer.len;
     }

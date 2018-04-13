@@ -177,9 +177,8 @@ fn notifyIRQ() void {
 
     switch (subscriber) {
         MailboxId.Port => {
-            send(Message.to(subscriber, 0)
-                        .as(MailboxId.Kernel)
-                        .data(irq));
+            send(Message.to(subscriber, 0, irq)
+                        .as(MailboxId.Kernel));
         },
         else => unreachable,
     }

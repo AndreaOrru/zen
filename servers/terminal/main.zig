@@ -18,9 +18,9 @@ pub fn main() void {
         var message = Message.from(Terminal);
         zen.receive(&message);
 
-        switch (message.type) {
+        switch (message.code) {
             0 => vga.clear(),
-            1 => vga.writeString(??message.buffer),
+            1 => vga.writeString(??message.payload),
             else => unreachable,
         }
     }

@@ -134,7 +134,7 @@ fn getMailbox(mailbox_id: &const MailboxId) &Mailbox {
 ////
 // Process the outgoing message. Return a copy of the message with
 // an explicit sender field and the physical address of a copy of
-// the message's buffer (if specified).
+// the message's payload (if specified).
 //
 // Arguments:
 //     message: The original message.
@@ -152,21 +152,21 @@ fn processOutgoingMessage(message: &const Message) Message {
         else => {},
     }
 
-    // Copy the message's buffer into a kernel buffer.
-    if (message.buffer) |buffer| {
-        // Allocate space for a copy of the buffer and map it somewhere.
+    // Copy the message's payload into a kernel buffer.
+    if (message.payload) |payload| {
+        // Allocate space for a copy of the payload and map it somewhere.
         const physical_buffer = pmem.allocate();
         vmem.map(layout.TMP, physical_buffer, vmem.PAGE_WRITE);
         const tmp_buffer = @intToPtr(&u8, layout.TMP)[0..x86.PAGE_SIZE];
 
-        // Copy the sender's buffer into the newly allocated space.
-        std.mem.copy(u8, tmp_buffer, buffer);
+        // Copy the sender's payload into the newly allocated space.
+        std.mem.copy(u8, tmp_buffer, payload);
 
         // Substitute the original pointer with the new physical one.
         // When the receiving thread is ready, it will be mapped
         // somewhere in its address space and this field will hold
         // the final virtual address.
-        message_copy.buffer = @intToPtr(&u8, physical_buffer)[0..buffer.len];
+        message_copy.payload = @intToPtr(&u8, physical_buffer)[0..payload.len];
     }
 
     return message_copy;
@@ -185,19 +185,19 @@ fn deliverMessage(message: &const Message) void {
     // Copy the message structure.
     *destination = *message;
 
-    // Map the message's buffer into the thread's address space.
-    if (message.buffer) |buffer| {
+    // Map the message's payload into the thread's address space.
+    if (message.payload) |payload| {
         // TODO: leave empty pages in between destination buffers.
         const destination_buffer = layout.USER_MESSAGES + (receiver_thread.local_tid * x86.PAGE_SIZE);
 
-        // Deallocate the physical memory used for the previous buffer.
+        // Deallocate the physical memory used for the previous payload.
         if (vmem.virtualToPhysical(destination_buffer)) |old_physical| {
             pmem.free(old_physical);
         }
-        // Map the current message's buffer.
-        vmem.map(destination_buffer, @ptrToInt(buffer.ptr), vmem.PAGE_WRITE | vmem.PAGE_USER);
+        // Map the current message's payload.
+        vmem.map(destination_buffer, @ptrToInt(payload.ptr), vmem.PAGE_WRITE | vmem.PAGE_USER);
 
-        // Update the buffer field in the delivered message.
-        destination.buffer = @intToPtr(&u8, destination_buffer)[0..buffer.len];
+        // Update the payload field in the delivered message.
+        destination.payload = @intToPtr(&u8, destination_buffer)[0..payload.len];
     }
 }
