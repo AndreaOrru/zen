@@ -1,4 +1,4 @@
-# Zen
+# Zen [![Build Status](https://travis-ci.org/AndreaOrru/zen.svg?branch=master)](https://travis-ci.org/AndreaOrru/zen)
 Experimental operating system written in [Zig](http://ziglang.org).
 
 ## Build and test
