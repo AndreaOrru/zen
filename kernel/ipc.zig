@@ -35,7 +35,7 @@ pub const Mailbox = struct {
 };
 
 // Keep track of the registered ports.
-var ports = HashMap(u16, &Mailbox, hash_u16, eql_u16).init(&mem.allocator);
+var ports = HashMap(u16, *Mailbox, hash_u16, eql_u16).init(&mem.allocator);
 
 fn hash_u16(x: u16) u32 { return x; }
 fn eql_u16(a: u16, b: u16) bool { return a == b; }
@@ -49,14 +49,14 @@ fn eql_u16(a: u16, b: u16) bool { return a == b; }
 // Returns:
 //     Mailbox associated to the port.
 //
-pub fn getOrCreatePort(id: u16) &Mailbox {
+pub fn getOrCreatePort(id: u16) *Mailbox {
     // TODO: check that the ID is not reserved.
     if (ports.get(id)) |entry| {
         return entry.value;
     }
 
-    const mailbox = mem.allocator.create(Mailbox) catch unreachable;
-    *mailbox = Mailbox.init();
+    const mailbox = mem.allocator.createOne(Mailbox) catch unreachable;
+    mailbox.* = Mailbox.init();
 
     _ = ports.put(id, mailbox) catch unreachable;
     return mailbox;
@@ -68,7 +68,7 @@ pub fn getOrCreatePort(id: u16) &Mailbox {
 // Arguments:
 //     message: Pointer to the message to be sent.
 //
-pub fn send(message: &const Message) void {
+pub fn send(message: *const Message) void {
     // NOTE: We need a copy in kernel space, because we
     // are potentially switching address spaces.
     const message_copy = processOutgoingMessage(message);  // FIXME: should this be volatile?
@@ -94,11 +94,11 @@ pub fn send(message: &const Message) void {
 // Arguments:
 //     destination: Address where to deliver the message.
 //
-pub fn receive(destination: &Message) void {
+pub fn receive(destination: *Message) void {
     // TODO: validation, i.e. check if the thread has the right permissions.
     const mailbox = getMailbox(destination.receiver);
     // Specify where the thread wants to get the message delivered.
-    const receiving_thread = ??scheduler.current();
+    const receiving_thread = scheduler.current().?;
     receiving_thread.message_destination = destination;
 
     if (mailbox.messages.popFirst()) |first| {
@@ -122,10 +122,10 @@ pub fn receive(destination: &Message) void {
 // Returns:
 //     The address of the mailbox.
 //
-fn getMailbox(mailbox_id: &const MailboxId) &Mailbox {
-    return switch (*mailbox_id) {
-        MailboxId.This   => &(??scheduler.current()).mailbox,
-        MailboxId.Thread => |tid| &(??thread.get(tid)).mailbox,
+fn getMailbox(mailbox_id: *const MailboxId) *Mailbox {
+    return switch (mailbox_id.*) {
+        MailboxId.This   => &(scheduler.current().?).mailbox,
+        MailboxId.Thread => |tid| &(thread.get(tid).?).mailbox,
         MailboxId.Port   => |id| getOrCreatePort(id),
         else             => unreachable,
     };
@@ -142,11 +142,11 @@ fn getMailbox(mailbox_id: &const MailboxId) &Mailbox {
 // Returns:
 //     A copy of the message, post processing.
 //
-fn processOutgoingMessage(message: &const Message) Message {
-    var message_copy = *message;
+fn processOutgoingMessage(message: *const Message) Message {
+    var message_copy = message.*;
 
     switch (message.sender) {
-        MailboxId.This => message_copy.sender = MailboxId { .Thread = (??scheduler.current()).tid },
+        MailboxId.This => message_copy.sender = MailboxId { .Thread = (scheduler.current().?).tid },
         // MailboxId.Port   => TODO: ensure the sender owns the port.
         // MailboxId.Kernel => TODO: ensure the sender is really the kernel.
         else => {},
@@ -157,7 +157,7 @@ fn processOutgoingMessage(message: &const Message) Message {
         // Allocate space for a copy of the payload and map it somewhere.
         const physical_buffer = pmem.allocate();
         vmem.map(layout.TMP, physical_buffer, vmem.PAGE_WRITE);
-        const tmp_buffer = @intToPtr(&u8, layout.TMP)[0..x86.PAGE_SIZE];
+        const tmp_buffer = @intToPtr([*]u8, layout.TMP)[0..x86.PAGE_SIZE];
 
         // Copy the sender's payload into the newly allocated space.
         std.mem.copy(u8, tmp_buffer, payload);
@@ -166,7 +166,7 @@ fn processOutgoingMessage(message: &const Message) Message {
         // When the receiving thread is ready, it will be mapped
         // somewhere in its address space and this field will hold
         // the final virtual address.
-        message_copy.payload = @intToPtr(&u8, physical_buffer)[0..payload.len];
+        message_copy.payload = @intToPtr([*]u8, physical_buffer)[0..payload.len];
     }
 
     return message_copy;
@@ -178,12 +178,12 @@ fn processOutgoingMessage(message: &const Message) Message {
 // Arguments:
 //     message: The message to be delivered.
 //
-fn deliverMessage(message: &const Message) void {
-    const receiver_thread = ??scheduler.current();
+fn deliverMessage(message: *const Message) void {
+    const receiver_thread = scheduler.current().?;
     const destination = receiver_thread.message_destination;
 
     // Copy the message structure.
-    *destination = *message;
+    destination.* = message.*;
 
     // Map the message's payload into the thread's address space.
     if (message.payload) |payload| {
@@ -198,6 +198,6 @@ fn deliverMessage(message: &const Message) void {
         vmem.map(destination_buffer, @ptrToInt(payload.ptr), vmem.PAGE_WRITE | vmem.PAGE_USER);
 
         // Update the payload field in the delivered message.
-        destination.payload = @intToPtr(&u8, destination_buffer)[0..payload.len];
+        destination.payload = @intToPtr([*]u8, destination_buffer)[0..payload.len];
     }
 }

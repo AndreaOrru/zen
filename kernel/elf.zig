@@ -57,8 +57,8 @@ const ELFProgHeader = packed struct {
 //
 pub fn load(elf_addr: usize) usize {
     // Get the ELF structures.
-    const elf    = @intToPtr(&ELFHeader,     elf_addr);
-    const ph_tbl = @intToPtr(&ELFProgHeader, elf_addr + elf.e_phoff)[0..elf.e_phnum];
+    const elf    = @intToPtr(  *ELFHeader,     elf_addr);
+    const ph_tbl = @intToPtr([*]ELFProgHeader, elf_addr + elf.e_phoff)[0..elf.e_phnum];
 
     // Iterate over the Program Header Table.
     for (ph_tbl) |ph| {
@@ -76,10 +76,10 @@ pub fn load(elf_addr: usize) usize {
             }
 
             // Copy the segment data, and fill the rest with zeroes.
-            const dest = @intToPtr(&u8, ph.p_vaddr);
-            const src  = @intToPtr(&u8, elf_addr + ph.p_offset);
+            const dest = @intToPtr([*]u8, ph.p_vaddr);
+            const src  = @intToPtr([*]u8, elf_addr + ph.p_offset);
             @memcpy(dest, src, ph.p_filesz);
-            @memset(&dest[ph.p_filesz], 0, ph.p_memsz - ph.p_filesz);
+            @memset(dest + ph.p_filesz, 0, ph.p_memsz - ph.p_filesz);
         }
     }
 

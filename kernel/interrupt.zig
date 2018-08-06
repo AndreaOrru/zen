@@ -51,7 +51,7 @@ fn unhandled() noreturn {
 // Call the correct handler based on the interrupt number.
 //
 export fn interruptDispatch() void {
-    const n = u8(isr.context.interrupt_n);
+    const n = @intCast(u8, isr.context.interrupt_n);
 
     switch (n) {
         // Exceptions.
@@ -161,10 +161,11 @@ pub fn maskIRQ(irq: u8, mask: bool) void {
     const old = x86.inb(port);  // Retrieve the current mask.
 
     // Mask or unmask the interrupt.
+    const shift = @intCast(u3, irq % 8);  // TODO: waiting for Andy to fix this.
     if (mask) {
-        x86.outb(port, old |  (u8(1) << u3(irq % 8)));
+        x86.outb(port, old |  (u8(1) << shift));
     } else {
-        x86.outb(port, old & ~(u8(1) << u3(irq % 8)));
+        x86.outb(port, old & ~(u8(1) << shift));
     }
 }
 
@@ -193,9 +194,9 @@ fn notifyIRQ() void {
 //     irq: Number of the IRQ to subscribe to.
 //     mailbox_id: Mailbox to send the message to.
 //
-pub fn subscribeIRQ(irq: u8, mailbox_id: &const MailboxId) void {
+pub fn subscribeIRQ(irq: u8, mailbox_id: *const MailboxId) void {
     // TODO: validate.
-    irq_subscribers[irq] = *mailbox_id;
+    irq_subscribers[irq] = mailbox_id.*;
     registerIRQ(irq, notifyIRQ);
 }
 

@@ -29,8 +29,8 @@ pub fn initialize(hz: u32) void {
     x86.outb(PIT_CMD, SQUARE_WAVE_GEN | LSB_THEN_MSB);
 
     // Set the desired frequency divisor.
-    x86.outb(PIT_CH_0, u8( divisor       & 0xFF));
-    x86.outb(PIT_CH_0, u8((divisor >> 8) & 0xFF));
+    x86.outb(PIT_CH_0, @truncate(u8, divisor));
+    x86.outb(PIT_CH_0, @truncate(u8, divisor >> 8));
 
     tty.stepOK();
 }

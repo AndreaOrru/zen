@@ -20,7 +20,7 @@ pub fn main() void {
 
         switch (message.code) {
             0 => vga.clear(),
-            1 => vga.writeString(??message.payload),
+            1 => vga.writeString(message.payload.?),
             else => unreachable,
         }
     }

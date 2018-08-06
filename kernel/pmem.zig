@@ -4,8 +4,8 @@ const x86 = @import("x86.zig");
 const assert = @import("std").debug.assert;
 const Color = tty.Color;
 
-var stack: &usize = undefined;  // Stack of free physical page.
-var stack_index: usize = 0;     // Index into the stack.
+var stack: [*]usize = undefined;  // Stack of free physical page.
+var stack_index: usize = 0;       // Index into the stack.
 
 // Boundaries of the frame stack.
 pub var stack_size: usize = undefined;
@@ -46,7 +46,7 @@ pub fn free(address: usize) void {
 // Arguments:
 //     info: Information structure from bootloader.
 //
-pub fn initialize(info: &const MultibootInfo) void {
+pub fn initialize(info: *const MultibootInfo) void {
     tty.step("Indexing Physical Memory");
 
     // Ensure the bootloader has given us the memory map.
@@ -54,18 +54,18 @@ pub fn initialize(info: &const MultibootInfo) void {
     assert ((info.flags & MULTIBOOT_INFO_MEM_MAP) != 0);
 
     // Place the stack of free pages after the last Multiboot module.
-    stack = @intToPtr(&usize, x86.pageAlign(info.lastModuleEnd()));
+    stack = @intToPtr([*]usize, x86.pageAlign(info.lastModuleEnd()));
     // Calculate the approximate size of the stack based on the amount of total upper memory.
     stack_size = ((info.mem_upper * 1024) / x86.PAGE_SIZE) * @sizeOf(usize);
     stack_end  = x86.pageAlign(@ptrToInt(stack) + stack_size);
 
     var map: usize = info.mmap_addr;
     while (map < info.mmap_addr + info.mmap_length) {
-        var entry = @intToPtr(&MultibootMMapEntry, map);
+        var entry = @intToPtr(*MultibootMMapEntry, map);
 
         // Calculate the start and end of this memory area.
-        var start = usize(entry.addr          & 0xFFFFFFFF);
-        var   end = usize((start + entry.len) & 0xFFFFFFFF);
+        var start = @truncate(usize, entry.addr);
+        var   end = @truncate(usize, start + entry.len);
         // Anything that comes before the end of the stack of free pages is reserved.
         start = if (start >= stack_end) start else stack_end;
 

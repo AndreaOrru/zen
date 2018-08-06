@@ -90,10 +90,10 @@ inline fn getArg(comptime n: u8, comptime T: type) T {
         // TODO: validate this pointer.
         return @intToPtr(T, value);
     } else {
-        return T(value);
+        return @intCast(T, value);
     }
 
-    // TODO: handle pointers.
+    // TODO: validate pointers, handle other types.
 }
 
 ////

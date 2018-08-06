@@ -16,7 +16,7 @@ const assert = std.debug.assert;
 const STACK_SIZE = x86.PAGE_SIZE;  // Size of thread stacks.
 
 // Keep track of all the threads.
-var threads = Array(?&Thread).init(&mem.allocator);
+var threads = Array(?*Thread).init(&mem.allocator);
 
 // List of threads inside a process.
 pub const ThreadList  = List(Thread, "process_link");
@@ -30,12 +30,12 @@ pub const Thread = struct {
     queue_link:   List(Thread, "queue_link").Node,
 
     context: isr.Context,
-    process: &Process,
+    process: *Process,
 
     local_tid: u8,
     tid: u16,
 
-    message_destination: &Message,  // Address where to deliver messages.
+    message_destination: *Message,  // Address where to deliver messages.
     mailbox: Mailbox,               // Private thread mailbox.
 
     ////
@@ -48,7 +48,7 @@ pub const Thread = struct {
     // Returns:
     //     Pointer to the new thread structure.
     //
-    fn init(process: &Process, local_tid: u8, entry_point: usize) &Thread {
+    fn init(process: *Process, local_tid: u8, entry_point: usize) *Thread {
         assert (scheduler.current_process == process);
 
         // Calculate the address of the thread stack and map it.
@@ -56,18 +56,18 @@ pub const Thread = struct {
         vmem.mapZone(stack, null, STACK_SIZE, vmem.PAGE_WRITE | vmem.PAGE_USER);
 
         // Allocate and initialize the thread structure.
-        const thread = mem.allocator.create(Thread) catch unreachable;
-        *thread = Thread {
+        const thread = mem.allocator.createOne(Thread) catch unreachable;
+        thread.* = Thread {
             .context      = initContext(entry_point, stack),
             .process      = process,
             .local_tid    = local_tid,
-            .tid          = u16(threads.len),
+            .tid          = @intCast(u16, threads.len),
             .process_link = ThreadList.Node.initIntrusive(),
             .queue_link   = ThreadQueue.Node.initIntrusive(),
             .mailbox      = Mailbox.init(),
             .message_destination = undefined,
         };
-        threads.append(@ptrCast(?&Thread, thread)) catch unreachable;
+        threads.append(@ptrCast(?*Thread, thread)) catch unreachable;
         // TODO: simplify once #836 is solved.
 
         return thread;
@@ -76,7 +76,7 @@ pub const Thread = struct {
     ////
     // Destroy the thread and schedule a new one if necessary.
     //
-    pub fn destroy(self: &Thread) void {
+    pub fn destroy(self: *Thread) void {
         assert (scheduler.current_process == self.process);
 
         // Unmap the thread stack.
@@ -101,7 +101,7 @@ pub const Thread = struct {
 // Returns:
 //     Pointer to the thread, null if non-existent.
 //
-pub fn get(tid: u16) ?&Thread {
+pub fn get(tid: u16) ?*Thread {
     return threads.items[tid];
 }
 
@@ -117,8 +117,8 @@ pub fn get(tid: u16) ?&Thread {
 //
 fn initContext(entry_point: usize, stack: usize) isr.Context {
     // Insert a trap return address to destroy the thread on return.
-    var stack_top = @intToPtr(&usize, stack + STACK_SIZE - @sizeOf(usize));
-    *stack_top = layout.THREAD_DESTROY;
+    var stack_top = @intToPtr(*usize, stack + STACK_SIZE - @sizeOf(usize));
+    stack_top.* = layout.THREAD_DESTROY;
 
     return isr.Context {
         .cs  = gdt.USER_CODE | gdt.USER_RPL,

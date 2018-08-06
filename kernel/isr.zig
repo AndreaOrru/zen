@@ -29,8 +29,9 @@ pub const Context = packed struct {
     esp:    u32,
     ss:     u32,
 
-    pub inline fn setReturnValue(self: &volatile Context, value: var) void {
-        self.registers.eax = usize(value);
+    pub inline fn setReturnValue(self: *volatile Context, value: var) void {
+        self.registers.eax = if (@typeOf(value) == bool) @boolToInt(value)
+                             else                        @intCast(u32, value);
     }
 };
 
@@ -48,7 +49,7 @@ pub const Registers = packed struct {
 };
 
 // Pointer to the current saved context.
-pub export var context: &volatile Context = undefined;
+pub export var context: *volatile Context = undefined;
 
 ////
 // Install the Interrupt Service Routines in the IDT.

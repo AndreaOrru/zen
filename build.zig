@@ -3,7 +3,7 @@ const Builder = @import("std").build.Builder;
 const builtin = @import("builtin");
 const join = @import("std").mem.join;
 
-pub fn build(b: &Builder) void {
+pub fn build(b: *Builder) void {
     ////
     // Default step.
     //
@@ -42,7 +42,7 @@ pub fn build(b: &Builder) void {
     qemu_debug.dependOn(&run_qemu_debug.step);
 }
 
-fn buildKernel(b: &Builder) []const u8 {
+fn buildKernel(b: *Builder) []const u8 {
     const kernel = b.addExecutable("zen", "kernel/kmain.zig");
     kernel.addPackagePath("lib", "lib/index.zig");
     kernel.setOutputPath("zen");
@@ -60,7 +60,7 @@ fn buildKernel(b: &Builder) []const u8 {
     return kernel.getOutputPath();
 }
 
-fn buildServer(b: &Builder, comptime name: []const u8) []const u8 {
+fn buildServer(b: *Builder, comptime name: []const u8) []const u8 {
     const server = b.addExecutable(name, "servers/" ++ name ++ "/main.zig");
     server.addPackagePath("lib", "lib/index.zig");
     server.setOutputPath("servers/" ++ name ++ "/" ++ name);

@@ -37,7 +37,7 @@ const GDTEntry = packed struct {
 // GDT descriptor register.
 const GDTRegister = packed struct {
     limit: u16,
-    base: &const GDTEntry,
+    base: *const GDTEntry,
 };
 
 // Task State Segment.
@@ -60,13 +60,13 @@ const TSS = packed struct {
 //     flags: Segment flags.
 //
 fn makeEntry(base: usize, limit: usize, access: u8, flags: u4) GDTEntry {
-    return GDTEntry { .limit_low  = u16( limit        & 0xFFFF),
-                      .base_low   = u16( base         & 0xFFFF),
-                      .base_mid   =  u8((base  >> 16) & 0xFF  ),
-                      .access     =  u8( access               ),
-                      .limit_high =  u4((limit >> 16) & 0xF   ),
-                      .flags      =  u4( flags                ),
-                      .base_high  =  u8((base  >> 24) & 0xFF  ), };
+    return GDTEntry { .limit_low  = @truncate(u16,  limit       ),
+                      .base_low   = @truncate(u16,  base        ),
+                      .base_mid   = @truncate(u8,   base   >> 16),
+                      .access     = @truncate(u8,   access      ),
+                      .limit_high = @truncate(u4,   limit  >> 16),
+                      .flags      = @truncate(u4,   flags       ),
+                      .base_high  = @truncate(u8,   base   >> 24), };
 }
 
 // Fill in the GDT.
@@ -111,7 +111,7 @@ pub fn setKernelStack(esp0: usize) void {
 // Arguments:
 //     gdtr: Pointer to the GDTR.
 //
-extern fn loadGDT(gdtr: &const GDTRegister)void;
+extern fn loadGDT(gdtr: *const GDTRegister)void;
 
 ////
 // Initialize the Global Descriptor Table.

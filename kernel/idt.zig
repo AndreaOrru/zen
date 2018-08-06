@@ -19,7 +19,7 @@ const IDTEntry = packed struct {
 // IDT descriptor register.
 const IDTRegister = packed struct {
     limit: u16,
-    base:  &[256]IDTEntry,
+    base:  *[256]IDTEntry,
 };
 
 // Interrupt Descriptor Table.
@@ -42,8 +42,8 @@ const idtr = IDTRegister {
 pub fn setGate(n: u8, flags: u8, offset: extern fn()void) void {
     const intOffset = @ptrToInt(offset);
 
-    idt[n].offset_low  = u16(intOffset & 0xFFFF);
-    idt[n].offset_high = u16(intOffset >> 16);
+    idt[n].offset_low  = @truncate(u16, intOffset);
+    idt[n].offset_high = @truncate(u16, intOffset >> 16);
     idt[n].flags       = flags;
     idt[n].zero        = 0;
     idt[n].selector    = gdt.KERNEL_CODE;

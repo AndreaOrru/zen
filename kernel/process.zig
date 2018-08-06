@@ -28,9 +28,9 @@ pub const Process = struct {
     // Returns:
     //     Pointer to the new process structure.
     //
-    pub fn create(elf_addr: usize, args: ?[]const []const u8) &Process {
-        var process = mem.allocator.create(Process) catch unreachable;
-        *process = Process {
+    pub fn create(elf_addr: usize, args: ?[]const []const u8) *Process {
+        var process = mem.allocator.createOne(Process) catch unreachable;
+        process.* = Process {
             .pid            = next_pid,
             .page_directory = vmem.createAddressSpace(),
             .next_local_tid = 1,
@@ -44,7 +44,7 @@ pub const Process = struct {
         const entry_point = elf.load(elf_addr);
         // ...and start executing it.
         const main_thread = process.createThread(entry_point);
-        insertArguments(main_thread, args ?? [][]const u8 {});
+        insertArguments(main_thread, args orelse [][]const u8 {});
 
         return process;
     }
@@ -52,7 +52,7 @@ pub const Process = struct {
     ////
     // Destroy the process.
     //
-    pub fn destroy(self: &Process) void {
+    pub fn destroy(self: *Process) void {
         assert (scheduler.current_process == self);
 
         // Deallocate all of user space.
@@ -81,7 +81,7 @@ pub const Process = struct {
     // Returns:
     //    The TID of the new thread.
     //
-    pub fn createThread(self: &Process, entry_point: usize) &Thread {
+    pub fn createThread(self: *Process, entry_point: usize) *Thread {
         const thread = Thread.init(self, self.next_local_tid, entry_point);
 
         self.threads.append(&thread.process_link);
@@ -99,7 +99,7 @@ pub const Process = struct {
     // Arguments:
     //     thread: The thread to be removed.
     //
-    fn removeThread(self: &Process, thread: &Thread) void {
+    fn removeThread(self: *Process, thread: *Thread) void {
         scheduler.remove(thread);
         self.threads.remove(&thread.process_link);
 
@@ -114,11 +114,11 @@ pub const Process = struct {
 //     thread: The process's main thread.
 //     args: An array of strings (the arguments).
 //
-fn insertArguments(thread: &Thread, args: []const []const u8) void {
+fn insertArguments(thread: *Thread, args: []const []const u8) void {
     var stack = thread.context.esp;
 
     // Store the pointers to the beginning of the argument strings.
-    var argv_list = ArrayList(&u8).init(&mem.allocator);
+    var argv_list = ArrayList([*]u8).init(&mem.allocator);
     defer argv_list.deinit();
 
     // Copy the arguments.
@@ -126,7 +126,7 @@ fn insertArguments(thread: &Thread, args: []const []const u8) void {
         // Reserve space for the string and the null terminator.
         stack -= arg.len + 1;
         // Copy the null-terminated string into the stack.
-        var dest = @intToPtr(&u8, stack);
+        var dest = @intToPtr([*]u8, stack);
         std.mem.copy(u8, dest[0..arg.len], arg);
         dest[arg.len] = 0;
         // Keep track of the argument positions.
@@ -137,20 +137,20 @@ fn insertArguments(thread: &Thread, args: []const []const u8) void {
 
     // FIXME: we currently don't support envp.
     stack -= @sizeOf(usize);
-    const envp = @intToPtr(&usize, stack);
-    *envp = 0;
+    const envp = @intToPtr(*usize, stack);
+    envp.* = 0;
 
     // Reserve space for argv's entries and null terminator.
     stack -= (args.len + 1) * @sizeOf(usize);
     // Copy the null-terminated argv into the stack.
-    const argv = @intToPtr(&&u8, stack);
-    std.mem.copy(&u8, argv[0..args.len], argv_list.toSlice());
-    argv[args.len] = @intToPtr(&u8, 0);
+    const argv = @intToPtr([*][*]u8, stack);
+    std.mem.copy([*]u8, argv[0..args.len], argv_list.toSlice());
+    argv[args.len] = @intToPtr([*]u8, 0);
 
     // Write argc into the stack.
     stack -= @sizeOf(usize);
-    var argc = @intToPtr(&usize, stack);
-    *argc = args.len;
+    var argc = @intToPtr(*usize, stack);
+    argc.* = args.len;
 
     thread.context.esp = stack;
 }

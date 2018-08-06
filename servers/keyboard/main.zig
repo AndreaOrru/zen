@@ -53,15 +53,15 @@ fn handleKeyEvent() void {
 ////
 // Handle a read request from another thread.
 //
-fn handleRead(reader: &const MailboxId) void {
+fn handleRead(reader: *const MailboxId) void {
     if (buffer_start == buffer_end) {
         // If the buffer is empty, make the thread wait.
-        waiting_thread = *reader;
+        waiting_thread = reader.*;
     } else {
         // Otherwise, fetch the first character from the buffer and send it.
         const char = buffer[buffer_start];
 
-        zen.send(Message.to(*reader, 0, char)
+        zen.send(Message.to(reader.*, 0, char)
                         .as(Keyboard));
 
         buffer_start = (buffer_start + 1) % buffer.len;

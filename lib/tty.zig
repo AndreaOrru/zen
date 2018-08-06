@@ -75,7 +75,7 @@ pub const VGA = struct {
     //
     pub fn init(vram: usize) VGA {
         return VGA {
-            .vram       = @intToPtr(&VGAEntry, vram)[0..0x4000],
+            .vram       = @intToPtr([*]VGAEntry, vram)[0..0x4000],
             .cursor     = 0,
             .foreground = Color.LightGrey,
             .background = Color.Black,
@@ -85,7 +85,7 @@ pub const VGA = struct {
     ////
     // Clear the screen.
     //
-    pub fn clear(self: &VGA) void {
+    pub fn clear(self: *VGA) void {
         mem.set(VGAEntry, self.vram[0..VGA_SIZE], self.entry(' '));
 
         self.cursor = 0;
@@ -98,7 +98,7 @@ pub const VGA = struct {
     // Arguments:
     //     char: Character to be printed.
     //
-    fn writeChar(self: &VGA, char: u8) void {
+    fn writeChar(self: *VGA, char: u8) void {
         if (self.cursor == VGA_WIDTH * VGA_HEIGHT - 1) {
             self.scrollDown();
         }
@@ -137,7 +137,7 @@ pub const VGA = struct {
     // Arguments:
     //     string: String to be printed.
     //
-    pub fn writeString(self: &VGA, string: []const u8) void {
+    pub fn writeString(self: *VGA, string: []const u8) void {
         for (string) |char| {
             self.writeChar(char);
         }
@@ -148,7 +148,7 @@ pub const VGA = struct {
     ////
     // Scroll the screen one line down.
     //
-    fn scrollDown(self: &VGA) void {
+    fn scrollDown(self: *VGA) void {
         const first = VGA_WIDTH;             // Index of first line.
         const last  = VGA_SIZE - VGA_WIDTH;  // Index of last line.
 
@@ -165,18 +165,18 @@ pub const VGA = struct {
     // Update the position of the hardware cursor.
     // Use the software cursor as the source of truth.
     //
-    fn updateCursor(self: &const VGA) void {
+    fn updateCursor(self: *const VGA) void {
         zen.outb(0x3D4, 0x0F);
-        zen.outb(0x3D5, u8(self.cursor & 0xFF));
+        zen.outb(0x3D5, @truncate(u8, self.cursor));
         zen.outb(0x3D4, 0x0E);
-        zen.outb(0x3D5, u8((self.cursor >> 8) & 0xFF));
+        zen.outb(0x3D5, @truncate(u8, self.cursor >> 8));
     }
 
     ////
     // Update the position of the software cursor.
     // Use the hardware cursor as the source of truth.
     //
-    pub fn fetchCursor(self: &VGA) void {
+    pub fn fetchCursor(self: *VGA) void {
         var cursor: usize = 0;
 
         zen.outb(0x3D4, 0x0E);
@@ -197,7 +197,7 @@ pub const VGA = struct {
     // Returns:
     //     The requested VGAEntry.
     //
-    fn entry(self: &VGA, char: u8) VGAEntry {
+    fn entry(self: *VGA, char: u8) VGAEntry {
         return VGAEntry {
             .char       = char,
             .foreground = self.foreground,

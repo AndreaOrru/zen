@@ -13,18 +13,18 @@ pub var allocator = mem.Allocator {
 };
 
 var heap: []u8 = undefined;          // Global kernel heap.
-var free_list: ?&Block = undefined;  // List of free blocks in the heap.
+var free_list: ?*Block = undefined;  // List of free blocks in the heap.
 
 // Structure representing a block in the heap.
 const Block = struct {
     free: bool,     // Is the block free?
 
-    prev: ?&Block,  // Adjacent block to the left.
-    next: ?&Block,  // Adjacent block to the right.
+    prev: ?*Block,  // Adjacent block to the left.
+    next: ?*Block,  // Adjacent block to the right.
 
     // Doubly linked list of free blocks.
-    prev_free: ?&Block,
-    next_free: ?&Block,
+    prev_free: ?*Block,
+    next_free: ?*Block,
 
     ////
     // Initialize a free block as big as the heap.
@@ -48,7 +48,7 @@ const Block = struct {
     // Returns:
     //     The size of the usable portion of the block.
     //
-    pub fn size(self: &Block) usize {
+    pub fn size(self: *Block) usize {
         // Block can end at the beginning of the next block, or at the end of the heap.
         const end = if (self.next) |next_block| @ptrToInt(next_block)
                     else @ptrToInt(heap.ptr) + heap.len;
@@ -59,8 +59,8 @@ const Block = struct {
     ////
     // Return a slice of the usable portion of the block.
     //
-    pub fn data(self: &Block) []u8 {
-        return @intToPtr(&u8, @ptrToInt(self) + @sizeOf(Block))[0..self.size()];
+    pub fn data(self: *Block) []u8 {
+        return @intToPtr([*]u8, @ptrToInt(self) + @sizeOf(Block))[0..self.size()];
     }
 
     ////
@@ -72,17 +72,17 @@ const Block = struct {
     // Returns:
     //     The associated block strucutre.
     //
-    pub fn fromData(bytes: &u8) &Block {
-        return @intToPtr(&Block, @ptrToInt(bytes) - @sizeOf(Block));
+    pub fn fromData(bytes: [*]u8) *Block {
+        return @intToPtr(*Block, @ptrToInt(bytes) - @sizeOf(Block));
     }
 };
 
 // Implement standard alloc function - see std.mem for reference.
-fn alloc(self: &mem.Allocator, size: usize, alignment: u29) ![]u8 {
+fn alloc(self: *mem.Allocator, size: usize, alignment: u29) ![]u8 {
     // TODO: align properly.
 
     // Find a block that's big enough.
-    var block = searchFreeBlock(size) ?? return error.OutOfMemory;
+    var block = searchFreeBlock(size) orelse return error.OutOfMemory;
 
     // If it's bigger than needed, split it.
     if (block.size() > size + @sizeOf(Block)) {
@@ -94,7 +94,7 @@ fn alloc(self: &mem.Allocator, size: usize, alignment: u29) ![]u8 {
 }
 
 // Implement standard realloc function - see std.mem for reference.
-fn realloc(self: &mem.Allocator, old_mem: []u8, new_size: usize, alignment: u29) ![]u8 {
+fn realloc(self: *mem.Allocator, old_mem: []u8, new_size: usize, alignment: u29) ![]u8 {
     // Try to increase the size of the current block.
     var block = Block.fromData(old_mem.ptr);
     mergeRight(block);
@@ -117,7 +117,7 @@ fn realloc(self: &mem.Allocator, old_mem: []u8, new_size: usize, alignment: u29)
 }
 
 // Implement standard free function - see std.mem for reference.
-fn free(self: &mem.Allocator, old_mem: []u8) void {
+fn free(self: *mem.Allocator, old_mem: []u8) void {
     var block = Block.fromData(old_mem.ptr);
 
     freeBlock(block);  // Reinsert the block in the free list.
@@ -135,7 +135,7 @@ fn free(self: &mem.Allocator, old_mem: []u8) void {
 // Returns:
 //     A suitable block, or null.
 //
-fn searchFreeBlock(size: usize) ?&Block {
+fn searchFreeBlock(size: usize) ?*Block {
     var i = free_list;
 
     while (i) |block| : (i = block.next_free) {
@@ -151,7 +151,7 @@ fn searchFreeBlock(size: usize) ?&Block {
 // Arguments:
 //     block: The block to be freed.
 //
-fn freeBlock(block: &Block) void {
+fn freeBlock(block: *Block) void {
     assert (block.free == false);
 
     // Place the block at the front of the list.
@@ -170,7 +170,7 @@ fn freeBlock(block: &Block) void {
 // Arguments:
 //     block: The block to be occupied.
 //
-fn occupyBlock(block: &Block) void {
+fn occupyBlock(block: *Block) void {
     assert (block.free == true);
 
     if (block.prev_free) |prev_free| {
@@ -197,13 +197,13 @@ fn occupyBlock(block: &Block) void {
 // Arguments:
 //     block: The block to be splitted.
 //
-fn splitBlock(block: &Block, left_sz: usize) void {
+fn splitBlock(block: *Block, left_sz: usize) void {
     // Check that there is enough space for a second block.
     assert (block.size() - left_sz > @sizeOf(Block));
 
     // Setup the second block at the end of the first one.
-    var right_block = @intToPtr(&Block, @ptrToInt(block) + @sizeOf(Block) + left_sz);
-    *right_block = Block {
+    var right_block = @intToPtr(*Block, @ptrToInt(block) + @sizeOf(Block) + left_sz);
+    right_block.* = Block {
         .free = false,  // For consistency: not free until added to the free list.
         .prev = block,
         .next = block.next,
@@ -226,7 +226,7 @@ fn splitBlock(block: &Block, left_sz: usize) void {
 // Arguments:
 //     block: The block to merge (not necessarily free).
 //
-fn mergeRight(block: &Block) void {
+fn mergeRight(block: *Block) void {
     // If there's a block to the right...
     if (block.next) |next| {
         // ...and it's free:
@@ -248,7 +248,7 @@ fn mergeRight(block: &Block) void {
 // Arguments:
 //     block: The block to merge (not necessarily free).
 //
-fn mergeLeft(block: &Block) void {
+fn mergeLeft(block: *Block) void {
     if (block.prev) |prev| {
         if (prev.free) {
             mergeRight(prev);
@@ -273,9 +273,9 @@ pub fn initialize(capacity: usize) void {
     // TODO: on-demand mapping.
 
     // Initialize the heap with one big free block.
-    heap = @intToPtr(&u8, layout.HEAP)[0..capacity];
-    free_list = @ptrCast(&Block, heap.ptr);
-    *??free_list = Block.init();
+    heap = @intToPtr([*]u8, layout.HEAP)[0..capacity];
+    free_list = @ptrCast(*Block, heap.ptr);
+    free_list.?.* = Block.init();
 
     tty.colorPrint(Color.White, " {d} KB", capacity / 1024);
     tty.stepOK();

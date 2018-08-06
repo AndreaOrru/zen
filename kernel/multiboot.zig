@@ -60,19 +60,19 @@ pub const MultibootInfo = packed struct {
     ////
     // Return the ending address of the last module.
     //
-    pub fn lastModuleEnd(self: &const MultibootInfo) usize {
-        const mods = @intToPtr(&MultibootModule, self.mods_addr);
+    pub fn lastModuleEnd(self: *const MultibootInfo) usize {
+        const mods = @intToPtr([*]MultibootModule, self.mods_addr);
         return mods[self.mods_count - 1].mod_end;
     }
 
     ////
     // Load all the modules passed by the bootloader.
     //
-    pub fn loadModules(self: &const MultibootInfo) void {
-        const mods = @intToPtr(&MultibootModule, self.mods_addr)[0..self.mods_count];
+    pub fn loadModules(self: *const MultibootInfo) void {
+        const mods = @intToPtr([*]MultibootModule, self.mods_addr)[0..self.mods_count];
 
         for (mods) |mod| {
-            const cmdline = cstr.toSlice(@intToPtr(&u8, mod.cmdline));
+            const cmdline = cstr.toSlice(@intToPtr([*]u8, mod.cmdline));
             tty.step("Loading \"{}\"", cmdline);
 
             _ = Process.create(mod.mod_start, null);
