@@ -20,13 +20,13 @@ pub fn build(b: *Builder) void {
     const qemu       = b.step("qemu",       "Run the OS with Qemu");
     const qemu_debug = b.step("qemu-debug", "Run the OS with Qemu and wait for debugger to attach");
 
-    const common_params = [][]const u8 {
+    const common_params = [][]const u8.{
         "qemu-system-i386",
         "-display", "curses",
         "-kernel", kernel,
         "-initrd", join(b.allocator, ',', terminal, keyboard, shell) catch unreachable,
     };
-    const debug_params = [][]const u8 {"-s", "-S"};
+    const debug_params = [][]const u8.{"-s", "-S"};
 
     var qemu_params       = Array([]const u8).init(b.allocator);
     var qemu_debug_params = Array([]const u8).init(b.allocator);

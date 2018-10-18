@@ -16,7 +16,7 @@ extern fn isr44()void; extern fn isr45()void; extern fn isr46()void; extern fn i
 extern fn isr128()void;
 
 // Context saved by Interrupt Service Routines.
-pub const Context = packed struct {
+pub const Context = packed struct.{
     registers: Registers,  // General purpose registers.
 
     interrupt_n: u32,  // Number of the interrupt.
@@ -36,12 +36,12 @@ pub const Context = packed struct {
 };
 
 // Structure holding general purpose registers as saved by PUSHA.
-pub const Registers = packed struct {
+pub const Registers = packed struct.{
     edi: u32, esi: u32, ebp: u32, esp: u32,
     ebx: u32, edx: u32, ecx: u32, eax: u32,
 
     pub fn init() Registers {
-        return Registers {
+        return Registers.{
             .edi = 0, .esi = 0, .ebp = 0, .esp = 0,
             .ebx = 0, .edx = 0, .ecx = 0, .eax = 0,
         };

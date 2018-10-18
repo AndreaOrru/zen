@@ -12,7 +12,7 @@ const ThreadList = @import("thread.zig").ThreadList;
 var next_pid: u16 = 1;
 
 // Structure representing a process.
-pub const Process = struct {
+pub const Process = struct.{
     pid:            u16,
     page_directory: usize,
 
@@ -30,7 +30,7 @@ pub const Process = struct {
     //
     pub fn create(elf_addr: usize, args: ?[]const []const u8) *Process {
         var process = mem.allocator.createOne(Process) catch unreachable;
-        process.* = Process {
+        process.* = Process.{
             .pid            = next_pid,
             .page_directory = vmem.createAddressSpace(),
             .next_local_tid = 1,
@@ -44,7 +44,7 @@ pub const Process = struct {
         const entry_point = elf.load(elf_addr);
         // ...and start executing it.
         const main_thread = process.createThread(entry_point);
-        insertArguments(main_thread, args orelse [][]const u8 {});
+        insertArguments(main_thread, args orelse [][]const u8.{});
 
         return process;
     }
