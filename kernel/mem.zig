@@ -274,7 +274,7 @@ pub fn initialize(capacity: usize) void {
 
     // Initialize the heap with one big free block.
     heap = @intToPtr([*]u8, layout.HEAP)[0..capacity];
-    free_list = @ptrCast(*Block, heap.ptr);
+    free_list = @ptrCast(*Block, @alignCast(@alignOf(Block), heap.ptr));
     free_list.?.* = Block.init();
 
     tty.colorPrint(Color.White, " {d} KB", capacity / 1024);
