@@ -1,4 +1,7 @@
-const MultibootHeader = @import("multiboot.zig").MultibootHeader;
+const assert = @import("std").debug.assert;
+
+use @import("multiboot.zig");
+const gdt = @import("gdt.zig");
 
 
 // Place the multiboot header at the very beginning of the binary.
@@ -9,10 +12,10 @@ export const multiboot_header align(4) section(".multiboot") = MultibootHeader.g
 ///
 /// Arguments:
 ///     magic: Magic number from bootloader.
-///     info: Information structure from bootloader.
+///     info:  Information structure from bootloader.
 ///
-export fn main() void {
-    // FIXME: just clearing something on the screen for now.
-    const vram = @intToPtr([*]u16, 0xB8000)[0..0x4000];
-    vram[0] = 0x0000;
+export fn main(magic: u32, info: *const MultibootInfo) void {
+    assert (magic == MULTIBOOT_BOOTLOADER_MAGIC);
+
+    gdt.initialize();  // Load a temporary 32-bit GDT.
 }

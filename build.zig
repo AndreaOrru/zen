@@ -1,17 +1,21 @@
 const Builder = @import("std").build.Builder;
 const builtin = @import("builtin");
 
+/// Configure the build.
 pub fn build(b: *Builder) void {
     const loader = buildLoader(b);
     const kernel = buildKernel(b);
 }
 
+/// Build the loader (32-bit springboard).
 fn buildLoader(b: *Builder) []const u8 {
     const loader = b.addExecutable("loader", "loader/main.zig");
-    loader.addAssemblyFile("loader/_start.s");
+    loader.setBuildMode(b.standardReleaseOptions());
     loader.setOutputPath("loader/loader");
 
-    loader.setBuildMode(b.standardReleaseOptions());
+    loader.addAssemblyFile("loader/_start.s");
+    loader.addAssemblyFile("loader/gdt.s");
+
     loader.setLinkerScriptPath("loader/link.ld");
     loader.setTarget(builtin.Arch.i386,
                      builtin.Os.freestanding,
@@ -21,11 +25,12 @@ fn buildLoader(b: *Builder) []const u8 {
     return loader.getOutputPath();
 }
 
+/// Build the microkernel.
 fn buildKernel(b: *Builder) []const u8 {
     const kernel = b.addExecutable("kernel", "kernel/main.zig");
+    kernel.setBuildMode(b.standardReleaseOptions());
     kernel.setOutputPath("kernel/kernel");
 
-    kernel.setBuildMode(b.standardReleaseOptions());
     kernel.setLinkerScriptPath("kernel/link.ld");
     kernel.setTarget(builtin.Arch.x86_64,
                      builtin.Os.freestanding,

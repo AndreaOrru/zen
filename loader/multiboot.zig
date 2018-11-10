@@ -1,6 +1,7 @@
 /// This should be in EAX.
 pub const MULTIBOOT_BOOTLOADER_MAGIC = 0x2BADB002;
 
+
 /// Is there basic lower/upper memory information?
 pub const MULTIBOOT_INFO_MEMORY      = 0x00000001;
 /// Is there a full memory map?
