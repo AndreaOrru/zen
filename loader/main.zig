@@ -18,4 +18,10 @@ export fn main(magic: u32, info: *const MultibootInfo) void {
     assert (magic == MULTIBOOT_BOOTLOADER_MAGIC);
 
     gdt.initialize();  // Load a temporary 32-bit GDT.
+
+    // TODO: parse multiboot structure to find kernel.
+    // TODO: parse kernel ELF64 to find entry point.
+
+    // TODO: setup long mode.
+    // TODO: jump to kernel in 64-bit mode.
 }
