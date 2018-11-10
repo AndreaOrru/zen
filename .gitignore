@@ -1,9 +1,0 @@
-/zig-cache
-
-/zen
-
-/run/zen.iso
-/run/iso/boot/zen
-/run/iso/servers/*
-
-!.gitkeep
