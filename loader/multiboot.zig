@@ -54,6 +54,7 @@ pub const MultibootInfo = packed struct.{
     vbe_interface_len: u16,
 };
 
+
 /// Types of memory map entries.
 pub const MULTIBOOT_MEMORY_AVAILABLE = 1;
 pub const MULTIBOOT_MEMORY_RESERVED  = 2;
@@ -66,6 +67,7 @@ pub const MultibootMMapEntry = packed struct.{
     type: u32,
 };
 
+
 /// Structure representing a module loaded alongside the kernel.
 pub const MultibootModule = packed struct.{
     // The memory used goes from bytes 'mod_start' to 'mod_end-1' inclusive.
@@ -75,6 +77,7 @@ pub const MultibootModule = packed struct.{
     cmdline:   u32,  // Module command line.
     pad:       u32,  // Padding to take it to 16 bytes (must be zero).
 };
+
 
 /// Multiboot structure to be read by the bootloader.
 pub const MultibootHeader = packed struct.{
