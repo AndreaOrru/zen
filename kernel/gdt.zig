@@ -24,7 +24,7 @@ const PROTECTED = (1 << 2);
 const BLOCKS_4K = (1 << 3);
 
 // Structure representing an entry in the GDT.
-const GDTEntry = packed struct.{
+const GDTEntry = packed struct {
     limit_low:  u16,
     base_low:   u16,
     base_mid:   u8,
@@ -35,13 +35,13 @@ const GDTEntry = packed struct.{
 };
 
 // GDT descriptor register.
-const GDTRegister = packed struct.{
+const GDTRegister = packed struct {
     limit: u16,
     base: *const GDTEntry,
 };
 
 // Task State Segment.
-const TSS = packed struct.{
+const TSS = packed struct {
     unused1: u32,
     esp0:    u32,      // Stack to use when coming to ring 0 from ring > 0.
     ss0:     u32,      // Segment to use when coming to ring 0 from ring > 0.
@@ -60,7 +60,7 @@ const TSS = packed struct.{
 //     flags: Segment flags.
 //
 fn makeEntry(base: usize, limit: usize, access: u8, flags: u4) GDTEntry {
-    return GDTEntry.{ .limit_low  = @truncate(u16,  limit       ),
+    return GDTEntry { .limit_low  = @truncate(u16,  limit       ),
                       .base_low   = @truncate(u16,  base        ),
                       .base_mid   = @truncate(u8,   base   >> 16),
                       .access     = @truncate(u8,   access      ),
@@ -70,7 +70,7 @@ fn makeEntry(base: usize, limit: usize, access: u8, flags: u4) GDTEntry {
 }
 
 // Fill in the GDT.
-var gdt align(4) = []GDTEntry.{
+var gdt align(4) = []GDTEntry {
     makeEntry(0, 0, 0, 0),
     makeEntry(0, 0xFFFFF, KERNEL | CODE, PROTECTED | BLOCKS_4K),
     makeEntry(0, 0xFFFFF, KERNEL | DATA, PROTECTED | BLOCKS_4K),
@@ -80,17 +80,17 @@ var gdt align(4) = []GDTEntry.{
 };
 
 // GDT descriptor register pointing at the GDT.
-var gdtr = GDTRegister.{
+var gdtr = GDTRegister {
     .limit = u16(@sizeOf(@typeOf(gdt))),
     .base  = &gdt[0],
 };
 
 // Instance of the Task State Segment.
-var tss = TSS.{
+var tss = TSS {
     .unused1 = 0,
     .esp0    = undefined,
     .ss0     = KERNEL_DATA,
-    .unused2 = []u32.{ 0 } ** 22,
+    .unused2 = []u32 { 0 } ** 22,
     .unused3 = 0,
     .iomap_base = @sizeOf(TSS),
 };

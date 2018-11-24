@@ -10,7 +10,7 @@ const x86 = @import("x86.zig");
 const TypeId = @import("builtin").TypeId;
 
 // Registered syscall handlers.
-pub var handlers = []fn()void.{
+pub var handlers = []fn()void {
     SYSCALL(exit),                    // 0
     SYSCALL(ipc.send),                // 1
     SYSCALL(ipc.receive),             // 2
@@ -35,7 +35,7 @@ pub var handlers = []fn()void.{
 fn SYSCALL(comptime function: var) fn()void {
     const signature = @typeOf(function);
 
-    return struct.{
+    return struct {
         // Return the n-th argument passed to the function.
         fn arg(comptime n: u8) @ArgType(signature, n) {
             return getArg(n, @ArgType(signature, n));

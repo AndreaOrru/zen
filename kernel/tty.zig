@@ -21,7 +21,7 @@ pub fn initialize() void {
 //     format: Format string.
 //     args: Parameters for format specifiers.
 //
-const Errors = error.{};
+const Errors = error {};
 pub fn print(comptime format: []const u8, args: ...) void {
     _ = fmt.format({}, Errors, printCallback, format, args);
 }

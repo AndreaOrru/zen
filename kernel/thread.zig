@@ -24,7 +24,7 @@ pub const ThreadList  = List(Thread, "process_link");
 pub const ThreadQueue = List(Thread, "queue_link");
 
 // Structure representing a thread.
-pub const Thread = struct.{
+pub const Thread = struct {
     // TODO: simplify once #679 is solved.
     process_link: List(Thread, "process_link").Node,
     queue_link:   List(Thread, "queue_link").Node,
@@ -57,7 +57,7 @@ pub const Thread = struct.{
 
         // Allocate and initialize the thread structure.
         const thread = mem.allocator.createOne(Thread) catch unreachable;
-        thread.* = Thread.{
+        thread.* = Thread {
             .context      = initContext(entry_point, stack),
             .process      = process,
             .local_tid    = local_tid,
@@ -120,7 +120,7 @@ fn initContext(entry_point: usize, stack: usize) isr.Context {
     var stack_top = @intToPtr(*usize, stack + STACK_SIZE - @sizeOf(usize));
     stack_top.* = layout.THREAD_DESTROY;
 
-    return isr.Context.{
+    return isr.Context {
         .cs  = gdt.USER_CODE | gdt.USER_RPL,
         .ss  = gdt.USER_DATA | gdt.USER_RPL,
         .eip = entry_point,

@@ -15,7 +15,7 @@ const Thread = thread.Thread;
 const ThreadQueue = thread.ThreadQueue;
 
 // Structure representing a mailbox.
-pub const Mailbox = struct.{
+pub const Mailbox = struct {
     messages:      List(Message),
     waiting_queue: IntrusiveList(Thread, "queue_link"),
     // TODO: simplify once #679 is resolved.
@@ -27,7 +27,7 @@ pub const Mailbox = struct.{
     //     An empty mailbox.
     //
     pub fn init() Mailbox {
-        return Mailbox.{
+        return Mailbox {
             .messages = List(Message).init(),
             .waiting_queue = ThreadQueue.init(),
         };
@@ -146,7 +146,7 @@ fn processOutgoingMessage(message: *const Message) Message {
     var message_copy = message.*;
 
     switch (message.sender) {
-        MailboxId.This => message_copy.sender = MailboxId.{ .Thread = (scheduler.current().?).tid },
+        MailboxId.This => message_copy.sender = MailboxId { .Thread = (scheduler.current().?).tid },
         // MailboxId.Port   => TODO: ensure the sender owns the port.
         // MailboxId.Kernel => TODO: ensure the sender is really the kernel.
         else => {},

@@ -15,7 +15,7 @@ pub const VGA_HEIGHT = 25;
 pub const VGA_SIZE   = VGA_WIDTH * VGA_HEIGHT;
 
 // Color codes.
-pub const Color = enum(u4).{
+pub const Color = enum(u4) {
     Black        = 0,
     Blue         = 1,
     Green        = 2,
@@ -35,7 +35,7 @@ pub const Color = enum(u4).{
 };
 
 // Character with attributes.
-pub const VGAEntry = packed struct.{
+pub const VGAEntry = packed struct {
     char:       u8,
     foreground: Color,
     background: Color,
@@ -58,7 +58,7 @@ pub fn disableCursor() void {
 }
 
 // VGA status.
-pub const VGA = struct.{
+pub const VGA = struct {
     vram:       []VGAEntry,
     cursor:     usize,
     foreground: Color,
@@ -74,7 +74,7 @@ pub const VGA = struct.{
     //     A structure holding the VGA status.
     //
     pub fn init(vram: usize) VGA {
-        return VGA.{
+        return VGA {
             .vram       = @intToPtr([*]VGAEntry, vram)[0..0x4000],
             .cursor     = 0,
             .foreground = Color.LightGrey,
@@ -198,7 +198,7 @@ pub const VGA = struct.{
     //     The requested VGAEntry.
     //
     fn entry(self: *VGA, char: u8) VGAEntry {
-        return VGAEntry.{
+        return VGAEntry {
             .char       = char,
             .foreground = self.foreground,
             .background = self.background,
