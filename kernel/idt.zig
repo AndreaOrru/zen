@@ -8,7 +8,7 @@ pub const INTERRUPT_GATE = 0x8E;
 pub const SYSCALL_GATE   = 0xEE;
 
 // Structure representing an entry in the IDT.
-const IDTEntry = packed struct.{
+const IDTEntry = packed struct {
     offset_low:  u16,
     selector:    u16,
     zero:        u8,
@@ -17,7 +17,7 @@ const IDTEntry = packed struct.{
 };
 
 // IDT descriptor register.
-const IDTRegister = packed struct.{
+const IDTRegister = packed struct {
     limit: u16,
     base:  *[256]IDTEntry,
 };
@@ -26,7 +26,7 @@ const IDTRegister = packed struct.{
 var idt: [256]IDTEntry = undefined;
 
 // IDT descriptor register pointing at the IDT.
-const idtr = IDTRegister.{
+const idtr = IDTRegister {
     .limit = u16(@sizeOf(@typeOf(idt))),
     .base  = &idt,
 };

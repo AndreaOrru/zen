@@ -1,3 +1,4 @@
+// zig fmt: off
 const std = @import("std");
 const layout = @import("layout.zig");
 const mem = @import("mem.zig");
@@ -7,7 +8,7 @@ const scheduler = @import("scheduler.zig");
 const thread = @import("thread.zig");
 const x86 = @import("x86.zig");
 const HashMap = std.HashMap;
-const IntrusiveList = std.IntrusiveLinkedList;
+const LinkedList = std.LinkedList;
 const List = std.LinkedList;
 const MailboxId = std.os.zen.MailboxId;
 const Message = std.os.zen.Message;
@@ -15,9 +16,9 @@ const Thread = thread.Thread;
 const ThreadQueue = thread.ThreadQueue;
 
 // Structure representing a mailbox.
-pub const Mailbox = struct.{
+pub const Mailbox = struct {
     messages:      List(Message),
-    waiting_queue: IntrusiveList(Thread, "queue_link"),
+    waiting_queue: LinkedList(void),
     // TODO: simplify once #679 is resolved.
 
     ////
@@ -27,7 +28,7 @@ pub const Mailbox = struct.{
     //     An empty mailbox.
     //
     pub fn init() Mailbox {
-        return Mailbox.{
+        return Mailbox {
             .messages = List(Message).init(),
             .waiting_queue = ThreadQueue.init(),
         };
@@ -71,12 +72,12 @@ pub fn getOrCreatePort(id: u16) *Mailbox {
 pub fn send(message: *const Message) void {
     // NOTE: We need a copy in kernel space, because we
     // are potentially switching address spaces.
-    const message_copy = processOutgoingMessage(message);  // FIXME: should this be volatile?
+    const message_copy = processOutgoingMessage(message.*);  // FIXME: should this be volatile?
     const mailbox = getMailbox(message.receiver);
 
     if (mailbox.waiting_queue.popFirst()) |first| {
         // There's a thread waiting to receive, wake it up.
-        const receiving_thread = first.toData();
+        const receiving_thread = @fieldParentPtr(Thread, "queue_link", first);
         scheduler.new(receiving_thread);
         // Deliver the message into the receiver's address space.
         deliverMessage(message_copy);
@@ -122,8 +123,8 @@ pub fn receive(destination: *Message) void {
 // Returns:
 //     The address of the mailbox.
 //
-fn getMailbox(mailbox_id: *const MailboxId) *Mailbox {
-    return switch (mailbox_id.*) {
+fn getMailbox(mailbox_id: MailboxId) *Mailbox {
+    return switch (mailbox_id) {
         MailboxId.This   => &(scheduler.current().?).mailbox,
         MailboxId.Thread => |tid| &(thread.get(tid).?).mailbox,
         MailboxId.Port   => |id| getOrCreatePort(id),
@@ -142,11 +143,11 @@ fn getMailbox(mailbox_id: *const MailboxId) *Mailbox {
 // Returns:
 //     A copy of the message, post processing.
 //
-fn processOutgoingMessage(message: *const Message) Message {
-    var message_copy = message.*;
+fn processOutgoingMessage(message: Message) Message {
+    var message_copy = message;
 
     switch (message.sender) {
-        MailboxId.This => message_copy.sender = MailboxId.{ .Thread = (scheduler.current().?).tid },
+        MailboxId.This => message_copy.sender = MailboxId { .Thread = (scheduler.current().?).tid },
         // MailboxId.Port   => TODO: ensure the sender owns the port.
         // MailboxId.Kernel => TODO: ensure the sender is really the kernel.
         else => {},
@@ -178,12 +179,12 @@ fn processOutgoingMessage(message: *const Message) Message {
 // Arguments:
 //     message: The message to be delivered.
 //
-fn deliverMessage(message: *const Message) void {
+fn deliverMessage(message: Message) void {
     const receiver_thread = scheduler.current().?;
     const destination = receiver_thread.message_destination;
 
     // Copy the message structure.
-    destination.* = message.*;
+    destination.* = message;
 
     // Map the message's payload into the thread's address space.
     if (message.payload) |payload| {

@@ -1,3 +1,4 @@
+// zig fmt: off
 const std = @import("std");
 const gdt = @import("gdt.zig");
 const isr = @import("isr.zig");
@@ -7,7 +8,7 @@ const vmem = @import("vmem.zig");
 const scheduler = @import("scheduler.zig");
 const x86 = @import("x86.zig");
 const Array = std.ArrayList;
-const List = std.IntrusiveLinkedList;
+const List = std.LinkedList;
 const Mailbox = @import("ipc.zig").Mailbox;
 const Message = std.os.zen.Message;
 const Process = @import("process.zig").Process;
@@ -19,15 +20,15 @@ const STACK_SIZE = x86.PAGE_SIZE;  // Size of thread stacks.
 var threads = Array(?*Thread).init(&mem.allocator);
 
 // List of threads inside a process.
-pub const ThreadList  = List(Thread, "process_link");
+pub const ThreadList  = List(void);
 // Queue of threads (for scheduler and mailboxes).
-pub const ThreadQueue = List(Thread, "queue_link");
+pub const ThreadQueue = List(void);
 
 // Structure representing a thread.
-pub const Thread = struct.{
+pub const Thread = struct {
     // TODO: simplify once #679 is solved.
-    process_link: List(Thread, "process_link").Node,
-    queue_link:   List(Thread, "queue_link").Node,
+    process_link: List(void).Node,
+    queue_link:   List(void).Node,
 
     context: isr.Context,
     process: *Process,
@@ -57,13 +58,13 @@ pub const Thread = struct.{
 
         // Allocate and initialize the thread structure.
         const thread = mem.allocator.createOne(Thread) catch unreachable;
-        thread.* = Thread.{
+        thread.* = Thread {
             .context      = initContext(entry_point, stack),
             .process      = process,
             .local_tid    = local_tid,
             .tid          = @intCast(u16, threads.len),
-            .process_link = ThreadList.Node.initIntrusive(),
-            .queue_link   = ThreadQueue.Node.initIntrusive(),
+            .process_link = ThreadList.Node.init({}),
+            .queue_link   = ThreadQueue.Node.init({}),
             .mailbox      = Mailbox.init(),
             .message_destination = undefined,
         };
@@ -120,7 +121,7 @@ fn initContext(entry_point: usize, stack: usize) isr.Context {
     var stack_top = @intToPtr(*usize, stack + STACK_SIZE - @sizeOf(usize));
     stack_top.* = layout.THREAD_DESTROY;
 
-    return isr.Context.{
+    return isr.Context {
         .cs  = gdt.USER_CODE | gdt.USER_RPL,
         .ss  = gdt.USER_DATA | gdt.USER_RPL,
         .eip = entry_point,

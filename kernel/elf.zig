@@ -2,7 +2,7 @@ const vmem = @import("vmem.zig");
 const x86 = @import("x86.zig");
 
 // Description of an ELF executable.
-const ELFHeader = packed struct.{
+const ELFHeader = packed struct {
     e_ident:     [16]u8,
     e_type:      u16,
     e_machine:   u16,
@@ -35,7 +35,7 @@ const PF_W = 0x2;
 const PF_R = 0x4;
 
 // Description of an ELF program segment.
-const ELFProgHeader = packed struct.{
+const ELFProgHeader = packed struct {
     p_type:   u32,
     p_offset: u32,
     p_vaddr:  u32,

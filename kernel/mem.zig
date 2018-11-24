@@ -6,7 +6,7 @@ const assert = @import("std").debug.assert;
 const Color = tty.Color;
 
 // Standard allocator interface.
-pub var allocator = mem.Allocator.{
+pub var allocator = mem.Allocator {
     .allocFn   = alloc,
     .reallocFn = realloc,
     .freeFn    = free,
@@ -16,7 +16,7 @@ var heap: []u8 = undefined;          // Global kernel heap.
 var free_list: ?*Block = undefined;  // List of free blocks in the heap.
 
 // Structure representing a block in the heap.
-const Block = struct.{
+const Block = struct {
     free: bool,     // Is the block free?
 
     prev: ?*Block,  // Adjacent block to the left.
@@ -33,7 +33,7 @@ const Block = struct.{
     //     The biggest possible free block.
     //
     pub fn init() Block {
-        return Block.{
+        return Block {
             .free = true,
             .prev = null,
             .next = null,
@@ -203,7 +203,7 @@ fn splitBlock(block: *Block, left_sz: usize) void {
 
     // Setup the second block at the end of the first one.
     var right_block = @intToPtr(*Block, @ptrToInt(block) + @sizeOf(Block) + left_sz);
-    right_block.* = Block.{
+    right_block.* = Block {
         .free = false,  // For consistency: not free until added to the free list.
         .prev = block,
         .next = block.next,

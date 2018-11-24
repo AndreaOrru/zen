@@ -1,3 +1,4 @@
+// zig fmt: off
 const std = @import("std");
 const isr = @import("isr.zig");
 const scheduler = @import("scheduler.zig");
@@ -31,9 +32,9 @@ const IRQ_15 = IRQ_0 + 15;
 const SYSCALL = 128;
 
 // Registered interrupt handlers.
-var handlers = []fn()void.{ unhandled } ** 48;
+var handlers = []fn()void { unhandled } ** 48;
 // Registered IRQ subscribers.
-var irq_subscribers = []MailboxId.{ MailboxId.Kernel } ** 16;
+var irq_subscribers = []MailboxId { MailboxId.Kernel } ** 16;
 
 ////
 // Default interrupt handler.
