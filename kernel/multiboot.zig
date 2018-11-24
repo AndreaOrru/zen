@@ -1,3 +1,4 @@
+// zig fmt: off
 const tty = @import("tty.zig");
 const cstr = @import("std").cstr;
 const Process = @import("process.zig").Process;
@@ -113,7 +114,7 @@ const MultibootHeader = packed struct {
 // NOTE: this structure is incomplete.
 
 // Place the header at the very beginning of the binary.
-export const multiboot_header align(4) section(".multiboot") = multiboot: {
+export const multiboot_header align(4) linksection(".multiboot") = multiboot: {
     const MAGIC   = u32(0x1BADB002);  // Magic number for validation.
     const ALIGN   = u32(1 << 0);      // Align loaded modules.
     const MEMINFO = u32(1 << 1);      // Receive a memory map from the bootloader.

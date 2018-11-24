@@ -1,3 +1,4 @@
+// zig fmt: off
 const gdt = @import("gdt.zig");
 const isr = @import("isr.zig");
 const mem = @import("mem.zig");
@@ -18,7 +19,7 @@ var ready_queue: ThreadQueue = undefined;       // Queue of threads ready for ex
 fn schedule() void {
     if (ready_queue.popFirst()) |next| {
         ready_queue.append(next);
-        const next_thread = next.toData();
+        const next_thread = @fieldParentPtr(Thread, "queue_link", next);
 
         contextSwitch(next_thread);
     }
@@ -89,7 +90,7 @@ pub fn enqueue(thread: *Thread) void {
 pub fn dequeue() ?*Thread {
     const thread = ready_queue.pop() orelse return null;
     schedule();
-    return thread.toData();
+    return @fieldParentPtr(Thread, "queue_link", thread);
 }
 
 ////
@@ -111,7 +112,7 @@ pub fn remove(thread: *Thread) void {
 //
 pub inline fn current() ?*Thread {
     const last = ready_queue.last orelse return null;
-    return last.toData();
+    return @fieldParentPtr(Thread, "queue_link", last);
 }
 
 ////

@@ -1,3 +1,4 @@
+// zig fmt: off
 const std = @import("std");
 const isr = @import("isr.zig");
 const scheduler = @import("scheduler.zig");

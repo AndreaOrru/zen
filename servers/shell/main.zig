@@ -11,7 +11,7 @@ const warn = std.debug.warn;
 //
 pub fn main() void {
     var stdin_file = io.getStdIn() catch unreachable;
-    var stdin = &io.FileInStream.init(&stdin_file).stream;
+    var stdin = &stdin_file.inStream().stream;
     var buffer: [1024]u8 = undefined;
 
     warn("\n");
@@ -52,7 +52,6 @@ fn execute(command: []u8) void {
 //
 fn readLine(stream: var, buffer: []u8) usize {
     // TODO: change the type of stream when #764 is fixed.
-
     var i: usize = 0;
     var char: u8 = 0;
 
@@ -73,24 +72,23 @@ fn readLine(stream: var, buffer: []u8) usize {
         }
     }
 
-    return i - 1;  // Exclude \n.
+    return i - 1; // Exclude \n.
 }
-
 
 //////////////////////////
 ////  Shell commands  ////
 //////////////////////////
 
 fn clear() void {
-    zen.send(Message.to(Server.Terminal, 0));
+    zen.send(&Message.to(Server.Terminal, 0));
 }
 
 fn help() void {
     warn("{}\n\n",
-         \\List of supported commands:
-         \\    clear      Clear the screen
-         \\    help       Show help message
-         \\    version    Show Zen version
+        \\List of supported commands:
+        \\    clear      Clear the screen
+        \\    help       Show help message
+        \\    version    Show Zen version
     );
 }
 

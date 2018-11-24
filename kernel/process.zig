@@ -13,11 +13,11 @@ var next_pid: u16 = 1;
 
 // Structure representing a process.
 pub const Process = struct {
-    pid:            u16,
+    pid: u16,
     page_directory: usize,
 
     next_local_tid: u8,
-    threads:        ThreadList,
+    threads: ThreadList,
 
     ////
     // Create a new process and switch to it.
@@ -30,11 +30,11 @@ pub const Process = struct {
     //
     pub fn create(elf_addr: usize, args: ?[]const []const u8) *Process {
         var process = mem.allocator.createOne(Process) catch unreachable;
-        process.* = Process {
-            .pid            = next_pid,
+        process.* = Process{
+            .pid = next_pid,
             .page_directory = vmem.createAddressSpace(),
             .next_local_tid = 1,
-            .threads        = ThreadList.init(),
+            .threads = ThreadList.init(),
         };
         next_pid += 1;
 
@@ -44,7 +44,7 @@ pub const Process = struct {
         const entry_point = elf.load(elf_addr);
         // ...and start executing it.
         const main_thread = process.createThread(entry_point);
-        insertArguments(main_thread, args orelse [][]const u8 {});
+        insertArguments(main_thread, args orelse [][]const u8{});
 
         return process;
     }
@@ -53,7 +53,7 @@ pub const Process = struct {
     // Destroy the process.
     //
     pub fn destroy(self: *Process) void {
-        assert (scheduler.current_process == self);
+        assert(scheduler.current_process == self);
 
         // Deallocate all of user space.
         vmem.destroyAddressSpace();
@@ -65,7 +65,7 @@ pub const Process = struct {
             // before deallocating the current one.
             it = node.next;
 
-            const thread = node.toData();
+            const thread = @fieldParentPtr(Thread, "process_link", node);
             thread.destroy();
         }
 

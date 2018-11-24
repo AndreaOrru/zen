@@ -1,3 +1,4 @@
+// zig fmt: off
 const std = @import("std");
 const zen = std.os.zen;
 const Keyboard = zen.Server.Keyboard;
@@ -41,7 +42,7 @@ fn handleKeyEvent() void {
     if (waiting_thread) |thread| {
         // If a thread was blocked reading, send the character to it.
         waiting_thread = null;
-        zen.send(Message.to(thread, 0, char)
+        zen.send(&Message.to(thread, 0, char)
                         .as(Keyboard));
     } else {
         // Otherwise, save the character into the buffer.
@@ -53,15 +54,15 @@ fn handleKeyEvent() void {
 ////
 // Handle a read request from another thread.
 //
-fn handleRead(reader: *const MailboxId) void {
+fn handleRead(reader: MailboxId) void {
     if (buffer_start == buffer_end) {
         // If the buffer is empty, make the thread wait.
-        waiting_thread = reader.*;
+        waiting_thread = reader;
     } else {
         // Otherwise, fetch the first character from the buffer and send it.
         const char = buffer[buffer_start];
 
-        zen.send(Message.to(reader.*, 0, char)
+        zen.send(&Message.to(reader, 0, char)
                         .as(Keyboard));
 
         buffer_start = (buffer_start + 1) % buffer.len;
@@ -73,7 +74,7 @@ fn handleRead(reader: *const MailboxId) void {
 //
 pub fn main() void {
     // Instruct the kernel to send IRQ1 notifications to the Keyboard port.
-    zen.subscribeIRQ(1, Keyboard);
+    zen.subscribeIRQ(1, &Keyboard);
 
     // Receive messages from the Keyboard port.
     var message = Message.from(Keyboard);
