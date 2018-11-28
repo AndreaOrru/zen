@@ -5,7 +5,7 @@ const gdt = @import("gdt.zig");
 
 
 // Place the multiboot header at the very beginning of the binary.
-export const multiboot_header align(4) section(".multiboot") = MultibootHeader.generate();
+export const multiboot_header align(4) linksection(".multiboot") = MultibootHeader.generate();
 
 
 /// Loader's main function.
@@ -14,7 +14,7 @@ export const multiboot_header align(4) section(".multiboot") = MultibootHeader.g
 ///     magic: Magic number from bootloader.
 ///     info:  Information structure from bootloader.
 ///
-export fn main(magic: u32, info: *const MultibootInfo) void {
+export fn main(magic: u32, multiboot: *const MultibootInfo) void {
     assert (magic == MULTIBOOT_BOOTLOADER_MAGIC);
 
     gdt.initialize();  // Load a temporary 32-bit GDT.

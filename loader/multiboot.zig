@@ -8,7 +8,7 @@ pub const MULTIBOOT_INFO_MEMORY      = 0x00000001;
 pub const MULTIBOOT_INFO_MEM_MAP     = 0x00000040;
 
 /// System information structure passed by the bootloader.
-pub const MultibootInfo = packed struct.{
+pub const MultibootInfo = packed struct {
     /// Multiboot info version number.
     flags: u32,
 
@@ -61,7 +61,7 @@ pub const MULTIBOOT_MEMORY_AVAILABLE = 1;
 pub const MULTIBOOT_MEMORY_RESERVED  = 2;
 
 /// Entries in the memory map.
-pub const MultibootMMapEntry = packed struct.{
+pub const MultibootMMapEntry = packed struct {
     size: u32,
     addr: u64,
     len:  u64,
@@ -70,7 +70,7 @@ pub const MultibootMMapEntry = packed struct.{
 
 
 /// Structure representing a module loaded alongside the kernel.
-pub const MultibootModule = packed struct.{
+pub const MultibootModule = packed struct {
     // The memory used goes from bytes 'mod_start' to 'mod_end-1' inclusive.
     mod_start: u32,
     mod_end:   u32,
@@ -81,7 +81,7 @@ pub const MultibootModule = packed struct.{
 
 
 /// Multiboot structure to be read by the bootloader.
-pub const MultibootHeader = packed struct.{
+pub const MultibootHeader = packed struct {
     magic:    u32,  // Must be equal to header magic number.
     flags:    u32,  // Feature flags.
     checksum: u32,  // Above fields plus this one must equal 0 mod 2^32.
@@ -94,7 +94,7 @@ pub const MultibootHeader = packed struct.{
         const MEMINFO = u32(1 << 1);      // Receive a memory map from the bootloader.
         const FLAGS   = ALIGN | MEMINFO;  // Combine the flags.
 
-        return MultibootHeader.{
+        return MultibootHeader {
             .magic    = MAGIC,
             .flags    = FLAGS,
             .checksum = ~(MAGIC +% FLAGS) +% 1,
