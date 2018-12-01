@@ -26,6 +26,21 @@ const GDTRegister = packed struct {
 };
 
 
+/// Fill in the GDT.
+var gdt align(4) = []GDTEntry {
+    makeEntry(0, 0, 0, 0),
+    makeEntry(0, 0xFFFFF, KERNEL | CODE, PROTECTED | BLOCKS_4K),
+    makeEntry(0, 0xFFFFF, KERNEL | DATA, PROTECTED | BLOCKS_4K),
+};
+
+/// GDT descriptor register pointing at the GDT.
+var gdtr = GDTRegister {
+    .limit = u16(@sizeOf(@typeOf(gdt))),
+    .base  = &gdt[0],
+};
+
+
+///
 /// Generate a GDT entry structure.
 ///
 /// Arguments:
@@ -44,27 +59,13 @@ fn makeEntry(base: usize, limit: usize, access: u8, flags: u4) GDTEntry {
                       .base_high  = @truncate(u8,   base   >> 24), };
 }
 
-
-/// Fill in the GDT.
-var gdt align(4) = []GDTEntry {
-    makeEntry(0, 0, 0, 0),
-    makeEntry(0, 0xFFFFF, KERNEL | CODE, PROTECTED | BLOCKS_4K),
-    makeEntry(0, 0xFFFFF, KERNEL | DATA, PROTECTED | BLOCKS_4K),
-};
-
-/// GDT descriptor register pointing at the GDT.
-var gdtr = GDTRegister {
-    .limit = u16(@sizeOf(@typeOf(gdt))),
-    .base  = &gdt[0],
-};
-
-
+///
 /// Load the GDT into the system registers (defined in assembly).
 ///
 /// Arguments:
 ///     gdtr: Pointer to the GDTR.
 ///
-extern fn loadGDT(gdtr: *const GDTRegister)void;
+extern fn loadGDT(gdtr: *const GDTRegister) void;
 
 /// Initialize the Global Descriptor Table.
 pub fn initialize() void {

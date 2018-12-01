@@ -1,3 +1,6 @@
+const elf = @import("elf.zig");
+
+
 /// This should be in EAX.
 pub const MULTIBOOT_BOOTLOADER_MAGIC = 0x2BADB002;
 
@@ -6,6 +9,7 @@ pub const MULTIBOOT_BOOTLOADER_MAGIC = 0x2BADB002;
 pub const MULTIBOOT_INFO_MEMORY      = 0x00000001;
 /// Is there a full memory map?
 pub const MULTIBOOT_INFO_MEM_MAP     = 0x00000040;
+
 
 /// System information structure passed by the bootloader.
 pub const MultibootInfo = packed struct {
@@ -53,6 +57,11 @@ pub const MultibootInfo = packed struct {
     vbe_interface_seg: u16,
     vbe_interface_off: u16,
     vbe_interface_len: u16,
+
+    /// Return an array of all the available modules.
+    pub fn modules(self: *const MultibootInfo) []MultibootModule {
+        return @intToPtr([*]MultibootModule, self.mods_addr)[0..self.mods_count];
+    }
 };
 
 
@@ -77,6 +86,11 @@ pub const MultibootModule = packed struct {
 
     cmdline:   u32,  // Module command line.
     pad:       u32,  // Padding to take it to 16 bytes (must be zero).
+
+    /// Load the module into RAM and return its entry point.
+    pub fn load(self: *const MultibootModule) usize {
+        return elf.load(self.mod_start);
+    }
 };
 
 

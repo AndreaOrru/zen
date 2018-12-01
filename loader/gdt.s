@@ -1,5 +1,6 @@
 .type loadGDT, @function
 
+///
 /// Load the GDT into the system registers.
 ///
 /// Arguments:

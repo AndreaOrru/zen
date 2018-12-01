@@ -8,6 +8,7 @@ const gdt = @import("gdt.zig");
 export const multiboot_header align(4) linksection(".multiboot") = MultibootHeader.generate();
 
 
+///
 /// Loader's main function.
 ///
 /// Arguments:
@@ -19,8 +20,8 @@ export fn main(magic: u32, multiboot: *const MultibootInfo) void {
 
     gdt.initialize();  // Load a temporary 32-bit GDT.
 
-    // TODO: parse multiboot structure to find kernel.
-    // TODO: parse kernel ELF64 to find entry point.
+    const kernel = multiboot.modules()[0];
+    const kernel_entry = kernel.load();
 
     // TODO: setup long mode.
     // TODO: jump to kernel in 64-bit mode.
