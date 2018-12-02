@@ -16,7 +16,7 @@ export const multiboot_header align(4) linksection(".multiboot") = MultibootHead
 ///     magic: Magic number from bootloader.
 ///     multiboot: Pointer to the bootloader info structure.
 ///
-export fn main(magic: u32, multiboot: *const MultibootInfo) void {
+export fn main(magic: u32, multiboot: *const MultibootInfo) noreturn {
     assert (magic == MULTIBOOT_BOOTLOADER_MAGIC);
 
     // Load the 64-bit kernel (the first Multiboot module).
