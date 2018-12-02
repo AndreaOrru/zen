@@ -1,12 +1,12 @@
-// The size of a x86-64 memory page.
+/// The size of a x86-64 memory page.
 const PAGE_SIZE = 0x1000;
 
-// Page mapping flags.
+/// Page mapping flags.
 const PAGE_PRESENT = (1 << 0);
 const PAGE_WRITE   = (1 << 1);
 const PAGE_1GB     = (1 << 7);
 
-// Address of the 2-page buffer for paging structures.
+/// Address of the 2-page buffer for paging structures.
 const BUFFER_ADDR = 0x7000;
 
 
