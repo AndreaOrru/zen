@@ -2,7 +2,7 @@ const builtin = @import("builtin");
 const mem = @import("std").mem;
 
 const zen = if (builtin.os == builtin.Os.freestanding)
-    @import("../kernel/asm.zig")
+    @import("../kernel/x64.zig")
 else
     unreachable;  // FIXME: provide library.
 

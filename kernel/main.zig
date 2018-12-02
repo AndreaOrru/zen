@@ -1,5 +1,7 @@
 const MultibootInfo = @import("lib").multiboot.MultibootInfo;
 const tty = @import("tty.zig");
+const x64 = @import("x64.zig");
+const Color = tty.Color;
 
 
 ///
@@ -11,7 +13,12 @@ const tty = @import("tty.zig");
 export fn main(multiboot: *const MultibootInfo) noreturn {
     tty.initialize();
 
-    tty.print("Hello, 64-bit world!");
+    const title = "Zen - v0.0.2";
+    tty.alignCenter(title.len);
+    tty.colorPrint(Color.LightRed, title ++ "\n\n");
 
-    while (true) {}
+    tty.colorPrint(Color.LightBlue, "Booting the microkernel:\n");
+    tty.step("Doing absolutely nothing"); tty.stepOK();
+
+    x64.hang();
 }
