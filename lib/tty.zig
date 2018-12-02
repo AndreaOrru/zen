@@ -61,8 +61,10 @@ pub const VGA = struct {
     ///     A structure holding the VGA status.
     ///
     pub fn init(vram: usize) VGA {
+        const vga_entries = VRAM_SIZE / @sizeOf(VGAEntry);
+
         return VGA {
-            .vram       = @intToPtr([*]VGAEntry, vram)[0..0x4000],  // FIXME: calculate size.
+            .vram       = @intToPtr([*]VGAEntry, vram)[0..vga_entries],
             .cursor     = 0,
             .foreground = Color.LightGrey,
             .background = Color.Black,
