@@ -14,7 +14,7 @@ fn buildLoader(b: *Builder) []const u8 {
     loader.setOutputPath("loader/loader");
 
     loader.addAssemblyFile("loader/_start.s");
-    loader.addAssemblyFile("loader/gdt.s");
+    loader.addAssemblyFile("loader/longmode.s");
 
     loader.setLinkerScriptPath("loader/link.ld");
     loader.setTarget(builtin.Arch.i386,
