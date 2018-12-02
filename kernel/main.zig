@@ -1,6 +1,12 @@
-export fn main() noreturn {
-    const vram = @intToPtr([*]u16, 0xB8000)[0..0x4000];
-    vram[0] = 0x0000;
+const MultibootInfo = @import("lib").multiboot.MultibootInfo;
 
+
+///
+/// Get the ball rolling.
+///
+/// Arguments:
+///     multiboot: Pointer to the bootloader info structure.
+///
+export fn main(multiboot: *const MultibootInfo) noreturn {
     while (true) {}
 }

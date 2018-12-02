@@ -1,6 +1,3 @@
-const elf = @import("elf.zig");
-
-
 /// This should be in EAX.
 pub const MULTIBOOT_BOOTLOADER_MAGIC = 0x2BADB002;
 
@@ -86,11 +83,6 @@ pub const MultibootModule = packed struct {
 
     cmdline:   u32,  // Module command line.
     pad:       u32,  // Padding to take it to 16 bytes (must be zero).
-
-    /// Load the module into RAM and return its entry point.
-    pub fn load(self: *const MultibootModule) usize {
-        return elf.load(self.mod_start);
-    }
 };
 
 

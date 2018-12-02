@@ -1,4 +1,4 @@
-const MultibootInfo = @import("multiboot.zig").MultibootInfo;
+const MultibootInfo = @import("lib").multiboot.MultibootInfo;
 
 
 ///

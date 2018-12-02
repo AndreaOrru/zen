@@ -1,6 +1,7 @@
 const assert = @import("std").debug.assert;
 
-use @import("multiboot.zig");
+use @import("lib").multiboot;
+const elf = @import("elf.zig");
 const paging = @import("paging.zig");
 const longmode = @import("longmode.zig");
 
@@ -21,7 +22,7 @@ export fn main(magic: u32, multiboot: *const MultibootInfo) noreturn {
 
     // Load the 64-bit kernel (the first Multiboot module).
     const kernel = multiboot.modules()[0];
-    const kernel_entry = kernel.load();
+    const kernel_entry = elf.load(kernel.mod_start);
 
     const pml4 = paging.initialize();  // Initialize paging structures.
     longmode.setup(pml4);              // Prepare the CPU for Long Mode.

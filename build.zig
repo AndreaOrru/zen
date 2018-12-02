@@ -28,6 +28,7 @@ fn buildLoader(b: *Builder) []const u8 {
     loader.setBuildMode(b.standardReleaseOptions());
     loader.setOutputPath("loader/loader");
 
+    loader.addPackagePath("lib", "lib/index.zig");
     loader.addAssemblyFile("loader/_start.s");
     loader.addAssemblyFile("loader/longmode.s");
 
@@ -45,6 +46,8 @@ fn buildKernel(b: *Builder) []const u8 {
     const kernel = b.addExecutable("kernel", "kernel/main.zig");
     kernel.setBuildMode(b.standardReleaseOptions());
     kernel.setOutputPath("kernel/kernel");
+
+    kernel.addPackagePath("lib", "lib/index.zig");
 
     kernel.setLinkerScriptPath("kernel/link.ld");
     kernel.setTarget(builtin.Arch.x86_64,
