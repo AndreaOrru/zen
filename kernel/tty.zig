@@ -1,6 +1,7 @@
 const fmt = @import("std").fmt;
 
 use @import("lib").tty;
+const x64 = @import("x64.zig");
 
 
 /// VGA status.
@@ -75,6 +76,26 @@ pub fn alignRight(offset: usize) void {
 ///
 pub fn alignCenter(str_len: usize) void {
     alignLeft((VGA_WIDTH - str_len) / 2);
+}
+
+///
+/// Signal an unrecoverable error and hang the computer.
+///
+/// Arguments:
+///     format: Format string.
+///     args: Parameters for format specifiers.
+///
+pub fn panic(comptime format: []const u8, args: ...) noreturn {
+    // We may be interrupting user mode, so we disable the hardware cursor
+    // and fetch its current position, and start writing from there.
+    disableCursor();
+    vga.fetchCursor();
+    vga.writeChar('\n');
+
+    vga.background = Color.Red;
+    colorPrint(Color.White, "KERNEL PANIC: " ++ format ++ "\n", args);
+
+    x64.hang();
 }
 
 ///
