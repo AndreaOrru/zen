@@ -22,6 +22,16 @@ pub inline fn hang() noreturn {
 }
 
 ///
+/// Load a new Task Register.
+///
+/// Arguments:
+///     desc: Segment selector of the TSS.
+///
+pub inline fn ltr(desc: u16) void {
+    asm volatile ("ltr %[desc]" : : [desc] "r" (desc));
+}
+
+///
 /// Read a byte from a port.
 ///
 /// Arguments:

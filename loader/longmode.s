@@ -1,19 +1,37 @@
+// GDT segment flags.
+LONG_MODE = (   1 << 53)
+PRESENT   = (   1 << 47)
+READABLE  = (   1 << 41)
+WRITABLE  = (   1 << 41)
+KERNEL    = (0b00 << 45)
+USER      = (0b11 << 45)
+CODE      = (0b11 << 43) | READABLE | LONG_MODE | PRESENT
+DATA      = (0b10 << 43) | WRITABLE | LONG_MODE | PRESENT
+
+/// GDT segments (NOTE: keep in sync with kernel/gdt.zig).
+KERNEL_CODE = 0x08
+KERNEL_DATA = 0x10
+USER_CODE   = 0x18
+USER_DATA   = 0x20
+TSS_DESC    = 0x28
+
+
 /// Global Descriptor Table.
-.align 4
+.align 8
 gdt:
-    .quad 0x0000000000000000  // Null Descriptor.
-    .quad 0x00209A0000000000  // 64-bit Code Segment (exec/read).
-    .quad 0x0000920000000000  // 64-bit Data Segment (read/write).
+    .quad 0              // Null descriptor.
+    .quad KERNEL | CODE  // 64-bit Kernel Code segment.
+    .quad KERNEL | DATA  // 64-bit Kernel Data segment.
+    .quad USER   | CODE  // 64-bit User Code segment.
+    .quad USER   | DATA  // 64-bit USer Code segment.
+tss_desc:
+    .quad 0              // Reserved for TSS (first 64 bits).
+    .quad 0              // Reserved for TSS (last 64 bits).
 
 /// GDT Pointer structure.
 gdtr:
     .word (. - gdt - 1)  // 16-bit size (limit) of GDT.
     .long gdt            // 32-bit base address of GDT.
-
-
-/// GDT Segments.
-CODE_SEGMENT = 0x08
-DATA_SEGMENT = 0x10
 
 
 ///
@@ -60,16 +78,17 @@ setup:
 .type callKernel, @function
 callKernel:
     mov +4(%esp), %ebx       // Fetch the kernel_entry parameter.
-    mov +8(%esp), %edi       // Fetch the multiboot parameter.
-    ljmp $CODE_SEGMENT, $1f  // Jump into 64-bit mode.
+    mov +8(%esp), %edi       // Fetch (and pass) the multiboot parameter.
+    mov $tss_desc, %esi      // Fetch (and pass) the address of the TSS descriptor.
+    ljmp $KERNEL_CODE, $1f   // Jump into 64-bit mode.
 
 .code64
     // Setup the data segments.
-1:  movw $DATA_SEGMENT, %ax
-    movw %ax, %ds
-    movw %ax, %es
-    movw %ax, %fs
-    movw %ax, %gs
-    movw %ax, %ss
+1:  mov $KERNEL_DATA, %ax
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
+    mov %ax, %ss
     // Jump to the kernel.
     jmp *%rbx
