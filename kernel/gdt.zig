@@ -31,7 +31,7 @@ pub const SystemDescriptor = packed struct {
     unused:      u2,
     granularity: u1,
     base_high:   u40,
-    reserved:    u32,
+    zero2:       u32,
 };
 
 /// Task State Segment.
@@ -98,7 +98,7 @@ pub fn initializeTSS(tss_desc: *SystemDescriptor) void {
         .unused      = 0,
         .granularity = 0,
         .base_high   = @truncate(u40, base  >> 24),
-        .reserved    = 0,
+        .zero2       = 0,
     };
     // Load the Task Register.
     x64.ltr(TSS_DESC);

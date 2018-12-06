@@ -2,6 +2,7 @@ const builtin = @import("builtin");
 
 const MultibootInfo = @import("lib").multiboot.MultibootInfo;
 const gdt = @import("gdt.zig");
+const idt = @import("idt.zig");
 const tty = @import("tty.zig");
 const x64 = @import("x64.zig");
 const Color = tty.Color;
@@ -34,6 +35,7 @@ export fn main(multiboot: *const MultibootInfo, tss_desc: *Desc) noreturn {
 
     tty.colorPrint(Color.LightBlue, "Booting the microkernel:\n");
     gdt.initializeTSS(tss_desc);
+    idt.initialize();
 
     x64.hang();
 }
