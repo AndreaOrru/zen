@@ -1,3 +1,13 @@
+/// Type of a segment.
+const PT_NULL    = 0;
+const PT_LOAD    = 1;
+const PT_DYNAMIC = 2;
+const PT_INTERP  = 3;
+const PT_NOTE    = 4;
+const PT_SHLIB   = 5;
+const PT_PHDR    = 6;
+
+
 /// Description of an ELF executable.
 const ELFHeader = packed struct {
     e_ident:     [16]u8,
@@ -16,7 +26,6 @@ const ELFHeader = packed struct {
     e_shstrndx:  u16,
 };
 
-
 /// Description of an ELF program segment.
 const ELFProgHeader = packed struct {
     p_type:   u32,
@@ -29,17 +38,7 @@ const ELFProgHeader = packed struct {
     p_align:  u64,
 };
 
-/// Type of a segment.
-const PT_NULL    = 0;
-const PT_LOAD    = 1;
-const PT_DYNAMIC = 2;
-const PT_INTERP  = 3;
-const PT_NOTE    = 4;
-const PT_SHLIB   = 5;
-const PT_PHDR    = 6;
 
-
-///
 /// Truncate a 64-bit integer into a usize (32-bit).
 ///
 /// Arguments:
@@ -52,7 +51,6 @@ fn tr(value: u64) usize {
     return @truncate(usize, value);
 }
 
-///
 /// Load an ELF file.
 ///
 /// Arguments:

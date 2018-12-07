@@ -1,5 +1,5 @@
-/// The size of a x86-64 memory page.
-const PAGE_SIZE = 0x1000;
+const PAGE_SIZE = @import("lib").x64.PAGE_SIZE;
+
 
 /// Page mapping flags.
 const PAGE_PRESENT = (1 << 0);
@@ -10,7 +10,6 @@ const PAGE_1GB     = (1 << 7);
 const BUFFER_ADDR = 0x7000;
 
 
-///
 /// Zero out a memory area.
 ///
 /// Arguments:
@@ -22,8 +21,6 @@ fn zeroMemory(address: usize, bytes: usize) void {
     @memset(pointer, 0, bytes);
 }
 
-
-///
 /// Initialize identity mapping paging for Long Mode.
 ///
 /// Returns:

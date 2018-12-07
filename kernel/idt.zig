@@ -1,7 +1,7 @@
 const gdt = @import("gdt.zig");
 //const interrupt = @import("interrupt.zig");
 const tty = @import("tty.zig");
-const x64 = @import("x64.zig");
+const x64 = @import("lib").x64;
 
 
 /// Types of gates.
@@ -38,7 +38,6 @@ const idtr = IDTRegister {
 };
 
 
-///
 /// Setup an IDT entry.
 ///
 /// Arguments:
@@ -61,9 +60,7 @@ pub fn setGate(n: u8, offset: extern fn()void) void {
     };
 }
 
-///
 /// Initialize the Interrupt Descriptor Table.
-///
 pub fn initialize() void {
     tty.step("Setting up the Interrupt Descriptor Table");
 

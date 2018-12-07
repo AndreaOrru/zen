@@ -8,13 +8,13 @@ USER      = (0b11 << 45)
 CODE      = (0b11 << 43) | READABLE | LONG_MODE | PRESENT
 DATA      = (0b10 << 43) | WRITABLE | LONG_MODE | PRESENT
 
+
 /// GDT segments (NOTE: keep in sync with kernel/gdt.zig).
 KERNEL_CODE = 0x08
 KERNEL_DATA = 0x10
 USER_CODE   = 0x18
 USER_DATA   = 0x20
 TSS_DESC    = 0x28
-
 
 /// Global Descriptor Table.
 .align 8
@@ -34,7 +34,6 @@ gdtr:
     .long gdt            // 32-bit base address of GDT.
 
 
-///
 /// Setup the processor for Long Mode.
 /// This does not jump to 64-bit code just yet.
 ///
@@ -67,8 +66,6 @@ setup:
     lgdt (gdtr)
     ret
 
-
-///
 /// Jump to the 64-bit kernel, never to return.
 ///
 /// Arguments:

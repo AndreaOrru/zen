@@ -7,7 +7,6 @@ pub const MULTIBOOT_INFO_MEMORY      = 0x00000001;
 /// Is there a full memory map?
 pub const MULTIBOOT_INFO_MEM_MAP     = 0x00000040;
 
-
 /// System information structure passed by the bootloader.
 pub const MultibootInfo = packed struct {
     /// Multiboot info version number.
@@ -58,6 +57,11 @@ pub const MultibootInfo = packed struct {
     /// Return an array of all the available modules.
     pub fn modules(self: *const MultibootInfo) []MultibootModule {
         return @intToPtr([*]MultibootModule, self.mods_addr)[0..self.mods_count];
+    }
+
+    /// Return the ending address of the last module.
+    pub fn lastModuleEnd(self: *const MultibootInfo) usize {
+        return self.modules()[self.mods_count - 1].mod_end;
     }
 };
 

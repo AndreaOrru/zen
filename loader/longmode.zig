@@ -1,7 +1,6 @@
 const MultibootInfo = @import("lib").multiboot.MultibootInfo;
 
 
-///
 /// Setup the processor for Long Mode.
 /// This does not jump to 64-bit code just yet.
 ///
@@ -10,8 +9,6 @@ const MultibootInfo = @import("lib").multiboot.MultibootInfo;
 ///
 pub extern fn setup(pml4: usize) void;
 
-
-///
 /// Jump to the 64-bit kernel, never to return.
 ///
 /// Arguments:

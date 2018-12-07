@@ -1,5 +1,6 @@
-const Builder = @import("std").build.Builder;
 const builtin = @import("builtin");
+const Builder = @import("std").build.Builder;
+
 
 /// Configure the build.
 pub fn build(b: *Builder) void {

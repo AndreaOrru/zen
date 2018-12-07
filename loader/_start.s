@@ -1,8 +1,7 @@
-.global _start
-.type _start, @function
-
 /// Loader entry point. It puts the machine in a consistent state,
 /// before calling the main function.
+.global _start
+.type _start, @function
 _start:
     mov $0x80000, %esp  // Setup the stack.
 

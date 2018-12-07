@@ -1,10 +1,6 @@
 const builtin = @import("builtin");
 const mem = @import("std").mem;
-
-const zen = if (builtin.os == builtin.Os.freestanding)
-    @import("../kernel/x64.zig")
-else
-    unreachable;  // FIXME: provide library.
+const x64 = @import("x64.zig");
 
 
 /// VRAM buffer address in physical memory.
@@ -43,7 +39,6 @@ pub const VGAEntry = packed struct {
     background: Color,
 };
 
-
 /// VGA status.
 pub const VGA = struct {
     vram:       []VGAEntry,
@@ -51,7 +46,6 @@ pub const VGA = struct {
     foreground: Color,
     background: Color,
 
-    ///
     /// Initialize the VGA status.
     ///
     /// Arguments:
@@ -79,7 +73,6 @@ pub const VGA = struct {
         self.updateCursor();
     }
 
-    ///
     /// Print a character to the screen.
     ///
     /// Arguments:
@@ -118,7 +111,6 @@ pub const VGA = struct {
         }
     }
 
-    ///
     /// Print a string to the screen.
     ///
     /// Arguments:
@@ -149,10 +141,10 @@ pub const VGA = struct {
     /// Update the position of the hardware cursor.
     /// Use the software cursor as the source of truth.
     fn updateCursor(self: *const VGA) void {
-        zen.outb(0x3D4, 0x0F);
-        zen.outb(0x3D5, @truncate(u8, self.cursor));
-        zen.outb(0x3D4, 0x0E);
-        zen.outb(0x3D5, @truncate(u8, self.cursor >> 8));
+        x64.outb(0x3D4, 0x0F);
+        x64.outb(0x3D5, @truncate(u8, self.cursor));
+        x64.outb(0x3D4, 0x0E);
+        x64.outb(0x3D5, @truncate(u8, self.cursor >> 8));
     }
 
     /// Update the position of the software cursor.
@@ -160,16 +152,15 @@ pub const VGA = struct {
     pub fn fetchCursor(self: *VGA) void {
         var cursor: usize = 0;
 
-        zen.outb(0x3D4, 0x0E);
-        cursor |= usize(zen.inb(0x3D5)) << 8;
+        x64.outb(0x3D4, 0x0E);
+        cursor |= usize(x64.inb(0x3D5)) << 8;
 
-        zen.outb(0x3D4, 0x0F);
-        cursor |= zen.inb(0x3D5);
+        x64.outb(0x3D4, 0x0F);
+        cursor |= x64.inb(0x3D5);
 
         self.cursor = cursor;
     }
 
-    ///
     /// Build a VGAEntry with current foreground and background.
     ///
     /// Arguments:
@@ -190,12 +181,12 @@ pub const VGA = struct {
 
 /// Enable hardware cursor.
 pub fn enableCursor() void {
-    zen.outb(0x3D4, 0x0A);
-    zen.outb(0x3D5, 0x00);
+    x64.outb(0x3D4, 0x0A);
+    x64.outb(0x3D5, 0x00);
 }
 
 /// Disable hardware cursor.
 pub fn disableCursor() void {
-    zen.outb(0x3D4, 0x0A);
-    zen.outb(0x3D5, 1 << 5);
+    x64.outb(0x3D4, 0x0A);
+    x64.outb(0x3D5, 1 << 5);
 }

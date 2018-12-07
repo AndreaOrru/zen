@@ -1,7 +1,6 @@
-const fmt = @import("std").fmt;
-
 use @import("lib").tty;
-const x64 = @import("x64.zig");
+const fmt = @import("std").fmt;
+const x64 = @import("lib").x64;
 
 
 /// VGA status.
@@ -14,7 +13,6 @@ pub fn initialize() void {
     vga.clear();
 }
 
-///
 /// Print a formatted string to screen.
 ///
 /// Arguments:
@@ -29,7 +27,6 @@ fn printCallback(context: void, string: []const u8) Errors!void {
     vga.writeString(string);
 }
 
-///
 /// Print a string with the given foreground color.
 ///
 /// Arguments:
@@ -46,7 +43,6 @@ pub fn colorPrint(fg: Color, comptime format: []const u8, args: ...) void {
     vga.foreground = save_foreground;
 }
 
-///
 /// Align the cursor so that it is offset characters from the left border.
 ///
 /// Arguments:
@@ -58,7 +54,6 @@ pub fn alignLeft(offset: usize) void {
     }
 }
 
-///
 /// Align the cursor so that it is offset characters from the right border.
 ///
 /// Arguments:
@@ -68,7 +63,6 @@ pub fn alignRight(offset: usize) void {
     alignLeft(VGA_WIDTH - offset);
 }
 
-///
 /// Align the cursor to horizontally center a string.
 ///
 /// Arguments:
@@ -78,7 +72,6 @@ pub fn alignCenter(str_len: usize) void {
     alignLeft((VGA_WIDTH - str_len) / 2);
 }
 
-///
 /// Signal an unrecoverable error and hang the computer.
 ///
 /// Arguments:
@@ -98,7 +91,6 @@ pub fn panic(comptime format: []const u8, args: ...) noreturn {
     x64.hang();
 }
 
-///
 /// Print a loading step.
 ///
 /// Arguments:

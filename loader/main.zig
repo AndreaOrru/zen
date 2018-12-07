@@ -1,16 +1,14 @@
-const assert = @import("std").debug.assert;
-
 use @import("lib").multiboot;
 const elf = @import("elf.zig");
 const paging = @import("paging.zig");
 const longmode = @import("longmode.zig");
+const assert = @import("std").debug.assert;
 
 
 // Place the multiboot header at the very beginning of the binary.
 export const multiboot_header align(4) linksection(".multiboot") = MultibootHeader.generate();
 
 
-///
 /// Loader's main function.
 ///
 /// Arguments:

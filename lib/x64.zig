@@ -1,3 +1,31 @@
+/// The size of a x86-64 memory page.
+pub const PAGE_SIZE: usize = 0x1000;
+
+
+/// Page-align an address downward.
+///
+/// Arguments:
+///     address: Address to align.
+///
+/// Returns:
+///     The aligned address.
+///
+pub inline fn pageBase(address: usize) usize {
+    return address & (~PAGE_SIZE +% 1);
+}
+
+/// Page-align an address upward.
+///
+/// Arguments:
+///     address: Address to align.
+///
+/// Returns:
+///     The aligned address.
+///
+pub inline fn pageAlign(address: usize) usize {
+    return (address + PAGE_SIZE - 1) & (~PAGE_SIZE +% 1);
+}
+
 /// Halt the CPU.
 pub inline fn hlt() noreturn {
     while (true) {
@@ -21,7 +49,6 @@ pub inline fn hang() noreturn {
     hlt();
 }
 
-///
 /// Load a new Task Register.
 ///
 /// Arguments:
@@ -31,7 +58,6 @@ pub inline fn ltr(desc: u16) void {
     asm volatile ("ltr %[desc]" : : [desc] "r" (desc));
 }
 
-///
 /// Load a new Interrupt Descriptor Table.
 ///
 /// Arguments:
@@ -41,7 +67,6 @@ pub inline fn lidt(idtr: usize) void {
     asm volatile ("lidt (%[idtr])" : : [idtr] "r" (idtr));
 }
 
-///
 /// Read a byte from a port.
 ///
 /// Arguments:
@@ -55,7 +80,6 @@ pub inline fn inb(port: u16) u8 {
                                                   : [port]   "N{dx}" (port));
 }
 
-///
 /// Write a byte to a port.
 ///
 /// Arguments:

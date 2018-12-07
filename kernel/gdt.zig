@@ -1,5 +1,5 @@
 const tty = @import("tty.zig");
-const x64 = @import("x64.zig");
+const x64 = @import("lib").x64;
 
 
 /// GDT segment selectors (NOTE: keep in sync with loader/longmode.s).
@@ -62,7 +62,6 @@ var tss = TSS {
 };
 
 
-///
 /// Set the kernel stack to use when interrupting user mode.
 ///
 /// Arguments:
@@ -72,7 +71,6 @@ pub fn setKernelStack(rsp0: usize) void {
     tss.rsp0 = rsp0;
 }
 
-///
 /// Initialize the Task State Segment.
 ///
 /// Arguments:

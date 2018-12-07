@@ -1,15 +1,13 @@
 const builtin = @import("builtin");
-
-const MultibootInfo = @import("lib").multiboot.MultibootInfo;
 const gdt = @import("gdt.zig");
 const idt = @import("idt.zig");
+const pmem = @import("pmem.zig");
 const tty = @import("tty.zig");
-const x64 = @import("x64.zig");
+const x64 = @import("lib").x64;
 const Color = tty.Color;
 const Desc = gdt.SystemDescriptor;
+const MultibootInfo = @import("lib").multiboot.MultibootInfo;
 
-
-///
 /// Panic function called by Zig on language errors.
 ///
 /// Arguments:
@@ -20,7 +18,6 @@ pub fn panic(message: []const u8, stack_trace: ?*builtin.StackTrace) noreturn {
     tty.panic("{}", message);
 }
 
-///
 /// Get the ball rolling.
 ///
 /// Arguments:
@@ -36,6 +33,7 @@ export fn main(multiboot: *const MultibootInfo, tss_desc: *Desc) noreturn {
     tty.colorPrint(Color.LightBlue, "Booting the microkernel:\n");
     gdt.initializeTSS(tss_desc);
     idt.initialize();
+    pmem.initialize(multiboot);
 
     x64.hang();
 }
