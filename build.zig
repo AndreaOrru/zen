@@ -36,6 +36,7 @@ fn buildKernel(b: *Builder) []const u8 {
     kernel.setOutputPath("kernel/kernel");
 
     kernel.addPackagePath("lib", "lib/index.zig");
+    kernel.addAssemblyFile("kernel/isr.s");
 
     kernel.setLinkerScriptPath("kernel/link.ld");
     kernel.setTarget(builtin.Arch.x86_64,

@@ -8,6 +8,7 @@ const Color = tty.Color;
 const Desc = gdt.SystemDescriptor;
 const MultibootInfo = @import("lib").multiboot.MultibootInfo;
 
+
 /// Panic function called by Zig on language errors.
 ///
 /// Arguments:

@@ -1,5 +1,5 @@
 const gdt = @import("gdt.zig");
-//const interrupt = @import("interrupt.zig");
+const interrupt = @import("interrupt.zig");
 const tty = @import("tty.zig");
 const x64 = @import("lib").x64;
 
@@ -47,7 +47,7 @@ const idtr = IDTRegister {
 pub fn setGate(n: u8, offset: extern fn()void) void {
     const int_offset = @ptrToInt(offset);
 
-    idt[n].* = IDTEntry {
+    idt[n] = IDTEntry {
         .offset_low  = @truncate(u16, int_offset),
         .selector    = gdt.KERNEL_CODE,
         .zero        = 0,
@@ -64,7 +64,7 @@ pub fn setGate(n: u8, offset: extern fn()void) void {
 pub fn initialize() void {
     tty.step("Setting up the Interrupt Descriptor Table");
 
-    //interrupt.initialize();
+    interrupt.initialize();
     x64.lidt(@ptrToInt(&idtr));
 
     tty.stepOK();
