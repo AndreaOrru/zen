@@ -11,23 +11,29 @@ const assert = @import("std").debug.assert;
 const PageEntry = usize;
 
 // Page table structures (mapped with the recursive PD trick).
-const PD  = @intToPtr([*]PageEntry, layout.PD);
+const PD = @intToPtr([*]PageEntry, layout.PD);
 const PTs = @intToPtr([*]PageEntry, layout.PTs);
 
 // Page mapping flags. Refer to the official Intel manual.
-pub const PAGE_PRESENT   = (1 << 0);
-pub const PAGE_WRITE     = (1 << 1);
-pub const PAGE_USER      = (1 << 2);
-pub const PAGE_4MB       = (1 << 7);
-pub const PAGE_GLOBAL    = (1 << 8);
+pub const PAGE_PRESENT = (1 << 0);
+pub const PAGE_WRITE = (1 << 1);
+pub const PAGE_USER = (1 << 2);
+pub const PAGE_4MB = (1 << 7);
+pub const PAGE_GLOBAL = (1 << 8);
 pub const PAGE_ALLOCATED = (1 << 9);
 
 // Calculate the PD and PT indexes given a virtual address.
-fn pdIndex(v_addr: usize) usize { return  v_addr >> 22; }
-fn ptIndex(v_addr: usize) usize { return (v_addr >> 12) & 0x3FF; }
+fn pdIndex(v_addr: usize) usize {
+    return v_addr >> 22;
+}
+fn ptIndex(v_addr: usize) usize {
+    return (v_addr >> 12) & 0x3FF;
+}
 
 // Return pointers to the PD and PT entries given a virtual address.
-fn pdEntry(v_addr: usize) *PageEntry { return &PD[pdIndex(v_addr)]; }
+fn pdEntry(v_addr: usize) *PageEntry {
+    return &PD[pdIndex(v_addr)];
+}
 fn ptEntry(v_addr: usize) *PageEntry {
     return &PTs[(pdIndex(v_addr) * 0x400) + ptIndex(v_addr)];
 }
@@ -60,7 +66,7 @@ pub fn virtualToPhysical(v_addr: usize) ?usize {
 //
 pub fn map(v_addr: usize, p_addr: ?usize, flags: u32) void {
     // Do not touch the identity mapped area.
-    assert (v_addr >= layout.IDENTITY);
+    assert(v_addr >= layout.IDENTITY);
 
     const pd_entry = pdEntry(v_addr);
     const pt_entry = ptEntry(v_addr);
@@ -88,7 +94,7 @@ pub fn map(v_addr: usize, p_addr: ?usize, flags: u32) void {
             pt_entry.* = x86.pageBase(pt_entry.*) | flags | PAGE_PRESENT | PAGE_ALLOCATED;
         } else {
             // Allocate a new physical page.
-            pt_entry.* = pmem.allocate()          | flags | PAGE_PRESENT | PAGE_ALLOCATED;
+            pt_entry.* = pmem.allocate() | flags | PAGE_PRESENT | PAGE_ALLOCATED;
         }
     }
 
@@ -102,7 +108,7 @@ pub fn map(v_addr: usize, p_addr: ?usize, flags: u32) void {
 //     v_addr: Virtual address of the page to be unmapped.
 //
 pub fn unmap(v_addr: usize) void {
-    assert (v_addr >= layout.IDENTITY);
+    assert(v_addr >= layout.IDENTITY);
 
     const pd_entry = pdEntry(v_addr);
     if (pd_entry.* == 0) return;
@@ -151,7 +157,7 @@ pub fn unmapZone(v_addr: usize, size: usize) void {
 // Arguments:
 //     phys_pd: Physical pointer to the page directory.
 //
-extern fn setupPaging(phys_pd: usize)void;
+extern fn setupPaging(phys_pd: usize) void;
 
 ////
 // Fill a page table with zeroes.
@@ -217,9 +223,9 @@ fn pageFault() void {
     // Get the error code from the interrupt stack.
     const code = isr.context.error_code;
 
-    const err       = if (code & PAGE_PRESENT != 0) "protection" else "non-present";
-    const operation = if (code & PAGE_WRITE   != 0) "write"      else "read";
-    const privilege = if (code & PAGE_USER    != 0) "user"       else "kernel";
+    const err = if (code & PAGE_PRESENT != 0) "protection" else "non-present";
+    const operation = if (code & PAGE_WRITE != 0) "write" else "read";
+    const privilege = if (code & PAGE_USER != 0) "user" else "kernel";
 
     // Handle return from thread.
     if (address == layout.THREAD_DESTROY) {
@@ -244,20 +250,20 @@ pub fn initialize() void {
     tty.step("Initializing Paging");
 
     // Ensure we map all the page stack.
-    assert (pmem.stack_end < layout.IDENTITY);
+    assert(pmem.stack_end < layout.IDENTITY);
 
     // Allocate a page for the Page Directory.
     const pd = @intToPtr([*]PageEntry, pmem.allocate());
     zeroPageTable(pd);
 
     // Identity map the kernel (first 8 MB) and point last entry of PD to the PD itself.
-    pd[0]    = 0x000000      | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL;
-    pd[1]    = 0x400000      | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL;
+    pd[0] = 0x000000 | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL;
+    pd[1] = 0x400000 | PAGE_PRESENT | PAGE_WRITE | PAGE_4MB | PAGE_GLOBAL;
     pd[1023] = @ptrToInt(pd) | PAGE_PRESENT | PAGE_WRITE;
     // The recursive PD trick maps the whole paging hierarchy at the end of the address space.
 
-    interrupt.register(14, pageFault);  // Register the page fault handler.
-    setupPaging(@ptrToInt(pd));         // Enable paging.
+    interrupt.register(14, pageFault); // Register the page fault handler.
+    setupPaging(@ptrToInt(pd)); // Enable paging.
 
     tty.stepOK();
 }

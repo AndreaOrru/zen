@@ -10,33 +10,33 @@ else
 pub const VRAM_ADDR = 0xB8000;
 pub const VRAM_SIZE = 0x8000;
 // Screen size.
-pub const VGA_WIDTH  = 80;
+pub const VGA_WIDTH = 80;
 pub const VGA_HEIGHT = 25;
-pub const VGA_SIZE   = VGA_WIDTH * VGA_HEIGHT;
+pub const VGA_SIZE = VGA_WIDTH * VGA_HEIGHT;
 
 // Color codes.
 pub const Color = enum(u4) {
-    Black        = 0,
-    Blue         = 1,
-    Green        = 2,
-    Cyan         = 3,
-    Red          = 4,
-    Magenta      = 5,
-    Brown        = 6,
-    LightGrey    = 7,
-    DarkGrey     = 8,
-    LightBlue    = 9,
-    LightGreen   = 10,
-    LightCyan    = 11,
-    LightRed     = 12,
+    Black = 0,
+    Blue = 1,
+    Green = 2,
+    Cyan = 3,
+    Red = 4,
+    Magenta = 5,
+    Brown = 6,
+    LightGrey = 7,
+    DarkGrey = 8,
+    LightBlue = 9,
+    LightGreen = 10,
+    LightCyan = 11,
+    LightRed = 12,
     LightMagenta = 13,
-    LightBrown   = 14,
-    White        = 15,
+    LightBrown = 14,
+    White = 15,
 };
 
 // Character with attributes.
 pub const VGAEntry = packed struct {
-    char:       u8,
+    char: u8,
     foreground: Color,
     background: Color,
 };
@@ -59,8 +59,8 @@ pub fn disableCursor() void {
 
 // VGA status.
 pub const VGA = struct {
-    vram:       []VGAEntry,
-    cursor:     usize,
+    vram: []VGAEntry,
+    cursor: usize,
     foreground: Color,
     background: Color,
 
@@ -74,9 +74,9 @@ pub const VGA = struct {
     //     A structure holding the VGA status.
     //
     pub fn init(vram: usize) VGA {
-        return VGA {
-            .vram       = @intToPtr([*]VGAEntry, vram)[0..0x4000],
-            .cursor     = 0,
+        return VGA{
+            .vram = @intToPtr([*]VGAEntry, vram)[0..0x4000],
+            .cursor = 0,
             .foreground = Color.LightGrey,
             .background = Color.Black,
         };
@@ -149,13 +149,13 @@ pub const VGA = struct {
     // Scroll the screen one line down.
     //
     fn scrollDown(self: *VGA) void {
-        const first = VGA_WIDTH;             // Index of first line.
-        const last  = VGA_SIZE - VGA_WIDTH;  // Index of last line.
+        const first = VGA_WIDTH; // Index of first line.
+        const last = VGA_SIZE - VGA_WIDTH; // Index of last line.
 
         // Copy all the screen (apart from the first line) up one line.
-        mem.copy(VGAEntry, self.vram[0    .. last    ], self.vram[first .. VGA_SIZE]);
+        mem.copy(VGAEntry, self.vram[0..last], self.vram[first..VGA_SIZE]);
         // Clean the last line.
-        mem.set( VGAEntry, self.vram[last .. VGA_SIZE], self.entry(' '));
+        mem.set(VGAEntry, self.vram[last..VGA_SIZE], self.entry(' '));
 
         // Bring the cursor back to the beginning of the last line.
         self.cursor -= VGA_WIDTH;
@@ -198,8 +198,8 @@ pub const VGA = struct {
     //     The requested VGAEntry.
     //
     fn entry(self: *VGA, char: u8) VGAEntry {
-        return VGAEntry {
-            .char       = char,
+        return VGAEntry{
+            .char = char,
             .foreground = self.foreground,
             .background = self.background,
         };
