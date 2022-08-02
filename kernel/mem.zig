@@ -77,7 +77,7 @@ const Block = struct {
 };
 
 // Implement standard alloc function - see std.mem for reference.
-fn alloc(self: *mem.Allocator, size: usize, alignment: u29) ![]u8 {
+fn alloc(_: *mem.Allocator, size: usize, _: u29) ![]u8 {
     // TODO: align properly.
 
     // Find a block that's big enough.
@@ -116,7 +116,7 @@ fn realloc(self: *mem.Allocator, old_mem: []u8, new_size: usize, alignment: u29)
 }
 
 // Implement standard free function - see std.mem for reference.
-fn free(self: *mem.Allocator, old_mem: []u8) void {
+fn free(_: *mem.Allocator, old_mem: []u8) void {
     var block = Block.fromData(old_mem.ptr);
 
     freeBlock(block); // Reinsert the block in the free list.
@@ -262,7 +262,7 @@ fn mergeLeft(block: *Block) void {
 //     capacity: Maximum size of the kernel heap.
 //
 pub fn initialize(capacity: usize) void {
-    tty.step("Initializing Dynamic Memory Allocation");
+    tty.step("Initializing Dynamic Memory Allocation", .{});
 
     // Ensure the heap doesn't overflow into user space.
     assert((layout.HEAP + capacity) < layout.USER_STACKS);
@@ -276,6 +276,6 @@ pub fn initialize(capacity: usize) void {
     free_list = @ptrCast(*Block, @alignCast(@alignOf(Block), heap.ptr));
     free_list.?.* = Block.init();
 
-    tty.colorPrint(Color.White, " {d} KB", capacity / 1024);
+    tty.ColorPrint(Color.White, " {d} KB", capacity / 1024);
     tty.stepOK();
 }

@@ -19,8 +19,8 @@ const PIT_FREQUENCY = 1193182;
 //     hz: Frequency of the timer.
 //
 pub fn initialize(hz: u32) void {
-    tty.step("Configuring the System Timer");
-    tty.colorPrint(Color.White, " {d} Hz", hz);
+    tty.step("Configuring the System Timer", .{});
+    tty.ColorPrint(Color.White, " {d} Hz", hz);
 
     // Calculate the divisor for the required frequency.
     const divisor = PIT_FREQUENCY / hz;

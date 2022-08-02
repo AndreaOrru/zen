@@ -27,7 +27,7 @@ var idt: [256]IDTEntry = undefined;
 
 // IDT descriptor register pointing at the IDT.
 const idtr = IDTRegister{
-    .limit = u16(@sizeOf(@typeOf(idt))),
+    .limit = @intCast(u16, @sizeOf(@TypeOf(idt))),
     .base = &idt,
 };
 
@@ -53,7 +53,7 @@ pub fn setGate(n: u8, flags: u8, offset: fn () void) void {
 // Initialize the Interrupt Descriptor Table.
 //
 pub fn initialize() void {
-    tty.step("Setting up the Interrupt Descriptor Table");
+    tty.step("Setting up the Interrupt Descriptor Table", .{});
 
     interrupt.initialize();
     x86.lidt(@ptrToInt(&idtr));

@@ -64,7 +64,7 @@ pub fn load(elf_addr: usize) usize {
     for (ph_tbl) |ph| {
         // Load this segment if needed.
         if (ph.p_type == PT_LOAD) {
-            var flags = u16(vmem.PAGE_USER);
+            var flags: u16 = vmem.PAGE_USER;
             if (ph.p_flags & PF_W != 0) {
                 flags |= vmem.PAGE_WRITE;
             }

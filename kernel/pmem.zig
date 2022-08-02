@@ -23,7 +23,7 @@ pub fn available() usize {
 //
 pub fn allocate() usize {
     if (available() == 0)
-        tty.panic("out of memory");
+        tty.panic("out of memory", .{});
 
     stack_index -= 1;
     return stack[stack_index];
@@ -47,7 +47,7 @@ pub fn free(address: usize) void {
 //     info: Information structure from bootloader.
 //
 pub fn initialize(info: *const multiboot.MultibootInfo) void {
-    tty.step("Indexing Physical Memory");
+    tty.step("Indexing Physical Memory", .{});
 
     // Ensure the bootloader has given us the memory map.
     assert((info.flags & multiboot.MULTIBOOT_INFO_MEMORY) != 0);
@@ -78,6 +78,6 @@ pub fn initialize(info: *const multiboot.MultibootInfo) void {
         map += entry.size + @sizeOf(@TypeOf(entry.size));
     }
 
-    tty.colorPrint(Color.White, " {d} MB", available() / (1024 * 1024));
+    tty.ColorPrint(Color.White, " {d} MB", available() / (1024 * 1024));
     tty.stepOK();
 }

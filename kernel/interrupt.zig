@@ -32,7 +32,7 @@ const IRQ_15 = IRQ_0 + 15;
 const SYSCALL = 128;
 
 // Registered interrupt handlers.
-var handlers = []fn()void { unhandled } ** 48;
+var handlers = [_]fn()void { unhandled } ** 48;
 // Registered IRQ subscribers.
 var irq_subscribers = []MailboxId { MailboxId.Kernel } ** 16;
 
@@ -158,7 +158,7 @@ pub fn registerIRQ(irq: u8, handler: fn()void) void {
 //
 pub fn maskIRQ(irq: u8, mask: bool) void {
     // Figure out if master or slave PIC owns the IRQ.
-    const port = if (irq < 8) u16(PIC1_DATA) else u16(PIC2_DATA);
+    const port = if (irq < 8) @intCast(u16, PIC1_DATA) else @intCast(u16, PIC2_DATA);
     const old = x86.inb(port);  // Retrieve the current mask.
 
     // Mask or unmask the interrupt.

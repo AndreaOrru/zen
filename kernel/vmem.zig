@@ -247,7 +247,7 @@ fn pageFault() void {
 // Initialize the virtual memory system.
 //
 pub fn initialize() void {
-    tty.step("Initializing Paging");
+    tty.step("Initializing Paging", .{});
 
     // Ensure we map all the page stack.
     assert(pmem.stack_end < layout.IDENTITY);

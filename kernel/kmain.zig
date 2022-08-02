@@ -10,6 +10,8 @@ const tty = @import("tty.zig");
 const x86 = @import("x86.zig");
 const timer = @import("timer.zig");
 const assert = @import("std").debug.assert;
+const builtin = @import("builtin");
+const StackTrace = @import("std").builtin.StackTrace;
 const Color = tty.Color;
 
 ////
@@ -18,7 +20,7 @@ const Color = tty.Color;
 // Arguments:
 //     message: Reason for the panic.
 //
-pub fn panic(message: []const u8, _: ?*@import("builtin").StackTrace) noreturn {
+pub fn panic(message: []const u8, _: ?*StackTrace) noreturn {
     tty.panic("{}", message);
 }
 
@@ -36,9 +38,9 @@ export fn kmain(magic: u32, info: *const multiboot.MultibootInfo) noreturn {
 
     const title = "Zen - v0.0.1";
     tty.alignCenter(title.len);
-    tty.colorPrint(Color.LightRed, title ++ "\n\n");
+    tty.ColorPrint(Color.LightRed, title ++ "\n\n", .{});
 
-    tty.colorPrint(Color.LightBlue, "Booting the microkernel:\n");
+    tty.ColorPrint(Color.LightBlue, "Booting the microkernel:\n", .{});
     gdt.initialize();
     idt.initialize();
     pmem.initialize(info);
@@ -47,7 +49,7 @@ export fn kmain(magic: u32, info: *const multiboot.MultibootInfo) noreturn {
     timer.initialize(100);
     scheduler.initialize();
 
-    tty.colorPrint(Color.LightBlue, "\nLoading the servers:\n");
+    tty.ColorPrint(Color.LightBlue, "\nLoading the servers:\n", .{});
     info.loadModules();
 
     x86.sti();

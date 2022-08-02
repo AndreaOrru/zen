@@ -1,10 +1,11 @@
 const builtin = @import("builtin");
 const mem = @import("std").mem;
 
-const zen = if (builtin.os == builtin.Os.zen)
-    @import("std").os.zen
-else
-    @import("../kernel/x86.zig");
+//
+//const zen = if (builtin.os == builtin.Os.zen)
+//    @import("std").os.zen
+//else
+const zen = @import("../kernel/x86.zig");
 
 // VRAM buffer address in physical memory.
 pub const VRAM_ADDR = 0xB8000;
@@ -59,7 +60,7 @@ pub fn disableCursor() void {
 
 // VGA status.
 pub const VGA = struct {
-    vram: []VGAEntry,
+    vram: *[VRAM_SIZE / @sizeOf(VGAEntry)]VGAEntry,
     cursor: usize,
     foreground: Color,
     background: Color,
@@ -75,7 +76,7 @@ pub const VGA = struct {
     //
     pub fn init(vram: usize) VGA {
         return VGA{
-            .vram = @intToPtr([*]VGAEntry, vram)[0..0x4000],
+            .vram = @intToPtr([*]VGAEntry, vram)[0 .. VRAM_SIZE / @sizeOf(VGAEntry)],
             .cursor = 0,
             .foreground = Color.LightGrey,
             .background = Color.Black,
@@ -98,7 +99,7 @@ pub const VGA = struct {
     // Arguments:
     //     char: Character to be printed.
     //
-    fn writeChar(self: *VGA, char: u8) void {
+    pub fn writeChar(self: *VGA, char: u8) void {
         if (self.cursor == VGA_WIDTH * VGA_HEIGHT - 1) {
             self.scrollDown();
         }
@@ -180,7 +181,7 @@ pub const VGA = struct {
         var cursor: usize = 0;
 
         zen.outb(0x3D4, 0x0E);
-        cursor |= usize(zen.inb(0x3D5)) << 8;
+        cursor |= @intCast(usize, zen.inb(0x3D5)) << 8;
 
         zen.outb(0x3D4, 0x0F);
         cursor |= zen.inb(0x3D5);

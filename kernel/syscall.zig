@@ -8,6 +8,7 @@ const tty = @import("tty.zig");
 const vmem = @import("vmem.zig");
 const x86 = @import("x86.zig");
 const TypeId = @import("builtin").TypeId;
+const meta = @import("std").meta;
 
 // Registered syscall handlers.
 pub var handlers = []fn () void{
@@ -37,8 +38,9 @@ fn SYSCALL(comptime function: anytype) fn () void {
 
     return struct {
         // Return the n-th argument passed to the function.
-        fn arg(comptime n: u8) @ArgType(signature, n) {
-            return getArg(n, @ArgType(signature, n));
+        fn arg(comptime n: u8) @typeInfo(signature).Fn.args[0].arg_type.? {
+            const t = @typeInfo(signature).Fn.args[0].arg_type.?;
+            return getArg(n, t);
         }
 
         // Wrapper.
@@ -86,7 +88,7 @@ inline fn getArg(comptime n: u8, comptime T: type) T {
 
     if (T == bool) {
         return value != 0;
-    } else if (@typeId(T) == TypeId.Pointer) {
+    } else if (meta.Tag(T) == TypeId.Pointer) {
         // TODO: validate this pointer.
         return @intToPtr(T, value);
     } else {
@@ -102,7 +104,7 @@ inline fn getArg(comptime n: u8, comptime T: type) T {
 // Arguments:
 //     status: Exit status code.
 //
-inline fn exit(status: usize) void {
+inline fn exit(_: usize) void {
     // TODO: handle return status.
     scheduler.current_process.destroy();
 }
