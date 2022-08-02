@@ -73,7 +73,7 @@ pub const MultibootInfo = packed struct {
         const mods = @intToPtr([*]MultibootModule, self.mods_addr)[0..self.mods_count];
 
         for (mods) |mod| {
-            const cmdline = cstr.toSlice(@intToPtr([*]u8, mod.cmdline));
+            const cmdline = @intToPtr([*:0]u8, mod.cmdline);
             tty.step("Loading \"{}\"", cmdline);
 
             _ = Process.create(mod.mod_start, null);
@@ -115,10 +115,10 @@ const MultibootHeader = packed struct {
 
 // Place the header at the very beginning of the binary.
 export const multiboot_header align(4) linksection(".multiboot") = multiboot: {
-    const MAGIC   = u32(0x1BADB002);  // Magic number for validation.
-    const ALIGN   = u32(1 << 0);      // Align loaded modules.
-    const MEMINFO = u32(1 << 1);      // Receive a memory map from the bootloader.
-    const FLAGS   = ALIGN | MEMINFO;  // Combine the flags.
+    const MAGIC   : u32 = 0x1BADB002;  // Magic number for validation.
+    const ALIGN   : u32 = 1 << 0;      // Align loaded modules.
+    const MEMINFO : u32 = 1 << 1;      // Receive a memory map from the bootloader.
+    const FLAGS = ALIGN | MEMINFO;     // Combine the flags.
 
     break :multiboot MultibootHeader {
         .magic    = MAGIC,

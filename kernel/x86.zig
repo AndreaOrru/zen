@@ -24,8 +24,8 @@ fn intOrPtr(comptime T: type, address: usize) T {
 // Returns:
 //     The given address as type usize.
 //
-fn int(address: var) usize {
-    return if (@typeOf(address) == usize) address else @ptrToInt(address);
+fn int(address: anytype) usize {
+    return if (@TypeOf(address) == usize) address else @ptrToInt(address);
 }
 
 ////
@@ -37,10 +37,10 @@ fn int(address: var) usize {
 // Returns:
 //     The aligned address.
 //
-pub fn pageBase(address: var) @typeOf(address) {
+pub fn pageBase(address: anytype) @TypeOf(address) {
     const result = int(address) & (~PAGE_SIZE +% 1);
 
-    return intOrPtr(@typeOf(address), result);
+    return intOrPtr(@TypeOf(address), result);
 }
 
 ////
@@ -52,10 +52,10 @@ pub fn pageBase(address: var) @typeOf(address) {
 // Returns:
 //     The aligned address.
 //
-pub fn pageAlign(address: var) @typeOf(address) {
+pub fn pageAlign(address: anytype) @TypeOf(address) {
     const result = (int(address) + PAGE_SIZE - 1) & (~PAGE_SIZE +% 1);
 
-    return intOrPtr(@typeOf(address), result);
+    return intOrPtr(@TypeOf(address), result);
 }
 
 ////
@@ -96,7 +96,10 @@ pub inline fn hang() noreturn {
 //     idtr: Address of the IDTR register.
 //
 pub inline fn lidt(idtr: usize) void {
-    asm volatile ("lidt (%[idtr])" : : [idtr] "r" (idtr));
+    asm volatile ("lidt (%[idtr])"
+        :
+        : [idtr] "r" (idtr),
+    );
 }
 
 ////
@@ -106,7 +109,10 @@ pub inline fn lidt(idtr: usize) void {
 //     desc: Segment selector of the TSS.
 //
 pub inline fn ltr(desc: u16) void {
-    asm volatile ("ltr %[desc]" : : [desc] "r" (desc));
+    asm volatile ("ltr %[desc]"
+        :
+        : [desc] "r" (desc),
+    );
 }
 
 ////
@@ -116,21 +122,30 @@ pub inline fn ltr(desc: u16) void {
 //     v_addr: Virtual address to invalidate.
 //
 pub inline fn invlpg(v_addr: usize) void {
-    asm volatile ("invlpg (%[v_addr])" : : [v_addr] "r" (v_addr) : "memory");
+    asm volatile ("invlpg (%[v_addr])"
+        :
+        : [v_addr] "r" (v_addr),
+        : "memory"
+    );
 }
 
 ////
 // Read the CR2 control register.
 //
 pub inline fn readCR2() usize {
-    return asm volatile ("mov %%cr2, %[result]" : [result] "=r" (-> usize));
+    return asm volatile ("mov %%cr2, %[result]"
+        : [result] "=r" (-> usize),
+    );
 }
 
 ////
 // Write the CR3 control register.
 //
 pub inline fn writeCR3(pd: usize) void {
-    asm volatile ("mov %[pd], %%cr3" : : [pd] "r" (pd));
+    asm volatile ("mov %[pd], %%cr3"
+        :
+        : [pd] "r" (pd),
+    );
 }
 
 ////
@@ -143,8 +158,10 @@ pub inline fn writeCR3(pd: usize) void {
 //     The read byte.
 //
 pub inline fn inb(port: u16) u8 {
-    return asm volatile ("inb %[port], %[result]" : [result] "={al}" (-> u8)
-                                                  : [port]   "N{dx}" (port));
+    return asm volatile ("inb %[port], %[result]"
+        : [result] "={al}" (-> u8),
+        : [port] "N{dx}" (port),
+    );
 }
 
 ////
@@ -155,6 +172,9 @@ pub inline fn inb(port: u16) u8 {
 //     value: Value to be written.
 //
 pub inline fn outb(port: u16, value: u8) void {
-    asm volatile ("outb %[value], %[port]" : : [value] "{al}" (value),
-                                               [port]  "N{dx}" (port));
+    asm volatile ("outb %[value], %[port]"
+        :
+        : [value] "{al}" (value),
+          [port] "N{dx}" (port),
+    );
 }

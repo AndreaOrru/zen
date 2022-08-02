@@ -119,9 +119,9 @@ pub inline fn current() ?*Thread {
 // Initialize the scheduler.
 //
 pub fn initialize() void {
-    tty.step("Initializing the Scheduler");
+    tty.step("Initializing the Scheduler", .{});
 
-    ready_queue = ThreadQueue.init();
+    ready_queue = .{};
     timer.registerHandler(schedule);
 
     tty.stepOK();

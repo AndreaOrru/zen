@@ -1,18 +1,25 @@
 const layout = @import("layout.zig");
 const x86 = @import("x86.zig");
 const fmt = @import("std").fmt;
-use @import("lib").tty;
+const tty = @import("lib").tty;
+pub const Color = tty.Color;
 
 // Hold the VGA status.
-var vga = VGA.init(VRAM_ADDR);
+var vga = tty.VGA.init(tty.VRAM_ADDR);
 
 ////
 // Initialize the terminal.
 //
 pub fn initialize() void {
-    disableCursor();
+    tty.disableCursor();
     vga.clear();
 }
+
+const KWriter = struct {
+    pub fn writeAll(_: *const KWriter, string: []const u8) Errors!void {
+        vga.writeString(string);
+    }
+};
 
 ////
 // Print a formatted string to screen.
@@ -21,25 +28,21 @@ pub fn initialize() void {
 //     format: Format string.
 //     args: Parameters for format specifiers.
 //
-const Errors = error {};
-pub fn print(comptime format: []const u8, args: ...) void {
-    _ = fmt.format({}, Errors, printCallback, format, args);
-}
-
-// Callback for print.
-fn printCallback(context: void, string: []const u8) Errors!void {
-    vga.writeString(string);
+const Errors = error{};
+pub fn print(comptime format: []const u8, args: anytype) void {
+    const writer: KWriter = .{};
+    _ = fmt.format(writer, format, args) catch panic("failed to print, something is wrong", .{});
 }
 
 ////
-// Print a string in the given foreground color.
+// Print a string in the given foreground tty.Color.
 //
 // Arguments:
-//     fg: Color of the text.
+//     fg: tty.Color of the text.
 //     format: Format string.
 //     args: Parameters for format specifiers.
 //
-pub fn colorPrint(fg: Color, comptime format: []const u8, args: ...) void {
+pub fn ColorPrint(fg: tty.Color, comptime format: []const u8, args: anytype) void {
     const save_foreground = vga.foreground;
 
     vga.foreground = fg;
@@ -55,7 +58,7 @@ pub fn colorPrint(fg: Color, comptime format: []const u8, args: ...) void {
 //     offset: Number of characters from the left border.
 //
 pub fn alignLeft(offset: usize) void {
-    while (vga.cursor % VGA_WIDTH != offset) {
+    while (vga.cursor % tty.VGA_WIDTH != offset) {
         vga.writeChar(' ');
     }
 }
@@ -67,7 +70,7 @@ pub fn alignLeft(offset: usize) void {
 //     offset: Number of characters from the right border.
 //
 pub fn alignRight(offset: usize) void {
-    alignLeft(VGA_WIDTH - offset);
+    alignLeft(tty.VGA_WIDTH - offset);
 }
 
 ////
@@ -77,7 +80,7 @@ pub fn alignRight(offset: usize) void {
 //     str_len: Length of the string to be centered.
 //
 pub fn alignCenter(str_len: usize) void {
-    alignLeft((VGA_WIDTH - str_len) / 2);
+    alignLeft((tty.VGA_WIDTH - str_len) / 2);
 }
 
 ////
@@ -87,15 +90,15 @@ pub fn alignCenter(str_len: usize) void {
 //     format: Format string.
 //     args: Parameters for format specifiers.
 //
-pub fn panic(comptime format: []const u8, args: ...) noreturn {
+pub fn panic(comptime format: []const u8, args: anytype) noreturn {
     // We may be interrupting user mode, so we disable the hardware cursor
     // and fetch its current position, and start writing from there.
-    disableCursor();
+    tty.disableCursor();
     vga.fetchCursor();
     vga.writeChar('\n');
 
-    vga.background = Color.Red;
-    colorPrint(Color.White, "KERNEL PANIC: " ++ format ++ "\n", args);
+    vga.background = tty.Color.Red;
+    ColorPrint(tty.Color.White, "KERNEL PANIC: " ++ format ++ "\n", args);
 
     x86.hang();
 }
@@ -107,8 +110,8 @@ pub fn panic(comptime format: []const u8, args: ...) noreturn {
 //     format: Format string.
 //     args: Parameters for format specifiers.
 //
-pub fn step(comptime format: []const u8, args: ...) void {
-    colorPrint(Color.LightBlue, ">> ");
+pub fn step(comptime format: []const u8, args: anytype) void {
+    ColorPrint(tty.Color.LightBlue, ">> ", .{});
     print(format ++ "...", args);
 }
 
@@ -119,5 +122,5 @@ pub fn stepOK() void {
     const ok = " [ OK ]";
 
     alignRight(ok.len);
-    colorPrint(Color.LightGreen, ok);
+    ColorPrint(tty.Color.LightGreen, ok, .{});
 }
