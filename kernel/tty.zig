@@ -1,7 +1,7 @@
 const layout = @import("layout.zig");
 const x86 = @import("x86.zig");
 const fmt = @import("std").fmt;
-use @import("lib").tty;
+const tty = @import("lib").tty;
 
 // Hold the VGA status.
 var vga = VGA.init(VRAM_ADDR);
@@ -21,8 +21,8 @@ pub fn initialize() void {
 //     format: Format string.
 //     args: Parameters for format specifiers.
 //
-const Errors = error {};
-pub fn print(comptime format: []const u8, args: ...) void {
+const Errors = error{};
+pub fn print(comptime format: []const u8, args: anytype) void {
     _ = fmt.format({}, Errors, printCallback, format, args);
 }
 
@@ -39,7 +39,7 @@ fn printCallback(context: void, string: []const u8) Errors!void {
 //     format: Format string.
 //     args: Parameters for format specifiers.
 //
-pub fn colorPrint(fg: Color, comptime format: []const u8, args: ...) void {
+pub fn colorPrint(fg: Color, comptime format: []const u8, args: anytype) void {
     const save_foreground = vga.foreground;
 
     vga.foreground = fg;
@@ -87,7 +87,7 @@ pub fn alignCenter(str_len: usize) void {
 //     format: Format string.
 //     args: Parameters for format specifiers.
 //
-pub fn panic(comptime format: []const u8, args: ...) noreturn {
+pub fn panic(comptime format: []const u8, args: anytype) noreturn {
     // We may be interrupting user mode, so we disable the hardware cursor
     // and fetch its current position, and start writing from there.
     disableCursor();
@@ -107,7 +107,7 @@ pub fn panic(comptime format: []const u8, args: ...) noreturn {
 //     format: Format string.
 //     args: Parameters for format specifiers.
 //
-pub fn step(comptime format: []const u8, args: ...) void {
+pub fn step(comptime format: []const u8, args: anytype) void {
     colorPrint(Color.LightBlue, ">> ");
     print(format ++ "...", args);
 }

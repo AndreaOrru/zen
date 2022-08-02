@@ -10,15 +10,15 @@ const x86 = @import("x86.zig");
 const TypeId = @import("builtin").TypeId;
 
 // Registered syscall handlers.
-pub var handlers = []fn()void {
-    SYSCALL(exit),                    // 0
-    SYSCALL(ipc.send),                // 1
-    SYSCALL(ipc.receive),             // 2
-    SYSCALL(interrupt.subscribeIRQ),  // 3
-    SYSCALL(x86.inb),                 // 4
-    SYSCALL(x86.outb),                // 5
-    SYSCALL(map),                     // 6
-    SYSCALL(createThread),            // 7
+pub var handlers = []fn () void{
+    SYSCALL(exit), // 0
+    SYSCALL(ipc.send), // 1
+    SYSCALL(ipc.receive), // 2
+    SYSCALL(interrupt.subscribeIRQ), // 3
+    SYSCALL(x86.inb), // 4
+    SYSCALL(x86.outb), // 5
+    SYSCALL(map), // 6
+    SYSCALL(createThread), // 7
 };
 
 ////
@@ -32,8 +32,8 @@ pub var handlers = []fn()void {
 // Returns:
 //     A syscall handler that wraps the given function.
 //
-fn SYSCALL(comptime function: var) fn()void {
-    const signature = @typeOf(function);
+fn SYSCALL(comptime function: anytype) fn () void {
+    const signature = @TypeOf(function);
 
     return struct {
         // Return the n-th argument passed to the function.
@@ -52,11 +52,11 @@ fn SYSCALL(comptime function: var) fn()void {
                 4 => function(arg(0), arg(1), arg(2), arg(3)),
                 5 => function(arg(0), arg(1), arg(2), arg(3), arg(4)),
                 6 => function(arg(0), arg(1), arg(2), arg(3), arg(4), arg(5)),
-                else => unreachable
+                else => unreachable,
             };
 
             // Handle the return value if present.
-            if (@typeOf(result) != void) {
+            if (@TypeOf(result) != void) {
                 isr.context.setReturnValue(result);
             }
         }
@@ -81,7 +81,7 @@ inline fn getArg(comptime n: u8, comptime T: type) T {
         3 => isr.context.registers.esi,
         4 => isr.context.registers.edi,
         5 => isr.context.registers.ebp,
-        else => unreachable
+        else => unreachable,
     };
 
     if (T == bool) {

@@ -50,7 +50,7 @@ fn execute(command: []u8) void {
 // Returns:
 //     The length of the line (excluding newline character).
 //
-fn readLine(stream: var, buffer: []u8) usize {
+fn readLine(stream: anytype, buffer: []u8) usize {
     // TODO: change the type of stream when #764 is fixed.
     var i: usize = 0;
     var char: u8 = 0;
