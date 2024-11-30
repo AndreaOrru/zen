@@ -30,20 +30,19 @@ $(ISO_FILE): boot/limine kernel
 	cp boot/limine.conf $(ISO_DIR)  # Copy the Limine bootloader configuration file.
 	cp $(KERNEL_BIN) $(ISO_DIR)     # Copy the kernel binary.
 
-	cp boot/limine/limine-bios.sys    \  # Copy the Limine bootloader binaries.
+	cp boot/limine/limine-bios.sys    \
 	   boot/limine/limine-bios-cd.bin \
 	   boot/limine/limine-uefi-cd.bin \
-	   $(ISO_DIR)
-	cp boot/limine/BOOTX64.EFI        \  # Copy the UEFI binaries.
+	   $(ISO_DIR)  # Copy the Limine bootloader binaries.
+	cp boot/limine/BOOTX64.EFI        \
 	   boot/limine/BOOTIA32.EFI       \
-	   $(ISO_DIR)/EFI/BOOT/
+	   $(ISO_DIR)/EFI/BOOT/  # Copy the UEFI binaries.
 
-	xorriso \  # Create the bootable ISO image.
-		-as mkisofs -R -r -J -b limine-bios-cd.bin                \
-		-no-emul-boot -boot-load-size 4 -boot-info-table -hfsplus \
-		-apm-block-size 2048 --efi-boot limine-uefi-cd.bin        \
-		-efi-boot-part --efi-boot-image --protective-msdos-label  \
-		$(ISO_DIR) -o $(ISO_FILE)
+	xorriso -as mkisofs -R -r -J -b limine-bios-cd.bin                \
+			-no-emul-boot -boot-load-size 4 -boot-info-table -hfsplus \
+			-apm-block-size 2048 --efi-boot limine-uefi-cd.bin        \
+			-efi-boot-part --efi-boot-image --protective-msdos-label  \
+			$(ISO_DIR) -o $(ISO_FILE)  # Create the bootable ISO image.
 
 	./boot/limine/limine bios-install $(ISO_FILE)  # Install Limine.
 	rm -rf $(ISO_DIR)                              # Clean up directory.
