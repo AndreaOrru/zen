@@ -9,6 +9,7 @@ pub fn build(b: *std.Build) void {
     };
     // Disable all hardware floating point features.
     const Feature = std.Target.x86.Feature;
+    target_query.cpu_features_sub.addFeature(@intFromEnum(Feature.x87));
     target_query.cpu_features_sub.addFeature(@intFromEnum(Feature.mmx));
     target_query.cpu_features_sub.addFeature(@intFromEnum(Feature.sse));
     target_query.cpu_features_sub.addFeature(@intFromEnum(Feature.sse2));
@@ -23,10 +24,11 @@ pub fn build(b: *std.Build) void {
     // Create the kernel executable.
     const kernel = b.addExecutable(.{
         .name = "kernel",
-        .root_source_file = b.path("src/main.zig"),
         .target = target,
+        .root_source_file = b.path("src/main.zig"),
         .optimize = optimize,
         .code_model = .kernel, // Higher half kernel.
+        .pic = false, // Disable position independent code.
         .omit_frame_pointer = false, // Needed for stack traces.
     });
 
@@ -38,6 +40,8 @@ pub fn build(b: *std.Build) void {
     kernel.root_module.red_zone = false;
     kernel.root_module.stack_check = false;
     kernel.root_module.stack_protector = false;
+    kernel.link_function_sections = true;
+    kernel.link_data_sections = true;
     kernel.want_lto = false;
 
     // Link with a custom linker script.
