@@ -1,0 +1,11 @@
+.{
+    .name = "zen-kernel",
+    .version = "0.0.2",
+    .paths = .{"."},
+    .dependencies = .{
+        .limine = .{
+            .url = "https://github.com/48cf/limine-zig/archive/7b29b6e6f6d35052f01ed3831085a39aae131705.tar.gz",
+            .hash = "1220f946f839eab2ec49dca1c805ce72ac3e3ef9c47b3afcdecd1c05a7b35f66d277",
+        },
+    },
+}
