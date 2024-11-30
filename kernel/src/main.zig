@@ -1,8 +1,10 @@
 //! Kernel's entry point.
 
+const gdt = @import("./cpu/gdt.zig");
 const limine = @import("limine");
 const std = @import("std");
 const terminal = @import("./tty/terminal.zig");
+const x64 = @import("./cpu/x64.zig");
 
 /// Current version of the Zen kernel.
 const ZEN_VERSION = "0.0.2";
@@ -12,26 +14,18 @@ pub export var base_revision: limine.BaseRevision linksection(".limine_requests"
     .revision = 2, // TODO(2): Support base revision 3.
 };
 
-/// Completely stops the CPU.
-inline fn hang() noreturn {
-    asm volatile ("cli");
-    while (true) {
-        asm volatile ("hlt");
-    }
-}
-
 /// Kernel's global panic handler.
-pub fn panic(_: []const u8, _: ?*std.builtin.StackTrace, _: ?usize) noreturn {
-    // TODO(1): Implement a useful panic handler.
+pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace, _: ?usize) noreturn {
     // TODO(2): Support stack traces.
-    hang();
+    terminal.colorPrint(.red, "KERNEL PANIC: {s}", .{msg});
+    x64.hang();
 }
 
 /// Kernel's entry point.
 export fn _start() callconv(.C) noreturn {
-    // Don't proceed if the kernel's base revision is not supported by the bootloader.
+    // Do not proceed if the kernel's base revision is not supported by the bootloader.
     if (!base_revision.is_supported()) {
-        hang();
+        x64.hang();
     }
 
     // Initialize the terminal.
@@ -39,5 +33,9 @@ export fn _start() callconv(.C) noreturn {
     terminal.print("Welcome to ", .{});
     terminal.colorPrint(.blue, "Zen v{s}.\n\n", .{ZEN_VERSION});
 
-    hang();
+    // Initialize the rest of the system.
+    gdt.initialize();
+
+    // Loop forever.
+    x64.hang();
 }
