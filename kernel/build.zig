@@ -28,6 +28,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/main.zig"),
         .optimize = optimize,
         .code_model = .kernel, // Higher half kernel.
+        .linkage = .static, // Disable dynamic linking.
         .pic = false, // Disable position independent code.
         .omit_frame_pointer = false, // Needed for stack traces.
     });
@@ -40,9 +41,13 @@ pub fn build(b: *std.Build) void {
     kernel.root_module.red_zone = false;
     kernel.root_module.stack_check = false;
     kernel.root_module.stack_protector = false;
+    kernel.want_lto = false;
+    // Delete unused sections to reduce the kernel size.
     kernel.link_function_sections = true;
     kernel.link_data_sections = true;
-    kernel.want_lto = false;
+    kernel.link_gc_sections = true;
+    // Force the page size to 4 KiB to prevent binary bloat.
+    kernel.link_z_max_page_size = 0x1000;
 
     // Link with a custom linker script.
     kernel.setLinkerScriptPath(b.path("linker.ld"));
