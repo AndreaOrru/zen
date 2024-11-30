@@ -16,4 +16,5 @@ comptime {
 }
 
 /// Terminus 8x16 font (ter-i16n) as a 2D array of bytes.
+/// Each row represents a glyph, and each column represents a row of pixels.
 pub const BITMAP: *const [NUM_GLYPHS][HEIGHT]u8 = @ptrCast(RAW_BITMAP);

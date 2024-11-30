@@ -1,4 +1,5 @@
 const limine = @import("limine");
+const framebuffer = @import("./tty/framebuffer.zig");
 const std = @import("std");
 
 /// Base revision of the Limine protocol that the kernel supports.
@@ -27,6 +28,8 @@ export fn _start() callconv(.C) noreturn {
     if (!base_revision.is_supported()) {
         hang();
     }
+
+    framebuffer.initialize();
 
     hang();
 }
