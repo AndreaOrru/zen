@@ -1,6 +1,8 @@
+//! Kernel's entry point.
+
 const limine = @import("limine");
-const framebuffer = @import("./tty/framebuffer.zig");
 const std = @import("std");
+const terminal = @import("./tty/terminal.zig");
 
 /// Base revision of the Limine protocol that the kernel supports.
 pub export var base_revision: limine.BaseRevision linksection(".limine_requests") = .{
@@ -22,14 +24,15 @@ pub fn panic(_: []const u8, _: ?*std.builtin.StackTrace, _: ?usize) noreturn {
     hang();
 }
 
-/// Entry point for the kernel.
+/// Kernel's entry point.
 export fn _start() callconv(.C) noreturn {
     // Don't proceed if the kernel's base revision is not supported by the bootloader.
     if (!base_revision.is_supported()) {
         hang();
     }
 
-    framebuffer.initialize();
+    terminal.initialize();
+    terminal.print("Hello, world!\n", .{});
 
     hang();
 }
