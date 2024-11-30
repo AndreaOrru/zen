@@ -56,7 +56,7 @@ pub fn initialize() void {
 /// Writes on screen according to the specified format string.
 /// Parameters:
 ///   format:  Format string in `std.fmt.format` format.
-///   args:    Tuple of arguments to be formatted.
+///   args:    Tuple of arguments containing values for each format specifier.
 pub fn print(comptime format: []const u8, args: anytype) void {
     std.fmt.format(@as(TerminalWriter, undefined), format, args) catch unreachable;
 }
@@ -64,15 +64,35 @@ pub fn print(comptime format: []const u8, args: anytype) void {
 /// Writes on screen according to the specified format string, using the given foreground color.
 /// Parameters:
 ///   format:  Format string in `std.fmt.format` format.
-///   args:    Tuple of arguments to be formatted.
+///   args:    Tuple of arguments containing values for each format specifier.
 ///   fg:      Color of the text.
-pub fn colorPrint(comptime fg: Color, comptime format: []const u8, args: anytype) void {
+pub fn colorPrint(fg: Color, comptime format: []const u8, args: anytype) void {
     const saved_fg = current_fg;
 
     current_fg = @intFromEnum(fg);
     print(format, args);
 
     current_fg = saved_fg;
+}
+
+/// Prints a kernel loading step.
+/// Parameters:
+///   format:  Format string in `std.fmt.format` format.
+///   args:    Tuple of arguments containing values for each format specifier.
+pub fn step(comptime format: []const u8, args: anytype) void {
+    colorPrint(.blue, ">>> ", .{});
+    print(format ++ "... ", args);
+}
+
+/// Signals that a kernel loading step was completed successfully.
+/// Parameters:
+///   format:  Format string in `std.fmt.format` format.
+///   args:    Tuple of arguments containing values for each format specifier.
+pub fn stepOk(comptime format: []const u8, args: anytype) void {
+    if (format.len != 0) {
+        print(format ++ " ", args);
+    }
+    colorPrint(.green, "[OK]\n", .{});
 }
 
 /// Writes a string on screen.
