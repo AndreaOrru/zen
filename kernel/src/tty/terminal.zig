@@ -55,10 +55,24 @@ pub fn initialize() void {
 
 /// Writes on screen according to the specified format string.
 /// Parameters:
-///   fmt:   Format string in standard Zig format (`std.fmt.format`).
-///   args:  Tuple of arguments to be formatted.
-pub fn print(comptime fmt: []const u8, args: anytype) void {
-    std.fmt.format(@as(TerminalWriter, undefined), fmt, args) catch unreachable;
+///   format:  Format string in `std.fmt.format` format.
+///   args:    Tuple of arguments to be formatted.
+pub fn print(comptime format: []const u8, args: anytype) void {
+    std.fmt.format(@as(TerminalWriter, undefined), format, args) catch unreachable;
+}
+
+/// Writes on screen according to the specified format string, using the given foreground color.
+/// Parameters:
+///   format:  Format string in `std.fmt.format` format.
+///   args:    Tuple of arguments to be formatted.
+///   fg:      Color of the text.
+pub fn colorPrint(comptime fg: Color, comptime format: []const u8, args: anytype) void {
+    const saved_fg = current_fg;
+
+    current_fg = @intFromEnum(fg);
+    print(format, args);
+
+    current_fg = saved_fg;
 }
 
 /// Writes a string on screen.

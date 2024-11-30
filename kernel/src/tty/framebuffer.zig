@@ -42,12 +42,12 @@ pub fn initialize() void {
 }
 
 /// Clears the framebuffer with the given background color.
-pub fn clear(bg_color: RgbColor) void {
-    @memset(framebuffer, bg_color);
+pub fn clear(bg: RgbColor) void {
+    @memset(framebuffer, bg);
 }
 
 /// Scrolls the screen one line of characters up.
-pub fn scrollUp(bg_color: RgbColor) void {
+pub fn scrollUp(bg: RgbColor) void {
     const screen = height * width;
     const line = font.HEIGHT * width;
 
@@ -59,7 +59,7 @@ pub fn scrollUp(bg_color: RgbColor) void {
     }
 
     // Clear the last line.
-    @memset(framebuffer[screen - line .. screen], bg_color);
+    @memset(framebuffer[screen - line .. screen], bg);
 }
 
 /// Draws a font glyph at the given coordinates.
