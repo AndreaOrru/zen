@@ -44,15 +44,17 @@ pub fn initialize() void {
 }
 
 /// Clears the framebuffer with the given background color.
+///
 /// Parameters:
-///   bg:  Background color, in 0xRRGGBB format.
+///   bg: Background color, in 0xRRGGBB format.
 pub fn clear(bg: RgbColor) void {
     @memset(framebuffer, bg);
 }
 
 /// Scrolls the screen one line of characters up.
+///
 /// Parameters:
-///   bg:  Background color, in 0xRRGGBB format.
+///   bg: Background color, in 0xRRGGBB format.
 pub fn scrollUp(bg: RgbColor) void {
     const screen = height * width;
     const line = font.HEIGHT * width;
@@ -69,12 +71,13 @@ pub fn scrollUp(bg: RgbColor) void {
 }
 
 /// Draws a font glyph at the given coordinates.
+///
 /// Parameters:
-///   c:   ASCII code of the glyph.
-///   x:   Horizontal position, in pixels.
-///   y:   Vertical position, in pixels.
-///   fg:  Foreground color, in 0xRRGGBB format.
-///   bg:  Background color, in 0xRRGGBB format.
+///   c:  ASCII code of the glyph.
+///   x:  Horizontal position, in pixels.
+///   y:  Vertical position, in pixels.
+///   fg: Foreground color, in 0xRRGGBB format.
+///   bg: Background color, in 0xRRGGBB format.
 pub fn drawGlyph(c: u8, x: usize, y: usize, fg: RgbColor, bg: RgbColor) void {
     const glyph = font.BITMAP[c];
     // Iterate scanline by scanline (vertically).
@@ -90,10 +93,11 @@ pub fn drawGlyph(c: u8, x: usize, y: usize, fg: RgbColor, bg: RgbColor) void {
 }
 
 /// Draws a pixel on screen.
+///
 /// Parameters:
-///   x:      Horizontal position, in pixels.
-///   y:      Vertical position, in pixels.
-///   color:  Pixel color, in 0xRRGGBB format.
+///   x:     Horizontal position, in pixels.
+///   y:     Vertical position, in pixels.
+///   color: Pixel color, in 0xRRGGBB format.
 inline fn drawPixel(x: usize, y: usize, color: RgbColor) void {
     framebuffer[y * width + x] = color;
 }

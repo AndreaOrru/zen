@@ -52,10 +52,11 @@ pub fn initialize() void {
 }
 
 /// Setups an Interrupt Descriptor Table entry.
+///
 /// Parameters:
-///   n:        Index of the gate.
-///   dpl:      Descriptor Privilege Level.
-///   isr_ptr:  Address of the Interrupt Service Routine function.
+///   n:       Index of the gate.
+///   dpl:     Descriptor Privilege Level.
+///   isr_ptr: Address of the Interrupt Service Routine function.
 pub fn setupGate(n: u8, dpl: gdt.Dpl, isr_ptr: *const IsrFunction) void {
     // Split the ISR function's offset.
     const offset = @intFromPtr(isr_ptr);

@@ -91,7 +91,7 @@ const EXCEPTION_NAMES = [NUM_EXCEPTIONS][]const u8{
 
 /// Pointer to the stack that will be used by the kernel to handle interrupts.
 /// Referenced from assembly (`interrupt/isr_stubs.s`).
-export var kernel_stack: *volatile usize = undefined;
+export var kernel_stack: *u64 = undefined;
 
 /// Interrupt handlers table. Referenced from assembly (`interrupt/isr_stubs.s`).
 export var interrupt_handlers = [_]*const HandlerFunction{unhandled_interrupt} ** (NUM_EXCEPTIONS + NUM_IRQS);
@@ -159,9 +159,10 @@ pub fn install() void {
 }
 
 /// Registers an interrupt handler.
+///
 /// Parameters:
-///   n:        Interrupt number.
-///   handler:  Interrupt handler, or `null` for the default handler.
+///   n:       Interrupt number.
+///   handler: Interrupt handler, or `null` for the default handler.
 pub fn registerHandler(n: u8, handler: ?*HandlerFunction) void {
     interrupt_handlers[n] = if (handler) handler else unhandled_interrupt;
 }

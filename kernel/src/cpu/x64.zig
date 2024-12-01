@@ -17,8 +17,9 @@ pub inline fn hang() noreturn {
 }
 
 /// Loads a new Interrupt Descriptor Table.
+///
 /// Parameters:
-///   idtr:  Pointer to a IDT Register structure.
+///   idtr: Pointer to a IDT Register structure.
 pub inline fn lidt(idtr: SystemTableRegister) void {
     asm volatile ("lidt (%[idtr])"
         :
@@ -27,8 +28,9 @@ pub inline fn lidt(idtr: SystemTableRegister) void {
 }
 
 /// Loads a new Global Descriptor Table.
+///
 /// Parameters:
-///   gdtr:  Pointer to a GDT Register structure.
+///   gdtr: Pointer to a GDT Register structure.
 pub inline fn lgdt(gdtr: SystemTableRegister) void {
     asm volatile ("lgdt (%[gdtr])"
         :
@@ -37,8 +39,9 @@ pub inline fn lgdt(gdtr: SystemTableRegister) void {
 }
 
 /// Loads a new Task Register.
+///
 /// Parameters:
-///   selector:  The segment selector of the TSS.
+///   selector: The segment selector of the TSS.
 pub inline fn ltr(selector: gdt.SegmentSelector) void {
     asm volatile ("ltr %[selector]"
         :
@@ -47,6 +50,7 @@ pub inline fn ltr(selector: gdt.SegmentSelector) void {
 }
 
 /// Reads from the RSP register.
+///
 /// Returns:
 ///   Value of the RSP register.
 pub inline fn readRsp() u64 {
