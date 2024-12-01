@@ -1,4 +1,6 @@
 //! Framebuffer initialization and basic operations.
+//! You probably don't want to use this module directly.
+//! Instead, use the `terminal` module, which provides a higher-level API.
 
 const font = @import("./font.zig");
 const limine = @import("limine");

@@ -1,3 +1,5 @@
+//! Low-level x86_64-specific functions.
+
 const GdtRegister = @import("./gdt.zig").GdtRegister;
 const GdtSegmentSelector = @import("./gdt.zig").SegmentSelector;
 

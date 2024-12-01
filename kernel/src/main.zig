@@ -1,9 +1,11 @@
 //! Kernel's entry point.
+//! This is where we get the ball rolling.
 
-const gdt = @import("./cpu/gdt.zig");
 const limine = @import("limine");
 const std = @import("std");
-const terminal = @import("./tty/terminal.zig");
+
+const gdt = @import("./cpu/gdt.zig");
+const term = @import("./term/terminal.zig");
 const x64 = @import("./cpu/x64.zig");
 
 /// Current version of the Zen kernel.
@@ -17,7 +19,7 @@ pub export var base_revision: limine.BaseRevision linksection(".limine_requests"
 /// Kernel's global panic handler.
 pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace, _: ?usize) noreturn {
     // TODO(2): Support stack traces.
-    terminal.colorPrint(.red, "KERNEL PANIC: {s}", .{msg});
+    term.colorPrint(.red, "KERNEL PANIC: {s}", .{msg});
     x64.hang();
 }
 
@@ -29,9 +31,9 @@ export fn _start() callconv(.C) noreturn {
     }
 
     // Initialize the terminal.
-    terminal.initialize();
-    terminal.print("Welcome to ", .{});
-    terminal.colorPrint(.blue, "Zen v{s}.\n\n", .{ZEN_VERSION});
+    term.initialize();
+    term.print("Welcome to ", .{});
+    term.colorPrint(.blue, "Zen v{s}.\n\n", .{ZEN_VERSION});
 
     // Initialize the rest of the system.
     gdt.initialize();

@@ -1,4 +1,6 @@
-const terminal = @import("../tty/terminal.zig");
+//! Global Descriptor Table.
+
+const term = @import("../term/terminal.zig");
 const x64 = @import("./x64.zig");
 
 /// Descriptor Privilege Level.
@@ -81,7 +83,7 @@ var gdt = [_]SegmentDescriptor{
 
 /// Initializes the Global Descriptor Table.
 pub fn initialize() void {
-    terminal.step("Initializing Global Descriptor Table", .{});
+    term.step("Initializing Global Descriptor Table", .{});
 
     setupTssDescriptor();
     loadGdt();
@@ -89,7 +91,7 @@ pub fn initialize() void {
     reloadSegments();
     x64.ltr(SegmentSelector.tss);
 
-    terminal.stepOk("", .{});
+    term.stepOk("", .{});
 }
 
 /// Sets the kernel stack to be used when interrupting user mode (Ring 3 -> 0).

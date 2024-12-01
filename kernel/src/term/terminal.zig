@@ -1,3 +1,5 @@
+//! Provides a simple terminal interface for use inside the kernel.
+
 const font = @import("./font.zig");
 const framebuffer = @import("./framebuffer.zig");
 const std = @import("std");
