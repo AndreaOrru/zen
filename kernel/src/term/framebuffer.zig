@@ -44,11 +44,15 @@ pub fn initialize() void {
 }
 
 /// Clears the framebuffer with the given background color.
+/// Parameters:
+///   bg:  Background color, in 0xRRGGBB format.
 pub fn clear(bg: RgbColor) void {
     @memset(framebuffer, bg);
 }
 
 /// Scrolls the screen one line of characters up.
+/// Parameters:
+///   bg:  Background color, in 0xRRGGBB format.
 pub fn scrollUp(bg: RgbColor) void {
     const screen = height * width;
     const line = font.HEIGHT * width;

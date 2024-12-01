@@ -98,6 +98,8 @@ pub fn stepOk(comptime format: []const u8, args: anytype) void {
 }
 
 /// Writes a string on screen.
+/// Parameters:
+///   bytes:  String of characters.
 fn writeString(bytes: []const u8) void {
     for (bytes) |byte| {
         writeChar(byte);
@@ -105,6 +107,8 @@ fn writeString(bytes: []const u8) void {
 }
 
 /// Writes a character on screen.
+/// Parameters:
+///   c:  ASCII code of the character.
 fn writeChar(c: u8) void {
     // If we've run out of space, scroll the screen.
     if (cursor == (screen_width * screen_height) - 1) {

@@ -12,6 +12,8 @@ pub inline fn hang() noreturn {
 }
 
 /// Loads a new Global Descriptor Table.
+/// Parameters:
+///   gdtr:  Pointer to a GDT Register structure.
 pub inline fn lgdt(gdtr: *const GdtRegister) void {
     asm volatile ("lgdt (%[gdtr])"
         :
@@ -20,6 +22,8 @@ pub inline fn lgdt(gdtr: *const GdtRegister) void {
 }
 
 /// Loads a new Task Register.
+/// Parameters:
+///   selector:  The segment selector of the TSS.
 pub inline fn ltr(selector: GdtSegmentSelector) void {
     asm volatile ("ltr %[selector]"
         :

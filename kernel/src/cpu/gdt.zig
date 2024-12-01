@@ -95,6 +95,8 @@ pub fn initialize() void {
 }
 
 /// Sets the kernel stack to be used when interrupting user mode (Ring 3 -> 0).
+/// Parameters:
+///   rsp0:  Stack pointer to load when switching to Ring 0.
 pub fn setKernelStack(rsp0: u64) void {
     tss.rsp0 = rsp0;
 }
