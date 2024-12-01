@@ -19,12 +19,6 @@ pub const SegmentSelector = enum(u16) {
     tss = 0x28,
 };
 
-/// Global Descriptor Table Register.
-pub const GdtRegister = packed struct {
-    limit: u16,
-    base: u64,
-};
-
 /// Global Descriptor Table Segment Descriptor.
 const SegmentDescriptor = packed struct {
     limit_low: u16,
@@ -119,12 +113,10 @@ fn setupTssDescriptor() void {
 
 /// Loads the Global Descriptor Table.
 fn loadGdt() void {
-    // Define and load the GDT Register.
-    const gdtr: GdtRegister = .{
+    x64.lgdt(.{
         .limit = @sizeOf(@TypeOf(gdt)) - 1,
         .base = @intFromPtr(&gdt[0]),
-    };
-    x64.lgdt(&gdtr);
+    });
 }
 
 /// Reloads code and data segment registers.

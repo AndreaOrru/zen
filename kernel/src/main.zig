@@ -5,6 +5,7 @@ const limine = @import("limine");
 const std = @import("std");
 
 const gdt = @import("./cpu/gdt.zig");
+const idt = @import("./interrupt/idt.zig");
 const term = @import("./term/terminal.zig");
 const x64 = @import("./cpu/x64.zig");
 
@@ -37,6 +38,7 @@ export fn _start() callconv(.C) noreturn {
 
     // Initialize the rest of the system.
     gdt.initialize();
+    idt.initialize();
 
     // Loop forever.
     x64.hang();
