@@ -11,7 +11,7 @@ pub const WIDTH = 8;
 pub const HEIGHT = 16;
 
 /// Terminus 8x16 font (ter-i16n) in bitmap format.
-const RAW_BITMAP = @embedFile("ter-i16n.bin");
+const RAW_BITMAP = @embedFile("./font.bin");
 comptime {
     // Ensure the bitmap has the expected size.
     assert(RAW_BITMAP.len == NUM_GLYPHS * HEIGHT);
