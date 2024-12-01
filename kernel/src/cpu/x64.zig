@@ -45,3 +45,14 @@ pub inline fn ltr(selector: gdt.SegmentSelector) void {
         : [selector] "r" (@intFromEnum(selector)),
     );
 }
+
+/// Reads from the RSP register.
+/// Returns:
+///   Value of the RSP register.
+pub inline fn readRsp() u64 {
+    var value: u64 = undefined;
+    asm volatile ("mov %rsp, %[value]"
+        : [value] "=r" (value),
+    );
+    return value;
+}
