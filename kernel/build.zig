@@ -32,6 +32,8 @@ pub fn build(b: *std.Build) void {
         .pic = false, // Disable position independent code.
         .omit_frame_pointer = false, // Needed for stack traces.
     });
+    // Add some assembly code to the build (Interrupt Service Routines).
+    kernel.addAssemblyFile(b.path("src/interrupt/isr_stubs.s"));
 
     // Add the Limine library as a dependency.
     const limine = b.dependency("limine", .{});
