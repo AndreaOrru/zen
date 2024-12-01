@@ -20,8 +20,7 @@ pub export var base_revision: limine.BaseRevision linksection(".limine_requests"
 /// Kernel's global panic handler.
 pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace, _: ?usize) noreturn {
     // TODO(2): Support stack traces.
-    term.colorPrint(.red, "KERNEL PANIC: {s}", .{msg});
-    x64.hang();
+    term.panic("{s}", .{msg});
 }
 
 /// Kernel's entry point.

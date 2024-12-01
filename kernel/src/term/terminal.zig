@@ -1,8 +1,10 @@
 //! Provides a simple terminal interface for use inside the kernel.
 
+const std = @import("std");
+
 const font = @import("./font.zig");
 const framebuffer = @import("./framebuffer.zig");
-const std = @import("std");
+const x64 = @import("../cpu/x64.zig");
 
 const RgbColor = framebuffer.RgbColor;
 
@@ -75,6 +77,15 @@ pub fn colorPrint(fg: Color, comptime format: []const u8, args: anytype) void {
     print(format, args);
 
     current_fg = saved_fg;
+}
+
+/// Signals a kernel panic. This function does not return.
+/// Parameters:
+///   format:  Format string in `std.fmt.format` format.
+///   args:    Tuple of arguments containing values for each format specifier.
+pub fn panic(comptime format: []const u8, args: anytype) noreturn {
+    colorPrint(.red, "KERNEL PANIC: " ++ format, args);
+    x64.hang();
 }
 
 /// Prints a kernel loading step.

@@ -3,6 +3,8 @@ const isr = @import("./isr.zig");
 const term = @import("../term/terminal.zig");
 const x64 = @import("../cpu/x64.zig");
 
+const IsrFunction = isr.IsrFunction;
+
 /// Number of entries in the IDT.
 const NUM_ENTRIES = 256;
 
@@ -54,7 +56,7 @@ pub fn initialize() void {
 ///   n:        Index of the gate.
 ///   dpl:      Descriptor Privilege Level.
 ///   isr_ptr:  Address of the Interrupt Service Routine function.
-pub fn setupGate(n: u8, dpl: gdt.Dpl, isr_ptr: *const isr.IsrFunction) void {
+pub fn setupGate(n: u8, dpl: gdt.Dpl, isr_ptr: *const IsrFunction) void {
     // Split the ISR function's offset.
     const offset = @intFromPtr(isr_ptr);
     const offset_low: u16 = @truncate(offset);
