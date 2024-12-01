@@ -37,7 +37,11 @@ const idt: [NUM_ENTRIES]GateDescriptor linksection(".bss") = undefined;
 pub fn initialize() void {
     term.step("Initializing Interrupt Descriptor Table", .{});
 
-    loadIdt();
+    // Load the new Interrupt Descriptor Table.
+    x64.lidt(.{
+        .limit = @sizeOf(@TypeOf(idt)) - 1,
+        .base = @intFromPtr(&idt[0]),
+    });
 
     term.stepOk("", .{});
 }
@@ -65,12 +69,4 @@ pub fn setupGate(n: u8, dpl: gdt.Dpl, isr: *const fn () void) void {
         .offset_high = offset_high,
         .reserved = 0,
     };
-}
-
-/// Loads the Interrupt Descriptor Table.
-fn loadIdt() void {
-    x64.lidt(.{
-        .limit = @sizeOf(@TypeOf(idt)) - 1,
-        .base = @intFromPtr(&idt[0]),
-    });
 }

@@ -81,8 +81,6 @@ pub fn initialize() void {
 
     setupTssDescriptor();
     loadGdt();
-
-    reloadSegments();
     x64.ltr(SegmentSelector.tss);
 
     term.stepOk("", .{});
@@ -111,17 +109,15 @@ fn setupTssDescriptor() void {
     tss_desc.access = 0x89;
 }
 
-/// Loads the Global Descriptor Table.
+/// Loads the GDT, and reload code and data segment registers.
 fn loadGdt() void {
+    // Load the GDT.
     x64.lgdt(.{
         .limit = @sizeOf(@TypeOf(gdt)) - 1,
         .base = @intFromPtr(&gdt[0]),
     });
-}
 
-/// Reloads code and data segment registers.
-fn reloadSegments() void {
-    // Performs a far jump to reload the code segment.
+    // Perform a far jump to reload the code segment.
     // Data segment registers are set to the null descriptor as they are not used in 64-bit mode.
     asm volatile (
         \\ push %[kernel_code]
