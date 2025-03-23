@@ -7,33 +7,40 @@ pub fn build(b: *Builder) void {
     ////
     // Default step.
     //
-    const kernel   = buildKernel(b);
+    const kernel = buildKernel(b);
     const terminal = buildServer(b, "terminal");
     const keyboard = buildServer(b, "keyboard");
     // TODO: unprivileged processes, not servers.
-    const shell    = buildServer(b, "shell");
-
+    const shell = buildServer(b, "shell");
 
     ////
     // Test and debug on Qemu.
     //
-    const qemu       = b.step("qemu",       "Run the OS with Qemu");
+    const qemu = b.step("qemu", "Run the OS with Qemu");
     const qemu_debug = b.step("qemu-debug", "Run the OS with Qemu and wait for debugger to attach");
 
-    const common_params = [][]const u8 {
+    const common_params = [][]const u8{
         "qemu-system-i386",
-        "-display", "curses",
-        "-kernel", kernel,
-        "-initrd", join(b.allocator, ',', terminal, keyboard, shell) catch unreachable,
+        "-display",
+        "curses",
+        "-kernel",
+        kernel,
+        "-initrd",
+        join(b.allocator, ',', terminal, keyboard, shell) catch unreachable,
     };
-    const debug_params = [][]const u8 {"-s", "-S"};
+    const debug_params = [][]const u8{ "-s", "-S" };
 
-    var qemu_params       = Array([]const u8).init(b.allocator);
+    var qemu_params = Array([]const u8).init(b.allocator);
     var qemu_debug_params = Array([]const u8).init(b.allocator);
-    for (common_params) |p| { qemu_params.append(p) catch unreachable; qemu_debug_params.append(p) catch unreachable; }
-    for (debug_params)  |p| {                                          qemu_debug_params.append(p) catch unreachable; }
+    for (common_params) |p| {
+        qemu_params.append(p) catch unreachable;
+        qemu_debug_params.append(p) catch unreachable;
+    }
+    for (debug_params) |p| {
+        qemu_debug_params.append(p) catch unreachable;
+    }
 
-    const run_qemu       = b.addCommand(".", b.env_map, qemu_params.toSlice());
+    const run_qemu = b.addCommand(".", b.env_map, qemu_params.toSlice());
     const run_qemu_debug = b.addCommand(".", b.env_map, qemu_debug_params.toSlice());
 
     run_qemu.step.dependOn(b.default_step);

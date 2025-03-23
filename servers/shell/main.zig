@@ -10,8 +10,8 @@ const warn = std.debug.warn;
 // Entry point.
 //
 pub fn main() void {
-    var stdin_file = io.getStdIn() catch unreachable;
-    var stdin = &stdin_file.inStream().stream;
+    var stdin = io.getStdIn() catch unreachable;
+    // var stdin = &stdin_file.inStream().stream;
     var buffer: [1024]u8 = undefined;
 
     warn("\n");
@@ -50,29 +50,31 @@ fn execute(command: []u8) void {
 // Returns:
 //     The length of the line (excluding newline character).
 //
-fn readLine(stream: var, buffer: []u8) usize {
-    // TODO: change the type of stream when #764 is fixed.
+
+fn readLine(file: std.os.File, buffer: []u8) usize {
     var i: usize = 0;
-    var char: u8 = 0;
+    var char: [1]u8 = undefined;
 
-    while (char != '\n') {
-        char = stream.readByte() catch unreachable;
+    while (i < buffer.len) {
+        const bytes_read = file.read(char[0..1]) catch unreachable; // Read a single byte
+        if (bytes_read == 0) break; // EOF
 
-        if (char == 8) {
-            // Backspace deletes the last character (if there's one).
+        if (char[0] == '\n') {
+            break; // Exit loop on newline
+        } else if (char[0] == 8) { // Handle backspace
             if (i > 0) {
-                warn("{c}", char);
+                warn("{c}", char[0]);
                 i -= 1;
             }
         } else {
             // Save printable characters in the buffer.
-            warn("{c}", char);
-            buffer[i] = char;
+            warn("{c}", char[0]);
+            buffer[i] = char[0];
             i += 1;
         }
     }
 
-    return i - 1; // Exclude \n.
+    return i; // Return the length of the line
 }
 
 //////////////////////////
