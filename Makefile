@@ -12,8 +12,8 @@ all: $(ISO_FILE)
 
 # Download and build the Limine bootloader.
 boot/limine:
-	git clone https://github.com/limine-bootloader/limine.git \
-		--branch=v8.x-binary --depth=1                        \
+	git clone https://codeberg.org/Limine/Limine.git \
+		--branch=v9.x-binary --depth=1               \
 		boot/limine
 	$(MAKE) -C boot/limine
 

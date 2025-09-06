@@ -15,7 +15,7 @@ const ZEN_VERSION = "0.0.2";
 
 /// Base revision of the Limine protocol that the kernel supports.
 pub export var base_revision: limine.BaseRevision linksection(".limine_requests") = .{
-    .revision = 2, // TODO(2): Support base revision 3.
+    .revision = 3,
 };
 
 /// Kernel's global panic handler.
