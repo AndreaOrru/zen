@@ -4,6 +4,7 @@
     .fingerprint = 0xe8f9a91343488fb4, // Changing this has security and trust implications.
     .minimum_zig_version = "0.16.0",
     .dependencies = .{
+        // TODO(3): update to latest version when the `usingnamespace` issue is resolved.
         .limine = .{
             .url = "https://github.com/48cf/limine-zig/archive/7b29b6e6f6d35052f01ed3831085a39aae131705.tar.gz",
             .hash = "1220f946f839eab2ec49dca1c805ce72ac3e3ef9c47b3afcdecd1c05a7b35f66d277",
