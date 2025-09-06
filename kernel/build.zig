@@ -29,6 +29,10 @@ pub fn build(b: *std.Build) void {
         .code_model = .kernel, // Higher half kernel.
         .pic = false, // Disable position independent code.
         .omit_frame_pointer = false, // Needed for stack traces.
+        // Disable features that are problematic in kernel space.
+        .red_zone = false,
+        .stack_check = false,
+        .stack_protector = false,
     });
     // Add some assembly code to the build (Interrupt Service Routines).
     kernel_module.addAssemblyFile(b.path("src/interrupt/isr_stubs.s"));
@@ -36,11 +40,6 @@ pub fn build(b: *std.Build) void {
     // Add the Limine library as a dependency.
     const limine = b.dependency("limine", .{});
     kernel_module.addImport("limine", limine.module("limine"));
-
-    // Disable features that are problematic in kernel space.
-    kernel_module.red_zone = false;
-    kernel_module.stack_check = false;
-    kernel_module.stack_protector = false;
 
     // Create the kernel executable from the module.
     const kernel = b.addExecutable(.{
