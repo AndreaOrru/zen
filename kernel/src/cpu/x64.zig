@@ -60,3 +60,15 @@ pub inline fn readRsp() u64 {
     );
     return value;
 }
+
+/// Reads from the CR2 register.
+///
+/// Returns:
+///   Value of the CR2 register.
+pub inline fn readCr2() u64 {
+    var value: u64 = undefined;
+    asm volatile ("mov %cr2, %[value]"
+        : [value] "=r" (value),
+    );
+    return value;
+}

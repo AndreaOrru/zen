@@ -22,7 +22,7 @@ const IRQ_15 = IRQ_0 + NUM_IRQS - 1;
 const HandlerFunction = fn (*InterruptStack) callconv(.c) void;
 
 /// Interrupt Stack Frame.
-const InterruptStack = packed struct {
+pub const InterruptStack = packed struct {
     // General purpose registers.
     r15: u64,
     r14: u64,
@@ -94,7 +94,7 @@ const EXCEPTION_NAMES = [NUM_EXCEPTIONS][]const u8{
 export var kernel_stack: *u64 = undefined;
 
 /// Interrupt handlers table. Referenced from assembly (`interrupt/isr_stubs.s`).
-export var interrupt_handlers = [_]*const HandlerFunction{unhandled_interrupt} ** (NUM_EXCEPTIONS + NUM_IRQS);
+export var interrupt_handlers = [_]*const HandlerFunction{unhandledInterrupt} ** (NUM_EXCEPTIONS + NUM_IRQS);
 
 /// Installs the Interrup Service Routines into the IDT.
 pub fn install() void {
@@ -163,12 +163,12 @@ pub fn install() void {
 /// Parameters:
 ///   n:       Interrupt number.
 ///   handler: Interrupt handler, or `null` for the default handler.
-pub fn registerHandler(n: u8, handler: ?*HandlerFunction) void {
-    interrupt_handlers[n] = if (handler) handler else unhandled_interrupt;
+pub fn registerHandler(n: u8, handler: ?*const HandlerFunction) void {
+    interrupt_handlers[n] = handler orelse unhandledInterrupt;
 }
 
 /// Default handler for unregistered interrupt vectors.
-fn unhandled_interrupt(stack: *InterruptStack) callconv(.c) noreturn {
+fn unhandledInterrupt(stack: *InterruptStack) callconv(.c) noreturn {
     var n = stack.interrupt_number;
 
     switch (n) {
