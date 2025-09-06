@@ -31,6 +31,8 @@ const Color = enum(RgbColor) {
 
 /// Number of spaces in a tab character ('\t').
 const TAB_WIDTH = 4;
+/// Size of the buffer used for formatted printing.
+const PRINT_BUFFER_SIZE = 1024;
 
 /// The current linear cursor position.
 var cursor: usize = 0;
@@ -63,7 +65,9 @@ pub fn initialize() void {
 ///   format: Format string in `std.fmt.format` format.
 ///   args:   Tuple of arguments containing values for each format specifier.
 pub fn print(comptime format: []const u8, args: anytype) void {
-    std.fmt.format(@as(TerminalWriter, undefined), format, args) catch unreachable;
+    var buf: [PRINT_BUFFER_SIZE]u8 = undefined;
+    const formatted = std.fmt.bufPrint(&buf, format, args) catch unreachable;
+    writeString(formatted);
 }
 
 /// Writes on screen according to the specified format string, using the given foreground color.
@@ -160,28 +164,3 @@ fn writeChar(c: u8) void {
         },
     }
 }
-
-/// Implementation of the `std.io.Writer` interface for the kernel terminal.
-const TerminalWriter = struct {
-    const Self = @This();
-    pub const Error = error{};
-
-    pub fn write(_: Self, bytes: []const u8) !usize {
-        writeString(bytes);
-        return bytes.len;
-    }
-
-    pub fn writeByte(self: Self, byte: u8) !void {
-        _ = try self.write(&.{byte});
-    }
-
-    pub fn writeBytesNTimes(self: Self, bytes: []const u8, n: usize) !void {
-        for (0..n) |_| {
-            _ = try self.write(bytes);
-        }
-    }
-
-    pub fn writeAll(self: Self, bytes: []const u8) !void {
-        _ = try self.write(bytes);
-    }
-};

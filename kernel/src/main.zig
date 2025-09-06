@@ -25,7 +25,7 @@ pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace, _: ?usize) noreturn {
 }
 
 /// Kernel's entry point.
-export fn _start() callconv(.C) noreturn {
+export fn _start() callconv(.c) noreturn {
     // Do not proceed if the kernel's base revision is not supported by the bootloader.
     if (!base_revision.is_supported()) {
         x64.hang();

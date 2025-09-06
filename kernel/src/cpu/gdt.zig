@@ -136,6 +136,5 @@ fn loadGdt() void {
         :
         : [kernel_code] "i" (SegmentSelector.kernel_code),
           [null_desc] "i" (SegmentSelector.null_desc),
-        : "rax", "memory"
-    );
+        : .{ .rax = true, .memory = true });
 }
