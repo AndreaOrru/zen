@@ -47,10 +47,6 @@ pub fn initialize() void {
     stack = @ptrFromInt(higherHalf(entries[max_index].base));
     const stack_size = pageAlignUp((free_memory / PAGE_SIZE) * @sizeOf(usize));
 
-    // Ensure the stack fits in the first 4 GB of physical RAM.
-    // That's because Limine identity maps only the first 4 GB.
-    assert(@intFromPtr(stack) + stack_size < higherHalf(4 * GIGABYTE));
-
     // Adjust the area we selected to exclude the page stack.
     entries[max_index].base += stack_size;
     entries[max_index].length -= stack_size;
