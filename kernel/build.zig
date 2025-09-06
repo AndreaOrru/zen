@@ -23,8 +23,8 @@ pub fn build(b: *std.Build) void {
 
     // Create the kernel module.
     const kernel_module = b.createModule(.{
-        .target = target,
         .root_source_file = b.path("src/main.zig"),
+        .target = target,
         .optimize = optimize,
         .code_model = .kernel, // Higher half kernel.
         .pic = false, // Disable position independent code.
@@ -33,6 +33,9 @@ pub fn build(b: *std.Build) void {
         .red_zone = false,
         .stack_check = false,
         .stack_protector = false,
+        // Ensure the C and C++ standard libraries are not linked.
+        .link_libc = false,
+        .link_libcpp = false,
     });
     // Add some assembly code to the build (Interrupt Service Routines).
     kernel_module.addAssemblyFile(b.path("src/interrupt/isr_stubs.s"));
