@@ -95,3 +95,14 @@ pub inline fn writeCr3(value: u64) void {
         : [value] "r" (value),
     );
 }
+
+/// Invalidates the TLB entries associated with the given virtual address.
+///
+/// Parameters:
+///   address: Virtual address to invalidate.
+pub inline fn invlpg(address: usize) void {
+    asm volatile ("invlpg (%[address])"
+        :
+        : [address] "r" (address),
+        : .{ .memory = true });
+}
