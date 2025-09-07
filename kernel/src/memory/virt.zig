@@ -2,10 +2,22 @@ const isr = @import("../interrupt/isr.zig");
 const term = @import("../term/terminal.zig");
 const x64 = @import("../cpu/x64.zig");
 
+const assert = @import("std").debug.assert;
+
 // Page entry flags.
 const PRESENT = 1 << 0;
 const WRITABLE = 1 << 1;
 const USER = 1 << 2;
+
+/// Number of entries in a page table.
+const NUM_ENTRIES = 512;
+/// PML4 entry reserved for the recursive page tables.
+const RECURSION_ENTRY = 510;
+
+/// A single entry in a page table.
+const PageEntry = u64;
+/// A page table with 512 entries.
+const PageTable = *[NUM_ENTRIES]PageEntry;
 
 /// Initializes the virtual memory manager.
 pub fn initialize() void {
@@ -14,7 +26,16 @@ pub fn initialize() void {
     // Register a handler for page faults.
     isr.registerHandler(14, pageFaultHandler);
 
-    // TODO(0): implement.
+    // Verify that the address space's lower half is not mapped.
+    const phys_pml4 = x64.readCr3();
+    const virt_pml4: PageTable = @ptrFromInt(higherHalf(phys_pml4));
+    for (virt_pml4[0 .. NUM_ENTRIES / 2]) |*entry| {
+        assert(entry.* == 0);
+    }
+
+    // Initialize recursive mapping for page tables.
+    virt_pml4[RECURSION_ENTRY] = phys_pml4 | PRESENT | WRITABLE;
+    x64.writeCr3(phys_pml4);
 
     term.stepOk("", .{});
 }

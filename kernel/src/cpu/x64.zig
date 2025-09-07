@@ -72,3 +72,26 @@ pub inline fn readCr2() u64 {
     );
     return value;
 }
+
+/// Reads from the CR3 register.
+///
+/// Returns:
+///   Value of the CR3 register.
+pub inline fn readCr3() u64 {
+    var value: u64 = undefined;
+    asm volatile ("mov %cr3, %[value]"
+        : [value] "=r" (value),
+    );
+    return value;
+}
+
+/// Writes to the CR3 register.
+///
+/// Parameters:
+///   value: Value to write to the CR3 register.
+pub inline fn writeCr3(value: u64) void {
+    asm volatile ("mov %[value], %cr3"
+        :
+        : [value] "r" (value),
+    );
+}

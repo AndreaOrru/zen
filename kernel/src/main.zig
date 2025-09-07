@@ -44,7 +44,7 @@ export fn _start() callconv(.c) noreturn {
     virt_memory.initialize();
 
     // Cause a page fault (for testing purposes).
-    const ptr: *u8 = @ptrFromInt(0xDEAD);
+    const ptr: *u8 = @ptrFromInt(0x1);
     ptr.* = 42;
 
     // Loop forever.
