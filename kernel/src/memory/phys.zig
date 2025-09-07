@@ -11,7 +11,7 @@ const KILOBYTE = 1024;
 const MEGABYTE = 1024 * KILOBYTE;
 const GIGABYTE = 1024 * MEGABYTE;
 /// x86-64 page size.
-const PAGE_SIZE: usize = 4096;
+pub const PAGE_SIZE: usize = 4096;
 
 /// Memory map request structure. Will be fullfilled by the Limine bootloader.
 pub export var memory_map_request: limine.MemoryMapRequest linksection(".limine_requests") = .{};

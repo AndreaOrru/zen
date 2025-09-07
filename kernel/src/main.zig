@@ -6,8 +6,8 @@ const std = @import("std");
 
 const gdt = @import("./cpu/gdt.zig");
 const idt = @import("./interrupt/idt.zig");
-const phys_memory = @import("./memory/phys.zig");
-const virt_memory = @import("./memory/virt.zig");
+const phys = @import("./memory/phys.zig");
+const virt = @import("./memory/virt.zig");
 const term = @import("./term/terminal.zig");
 const x64 = @import("./cpu/x64.zig");
 
@@ -40,11 +40,12 @@ export fn _start() callconv(.c) noreturn {
     // Initialize the rest of the system.
     gdt.initialize();
     idt.initialize();
-    phys_memory.initialize();
-    virt_memory.initialize();
+    phys.initialize();
+    virt.initialize();
 
     // Cause a page fault (for testing purposes).
-    const ptr: *u8 = @ptrFromInt(0x1);
+    virt.mapPage(0x1001, phys.allocate(), virt.WRITABLE);
+    const ptr: *u8 = @ptrFromInt(0x1001);
     ptr.* = 42;
 
     // Loop forever.
