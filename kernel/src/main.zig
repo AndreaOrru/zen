@@ -44,7 +44,8 @@ export fn _start() callconv(.c) noreturn {
     virt.initialize();
 
     // Cause a page fault (for testing purposes).
-    virt.mapPage(0x1001, phys.allocate(), virt.WRITABLE);
+    virt.mapAllocatePage(0x1000, virt.WRITABLE);
+    virt.unmapPage(0x1000);
     const ptr: *u8 = @ptrFromInt(0x1001);
     ptr.* = 42;
 

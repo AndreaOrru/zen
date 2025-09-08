@@ -12,6 +12,8 @@ const Flags = u16;
 pub const PRESENT: Flags = 1 << 0;
 pub const WRITABLE: Flags = 1 << 1;
 pub const USER: Flags = 1 << 2;
+/// Page entry flag to signal that the physical page was automatically allocated.
+const ALLOCATED: Flags = 1 << 9;
 
 /// Number of entries in a page table.
 const NUM_ENTRIES = 512;
@@ -26,6 +28,12 @@ const PageTable = *[NUM_ENTRIES]PageEntry;
 /// Address of the PML4 in the recursive page table.
 const pml4: PageTable = @ptrFromInt(0xFFFF_FF7F_BFDF_E000);
 
+// Mask for bits 52-62, which we use to keep track of the number of active
+// page entries in the lower level table pointed by the current entry.
+const ACTIVE_SHIFT = 52;
+const ACTIVE_MASK: PageEntry = ((1 << 11) - 1) << ACTIVE_SHIFT;
+
+/// Page entry flag to signal that the physical page was automatically allocated.
 /// Initializes the virtual memory manager.
 pub fn initialize() void {
     term.step("Initializing virtual memory manager", .{});
@@ -63,7 +71,7 @@ pub inline fn higherHalf(address: usize) usize {
 /// Parameters:
 ///   virtual_address:  Address of the virtual page to map.
 ///   physical_address: Physical address to map it to.
-///   flags:            Mapping flags, excluding `kPresent`.
+///   flags:            Mapping flags, excluding `PRESENT`.
 pub fn mapPage(virtual_address: usize, physical_address: usize, flags: Flags) void {
     // We never want to allocate the first page, so that
     // we can catch null dereferencing bugs.
@@ -84,16 +92,70 @@ pub fn mapPage(virtual_address: usize, physical_address: usize, flags: Flags) vo
         pdpt_entry.* = phys.allocate() | PRESENT | WRITABLE | USER;
         x64.invlpg(@intFromPtr(pd_entry));
         clearPageTable(pd_entry);
+        UpdateActiveEntries(pml4_entry, 1);
     }
     if (pd_entry.* == 0) {
         pd_entry.* = phys.allocate() | PRESENT | WRITABLE | USER;
         x64.invlpg(@intFromPtr(pt_entry));
         clearPageTable(pt_entry);
+        UpdateActiveEntries(pdpt_entry, 1);
     }
 
     assert(pt_entry.* == 0);
     pt_entry.* = physical_address | flags | PRESENT;
     x64.invlpg(virtual_address);
+    UpdateActiveEntries(pd_entry, 1);
+}
+
+/// Maps a virtual page to a newly allocated physical page.
+///
+/// Parameters:
+///   virtual_address: Address of the virtual page to map.
+///   flags:           Mapping flags, excluding `PRESENT`.
+pub fn mapAllocatePage(virtual_address: usize, flags: Flags) void {
+    // Allocate a physical page to be mapped, and keep track of the allocation.
+    mapPage(virtual_address, phys.allocate(), flags | ALLOCATED);
+}
+
+/// Unmaps a virtual page. If the associated physical page was automatically
+/// allocated, it will be automatically deallocated.
+///
+/// Parameters:
+///   virtual_address: Address of the virtual page to map.
+pub fn unmapPage(virtual_address: usize) void {
+    const pml4_entry = pml4Entry(virtual_address);
+    const pdpt_entry = pdptEntry(virtual_address);
+    const pd_entry = pdEntry(virtual_address);
+    const pt_entry = ptEntry(virtual_address);
+    assert(pt_entry.* != 0);
+
+    // Free the physical page if it was automatically allocated.
+    if (pt_entry.* & ALLOCATED != 0) {
+        phys.free(pt_entry.*);
+    }
+    // Unmap the virtual page.
+    pt_entry.* = 0;
+    x64.invlpg(virtual_address);
+    UpdateActiveEntries(pd_entry, -1);
+
+    // Free up space in the higher paging structures if possible.
+    if (ActiveEntries(pd_entry.*) == 0) {
+        phys.free(pd_entry.*);
+        pd_entry.* = 0;
+        x64.invlpg(@intFromPtr(pt_entry));
+        UpdateActiveEntries(pdpt_entry, -1);
+    }
+    if (ActiveEntries(pdpt_entry.*) == 0) {
+        phys.free(pdpt_entry.*);
+        pdpt_entry.* = 0;
+        x64.invlpg(@intFromPtr(pd_entry));
+        UpdateActiveEntries(pml4_entry, -1);
+    }
+    if (ActiveEntries(pml4_entry.*) == 0) {
+        phys.free(pml4_entry.*);
+        pml4_entry.* = 0;
+        x64.invlpg(@intFromPtr(pdpt_entry));
+    }
 }
 
 /// Handler for page fault interrupts.
@@ -128,6 +190,30 @@ fn clearPageTable(page_entry: *volatile PageEntry) void {
     for (table) |*entry| {
         entry.* = 0;
     }
+}
+
+/// Returns the number of active page entries in the
+/// lower level table pointed by the given entry.
+///
+/// Parameters:
+///   entry: Content of a page entry.
+///
+/// Returns:
+///   Number of active page entries at level below.
+fn ActiveEntries(entry: PageEntry) usize {
+    return (entry & ACTIVE_MASK) >> ACTIVE_SHIFT;
+}
+
+/// Updates the number of active page entries in the
+/// lower level table pointed by the given entry.
+///
+/// Parameters:
+///   entry: Pointer to the page entry.
+///   delta: Amount of entries to add/remove.
+fn UpdateActiveEntries(entry: *volatile PageEntry, delta: isize) void {
+    var count = ActiveEntries(entry.*);
+    count +%= @bitCast(delta); // Safe because of two's complement.
+    entry.* = (entry.* & ~ACTIVE_MASK) | (count << ACTIVE_SHIFT);
 }
 
 /// Calculates the address of the PML4 entry in the recursive
