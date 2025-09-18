@@ -36,7 +36,6 @@ const INVALID_ADDRESS_SPACE = @as(PageEntry, 0xDEADDEADDEADDEAD) & ~PRESENT;
 /// Address of the PML4 in the recursive page table.
 const pml4: PageTable = @ptrFromInt(0xFFFF_FF7F_BFDF_E000);
 
-/// Page entry flag to signal that the physical page was automatically allocated.
 /// Initializes the virtual memory manager.
 pub fn initialize() void {
     term.step("Initializing virtual memory manager", .{});
@@ -123,6 +122,27 @@ pub fn mapAllocatePage(virtual_address: usize, flags: Flags) void {
     mapPage(virtual_address, phys.allocate(), flags | ALLOCATED);
 }
 
+/// Remaps an already mapped virtual page with different flags.
+///
+/// Parameters:
+///   virtual_address: Address of the virtual page to remap.
+///   flags:           Mapping flags, excluding `kPresent`.
+pub fn remapPage(virtual_address: usize, flags: Flags) void {
+    assert(isAddressSpaceValid());
+
+    const pt_entry = ptEntry(virtual_address);
+    assert(pt_entry.* != 0);
+
+    // Preserve the `ALLOCATED` flag.
+    flags |= pt_entry.* & ALLOCATED;
+    // Preserve the address of the physical page.
+    const physical_address = pageAlignDown(pt_entry.*);
+
+    // Update the entry.
+    pt_entry.* = physical_address | flags | PRESENT;
+    x64.invlpg(virtual_address);
+}
+
 /// Unmaps a virtual page. If the associated physical page was automatically
 /// allocated, it will be automatically deallocated.
 ///
@@ -203,12 +223,12 @@ fn isAddressSpaceValid() bool {
     return pml4[0] != INVALID_ADDRESS_SPACE;
 }
 
-/// Checks if the address space is empty (i.e., has no mapped pages).
+/// Checks if the user-space portion of the address space is empty.
 ///
 /// Returns:
-///   true if the address space is empty, false otherwise.
+///   true if user-space is empty, false otherwise.
 fn isAddressSpaceEmpty() bool {
-    for (pml4) |entry| {
+    for (pml4[NUM_ENTRIES / 2 .. NUM_ENTRIES]) |entry| {
         if (entry != 0) {
             return false;
         }
