@@ -69,6 +69,26 @@ pub inline fn higherHalf(address: usize) usize {
     return address | 0xFFFF_8000_0000_0000;
 }
 
+/// Initializes a new address space.
+///
+/// Returns:
+///   Physical address of the new PML4.
+pub fn createAddressSpace() PageTable {
+    // Allocate and initialize space for a new PML4.
+    const phys_pml4 = phys.allocate();
+    const virt_pml4: PageTable = @ptrFromInt(higherHalf(phys_pml4));
+    clearPageTable(virt_pml4);
+
+    // Copy the higher half (kernel space) of the current address space.
+    for (NUM_ENTRIES / 2..NUM_ENTRIES) |i| {
+        virt_pml4[i] = pml4[i];
+    }
+    // Setup recursive mapping.
+    virt_pml4[RECURSION_ENTRY] = phys_pml4 | PRESENT | WRITABLE;
+
+    return phys_pml4;
+}
+
 /// Maps a virtual page to a specific physical page.
 ///
 /// Parameters:
@@ -92,6 +112,7 @@ pub fn mapPage(virtual_address: usize, physical_address: usize, flags: Flags) vo
     if (pml4_entry.* == 0) {
         pml4_entry.* = phys.allocate() | PRESENT | WRITABLE | USER;
         x64.invlpg(@intFromPtr(pdpt_entry));
+        clearPageTable(pdpt_entry);
     }
     if (pdpt_entry.* == 0) {
         pdpt_entry.* = phys.allocate() | PRESENT | WRITABLE | USER;
@@ -228,7 +249,7 @@ fn isAddressSpaceValid() bool {
 /// Returns:
 ///   true if user-space is empty, false otherwise.
 fn isAddressSpaceEmpty() bool {
-    for (pml4[NUM_ENTRIES / 2 .. NUM_ENTRIES]) |entry| {
+    for (pml4[0 .. NUM_ENTRIES / 2]) |entry| {
         if (entry != 0) {
             return false;
         }
