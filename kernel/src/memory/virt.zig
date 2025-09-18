@@ -92,19 +92,19 @@ pub fn mapPage(virtual_address: usize, physical_address: usize, flags: Flags) vo
         pdpt_entry.* = phys.allocate() | PRESENT | WRITABLE | USER;
         x64.invlpg(@intFromPtr(pd_entry));
         clearPageTable(pd_entry);
-        UpdateActiveEntries(pml4_entry, 1);
+        updateActiveEntries(pml4_entry, 1);
     }
     if (pd_entry.* == 0) {
         pd_entry.* = phys.allocate() | PRESENT | WRITABLE | USER;
         x64.invlpg(@intFromPtr(pt_entry));
         clearPageTable(pt_entry);
-        UpdateActiveEntries(pdpt_entry, 1);
+        updateActiveEntries(pdpt_entry, 1);
     }
 
     assert(pt_entry.* == 0);
     pt_entry.* = physical_address | flags | PRESENT;
     x64.invlpg(virtual_address);
-    UpdateActiveEntries(pd_entry, 1);
+    updateActiveEntries(pd_entry, 1);
 }
 
 /// Maps a virtual page to a newly allocated physical page.
@@ -136,22 +136,22 @@ pub fn unmapPage(virtual_address: usize) void {
     // Unmap the virtual page.
     pt_entry.* = 0;
     x64.invlpg(virtual_address);
-    UpdateActiveEntries(pd_entry, -1);
+    updateActiveEntries(pd_entry, -1);
 
     // Free up space in the higher paging structures if possible.
-    if (ActiveEntries(pd_entry.*) == 0) {
+    if (activeEntries(pd_entry.*) == 0) {
         phys.free(pd_entry.*);
         pd_entry.* = 0;
         x64.invlpg(@intFromPtr(pt_entry));
-        UpdateActiveEntries(pdpt_entry, -1);
+        updateActiveEntries(pdpt_entry, -1);
     }
-    if (ActiveEntries(pdpt_entry.*) == 0) {
+    if (activeEntries(pdpt_entry.*) == 0) {
         phys.free(pdpt_entry.*);
         pdpt_entry.* = 0;
         x64.invlpg(@intFromPtr(pd_entry));
-        UpdateActiveEntries(pml4_entry, -1);
+        updateActiveEntries(pml4_entry, -1);
     }
-    if (ActiveEntries(pml4_entry.*) == 0) {
+    if (activeEntries(pml4_entry.*) == 0) {
         phys.free(pml4_entry.*);
         pml4_entry.* = 0;
         x64.invlpg(@intFromPtr(pdpt_entry));
@@ -200,7 +200,7 @@ fn clearPageTable(page_entry: *volatile PageEntry) void {
 ///
 /// Returns:
 ///   Number of active page entries at level below.
-fn ActiveEntries(entry: PageEntry) usize {
+fn activeEntries(entry: PageEntry) usize {
     return (entry & ACTIVE_MASK) >> ACTIVE_SHIFT;
 }
 
@@ -210,8 +210,8 @@ fn ActiveEntries(entry: PageEntry) usize {
 /// Parameters:
 ///   entry: Pointer to the page entry.
 ///   delta: Amount of entries to add/remove.
-fn UpdateActiveEntries(entry: *volatile PageEntry, delta: isize) void {
-    var count = ActiveEntries(entry.*);
+fn updateActiveEntries(entry: *volatile PageEntry, delta: isize) void {
+    var count = activeEntries(entry.*);
     count +%= @bitCast(delta); // Safe because of two's complement.
     entry.* = (entry.* & ~ACTIVE_MASK) | (count << ACTIVE_SHIFT);
 }
