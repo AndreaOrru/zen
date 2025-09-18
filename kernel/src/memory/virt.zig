@@ -25,13 +25,16 @@ const PageEntry = u64;
 /// A page table with 512 entries.
 const PageTable = *[NUM_ENTRIES]PageEntry;
 
-/// Address of the PML4 in the recursive page table.
-const pml4: PageTable = @ptrFromInt(0xFFFF_FF7F_BFDF_E000);
-
 // Mask for bits 52-62, which we use to keep track of the number of active
 // page entries in the lower level table pointed by the current entry.
 const ACTIVE_SHIFT = 52;
 const ACTIVE_MASK: PageEntry = ((1 << 11) - 1) << ACTIVE_SHIFT;
+
+/// Magic value used to flag an address space as invalid.
+const INVALID_ADDRESS_SPACE = @as(PageEntry, 0xDEADDEADDEADDEAD) & ~PRESENT;
+
+/// Address of the PML4 in the recursive page table.
+const pml4: PageTable = @ptrFromInt(0xFFFF_FF7F_BFDF_E000);
 
 /// Page entry flag to signal that the physical page was automatically allocated.
 /// Initializes the virtual memory manager.
@@ -76,6 +79,8 @@ pub fn mapPage(virtual_address: usize, physical_address: usize, flags: Flags) vo
     // We never want to allocate the first page, so that
     // we can catch null dereferencing bugs.
     assert(virtual_address >= PAGE_SIZE);
+    // Ensure the address space is valid.
+    assert(isAddressSpaceValid());
 
     const pml4_entry = pml4Entry(virtual_address);
     const pdpt_entry = pdptEntry(virtual_address);
@@ -156,6 +161,14 @@ pub fn unmapPage(virtual_address: usize) void {
         pml4_entry.* = 0;
         x64.invlpg(@intFromPtr(pdpt_entry));
     }
+}
+
+/// Checks if the address space is valid.
+///
+/// Returns:
+///   true if the address space is valid, false otherwise.
+fn isAddressSpaceValid() bool {
+    return pml4[0] != INVALID_ADDRESS_SPACE;
 }
 
 /// Handler for page fault interrupts.
