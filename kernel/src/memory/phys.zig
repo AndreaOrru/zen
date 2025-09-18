@@ -1,9 +1,10 @@
 const limine = @import("limine");
+const std = @import("std");
 
 const term = @import("../term/terminal.zig");
 const x64 = @import("../cpu/x64.zig");
 
-const assert = @import("std").debug.assert;
+const assert = std.debug.assert;
 const higherHalf = @import("./virt.zig").higherHalf;
 
 // Memory constants.
@@ -106,7 +107,7 @@ pub fn free(address: usize) void {
 /// Returns:
 ///   Aligned address.
 pub inline fn pageAlignDown(address: usize) usize {
-    return address & ~(PAGE_SIZE - 1);
+    return std.mem.alignBackward(usize, address, PAGE_SIZE);
 }
 
 /// Aligns an address to the nearest page up.
@@ -117,5 +118,5 @@ pub inline fn pageAlignDown(address: usize) usize {
 /// Returns:
 ///   Aligned address.
 pub inline fn pageAlignUp(address: usize) usize {
-    return (address + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1);
+    return std.mem.alignForward(usize, address, PAGE_SIZE);
 }
