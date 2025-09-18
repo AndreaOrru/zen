@@ -128,6 +128,8 @@ pub fn mapAllocatePage(virtual_address: usize, flags: Flags) void {
 /// Parameters:
 ///   virtual_address: Address of the virtual page to map.
 pub fn unmapPage(virtual_address: usize) void {
+    assert(isAddressSpaceValid());
+
     const pml4_entry = pml4Entry(virtual_address);
     const pdpt_entry = pdptEntry(virtual_address);
     const pd_entry = pdEntry(virtual_address);
@@ -163,14 +165,6 @@ pub fn unmapPage(virtual_address: usize) void {
     }
 }
 
-/// Checks if the address space is valid.
-///
-/// Returns:
-///   true if the address space is valid, false otherwise.
-fn isAddressSpaceValid() bool {
-    return pml4[0] != INVALID_ADDRESS_SPACE;
-}
-
 /// Handler for page fault interrupts.
 ///
 /// Parameters:
@@ -191,6 +185,34 @@ fn pageFaultHandler(context: *isr.InterruptStack) callconv(.c) noreturn {
         \\  Operation:    {s}
         \\  Privilege:    {s}
     , .{ context.rip, address, error_typ, operation, privilege });
+}
+
+/// Flags the current address space as invalid, preventing any further
+/// operations on it. The address space must be already empty.
+fn flagAddressSpaceAsInvalid() void {
+    assert(isAddressSpaceEmpty());
+    pml4[0] = INVALID_ADDRESS_SPACE;
+}
+
+/// Checks if the address space is valid.
+///
+/// Returns:
+///   true if the address space is valid, false otherwise.
+fn isAddressSpaceValid() bool {
+    return pml4[0] != INVALID_ADDRESS_SPACE;
+}
+
+/// Checks if the address space is empty (i.e., has no mapped pages).
+///
+/// Returns:
+///   true if the address space is empty, false otherwise.
+fn isAddressSpaceEmpty() bool {
+    for (pml4) |entry| {
+        if (entry != 0) {
+            return false;
+        }
+    }
+    return true;
 }
 
 /// Clears (zero out) a page table.
