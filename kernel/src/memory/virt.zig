@@ -50,6 +50,7 @@ pub fn initialize() void {
     for (virt_pml4[0 .. NUM_ENTRIES / 2]) |*entry| {
         assert(entry.* == 0);
     }
+    // TODO(2): enable global pages.
 
     // Initialize recursive mapping for page tables.
     virt_pml4[RECURSION_ENTRY] = phys_pml4 | PRESENT | WRITABLE;
