@@ -59,7 +59,7 @@
 
         // Save the pointer to the current context and switch to the kernel stack.
         // mov %rsp, saved_context
-        mov kernel_stack, %rsp
+        // mov kernel_stack, %rsp
 
         // Handle interrupts with their respective handlers.
         .if \syscall == 0

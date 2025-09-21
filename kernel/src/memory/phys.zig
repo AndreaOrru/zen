@@ -8,9 +8,9 @@ const assert = std.debug.assert;
 const higherHalf = @import("./virt.zig").higherHalf;
 
 // Memory constants.
-const KILOBYTE = 1024;
-const MEGABYTE = 1024 * KILOBYTE;
-const GIGABYTE = 1024 * MEGABYTE;
+pub const KILOBYTE = 1024;
+pub const MEGABYTE = 1024 * KILOBYTE;
+pub const GIGABYTE = 1024 * MEGABYTE;
 /// x86-64 page size.
 pub const PAGE_SIZE: usize = 4096;
 

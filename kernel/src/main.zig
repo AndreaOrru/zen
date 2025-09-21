@@ -5,11 +5,14 @@ const limine = @import("limine");
 const std = @import("std");
 
 const gdt = @import("./cpu/gdt.zig");
+const heap = @import("./memory/heap.zig");
 const idt = @import("./interrupt/idt.zig");
 const phys = @import("./memory/phys.zig");
-const virt = @import("./memory/virt.zig");
 const term = @import("./term/terminal.zig");
+const virt = @import("./memory/virt.zig");
 const x64 = @import("./cpu/x64.zig");
+
+const MEGABYTE = phys.MEGABYTE;
 
 /// Current version of the Zen kernel.
 const ZEN_VERSION = "0.0.2";
@@ -42,12 +45,11 @@ export fn _start() callconv(.c) noreturn {
     idt.initialize();
     phys.initialize();
     virt.initialize();
+    heap.initialize(4 * MEGABYTE);
 
-    // Cause a page fault (for testing purposes).
-    virt.mapAllocatePage(0x1000, virt.WRITABLE);
-    virt.unmapPage(0x1000);
-    const ptr: *u8 = @ptrFromInt(0x1001);
-    ptr.* = 42;
+    const i = heap.allocator.create(u32) catch unreachable;
+    i.* = 1234;
+    term.print("Allocated an integer with value {d}.\n", .{i.*});
 
     // Loop forever.
     x64.hang();

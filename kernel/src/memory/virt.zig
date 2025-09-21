@@ -1,4 +1,5 @@
 const isr = @import("../interrupt/isr.zig");
+const heap = @import("./heap.zig");
 const phys = @import("./phys.zig");
 const term = @import("../term/terminal.zig");
 const x64 = @import("../cpu/x64.zig");
@@ -211,13 +212,18 @@ pub fn unmapPage(virtual_address: usize) void {
 ///
 /// Parameters:
 ///   context: Interrupt stack frame.
-fn pageFaultHandler(context: *isr.InterruptStack) callconv(.c) noreturn {
+fn pageFaultHandler(context: *isr.InterruptStack) callconv(.c) void {
     const address = x64.readCr2();
     const code = context.error_code;
 
     const error_typ = if (code & PRESENT != 0) "protection" else "non-present";
     const operation = if (code & WRITABLE != 0) "write" else "read";
     const privilege = if (code & USER != 0) "user" else "kernel";
+
+    // Map pages on demand in the heap.
+    if ((code & PRESENT == 0) and heap.contains(address)) {
+        return mapAllocatePage(address, WRITABLE);
+    }
 
     term.panic(
         \\Page Fault
